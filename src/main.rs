@@ -52,6 +52,8 @@ mod tests {
         let mut substrings = learn_substrings(&source);
         clean_short_substrings(&mut substrings);
 
+        assert_eq!(10, substrings.len());
+
         let encoded = encode_string(&source, &substrings);
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, source);
