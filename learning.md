@@ -22,3 +22,9 @@
 
 - BTreeMap
 - PartialOrd, PartialEq, Ord, Eq
+
+# First iteration
+
+- Encoding: use 2 bytes 0xF5xx to encode a substring
+- That gives us 256 possible substrings
+- We only gain compression if the substring is longer than 2 bytes

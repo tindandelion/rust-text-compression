@@ -1,25 +1,25 @@
-use crate::substring_dictionary::SubstringDictionary;
+pub fn encode_string(source: &str, substrings: &[String]) -> Vec<u8> {
+    let mut result = vec![];
 
-pub fn learn_substrings(s: &str) -> Vec<String> {
-    let mut dict = SubstringDictionary::new();
-    let mut head: &str = s;
+    let mut head = source;
     while head.len() > 0 {
-        if let Some(substr_match) = dict.find_longest_match(head) {
-            if let Some(following_string) = dict.find_longest_match(&head[substr_match.len()..]) {
-                let new_string = substr_match.clone() + &following_string;
-                head = &head[new_string.len()..];
-                dict.insert_new(&new_string);
-            } else {
-                head = &head[substr_match.len()..];
-            }
+        let found = substrings
+            .iter()
+            .enumerate()
+            .find(|(_, substr)| head.starts_with(*substr));
 
-            dict.increment_count(&substr_match);
-        } else {
-            dict.insert_new(&head[0..1]);
-            head = &head[1..];
+        match found {
+            Some((index, substr)) => {
+                result.extend([0xF5, index as u8]);
+                head = &head[substr.len()..];
+            }
+            None => {
+                result.push(head.as_bytes()[0]);
+                head = &head[1..];
+            }
         }
     }
-    dict.values().iter().map(|s| s.to_string()).collect()
+    result
 }
 
 #[cfg(test)]
@@ -27,26 +27,49 @@ mod tests {
     use super::*;
 
     #[test]
-    fn learn_unique_chars() {
-        let s = "abc";
-        let expected = vec!["a", "b", "c"];
-        let substrings = learn_substrings(s);
-        assert_eq!(expected, substrings);
+    fn encode_string_with_empty_substrings() {
+        let source = "abc";
+
+        let encoded = encode_string(&source, &vec![]);
+        assert_eq!(source.as_bytes(), encoded);
     }
 
     #[test]
-    fn learn_substring() {
-        let s = "ababab";
-        let expected = vec!["ab", "a", "b"];
-        let substrings = learn_substrings(s);
-        assert_eq!(expected, substrings);
+    fn encode_substring_with_index_in_substring_list() {
+        let source = "abc";
+        let substrings = vec!["abc".to_string()];
+
+        let encoded = encode_string(&source, &substrings);
+        assert_eq!(vec![0xF5, 0x00], encoded);
     }
 
     #[test]
-    fn learn_several_substrings() {
-        let s = "abcabcabc";
-        let expected = vec!["cab", "ab", "a", "b", "c"];
-        let substrings = learn_substrings(s);
-        assert_eq!(expected, substrings);
+    fn encode_two_consecutive_substrings() {
+        let source = "abcabc";
+        let substrings = vec!["abc".to_string()];
+
+        let encoded = encode_string(&source, &substrings);
+        assert_eq!(vec![0xF5, 0x00, 0xF5, 0x00], encoded);
+    }
+
+    #[test]
+    fn encode_two_consecutive_substrings_with_different_substrings() {
+        let source = "abcdef";
+        let substrings = vec!["abc".to_string(), "def".to_string()];
+
+        let encoded = encode_string(&source, &substrings);
+        assert_eq!(vec![0xF5, 0x00, 0xF5, 0x01], encoded);
+    }
+
+    #[test]
+    fn encode_mix_of_substrings_and_single_characters() {
+        let source = "abcxyzdef";
+        let substrings = vec!["abc".to_string(), "def".to_string()];
+
+        let encoded = encode_string(&source, &substrings);
+        assert_eq!(
+            vec![0xF5, 0x00, 'x' as u8, 'y' as u8, 'z' as u8, 0xF5, 0x01],
+            encoded
+        );
     }
 }
