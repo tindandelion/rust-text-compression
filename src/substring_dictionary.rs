@@ -12,6 +12,8 @@ impl SubstringDictionary {
     }
 
     pub fn insert_new(&mut self, str: &str) {
+        // TODO: need to do pruning
+        assert!(self.strings.len() < 256);
         self.strings.insert(str.to_string(), 1);
     }
 

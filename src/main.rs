@@ -1,5 +1,6 @@
 use decoder::decode_string;
 use encoder::encode_string;
+use std::fs;
 use substr_builder::{clean_short_substrings, learn_substrings};
 
 mod decoder;
@@ -8,15 +9,16 @@ mod substr_builder;
 mod substring_dictionary;
 
 fn main() {
-    let s =
-        "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new"
-            .to_string();
+    let s = fs::read_to_string("hamlet.txt").unwrap();
     let mut substrings = learn_substrings(&s);
     clean_short_substrings(&mut substrings);
 
+    println!("Some common substrings:");
+    println!("{:?}", &substrings[0..10]);
+
     let encoded = encode_string(&s, &substrings);
     println!(
-        "Original size: {}, encoded size: {}",
+        "Original size: {} bytes, encoded size: {} bytes",
         s.bytes().len(),
         encoded.len()
     );
