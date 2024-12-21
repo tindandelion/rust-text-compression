@@ -9,11 +9,32 @@ pub fn decode_string(encoded_bytes: &[u8], substrings: &[String]) -> String {
             result.push_str(&substrings[index as usize]);
             head = &head[2..];
         } else {
-            result.push(byte as char);
-            head = &head[1..];
+            let (char, width) = decode_first_char(head);
+            result.push(char);
+            head = &head[width..];
         }
     }
     result
+}
+
+fn decode_first_char(bytes: &[u8]) -> (char, usize) {
+    let width = utf8_char_width(bytes[0]);
+    let char = std::str::from_utf8(&bytes[..width])
+        .unwrap()
+        .chars()
+        .next()
+        .unwrap();
+    (char, width)
+}
+
+fn utf8_char_width(first_byte: u8) -> usize {
+    match first_byte {
+        0..=127 => 1,
+        192..=223 => 2,
+        224..=239 => 3,
+        240..=247 => 4,
+        _ => 0, // Invalid UTF-8 leading byte
+    }
 }
 
 #[cfg(test)]
@@ -46,9 +67,18 @@ mod tests {
         assert_eq!(decoded, "abcAdefABC");
     }
 
+    #[test]
+    fn decode_string_with_multi_byte_characters() {
+        let sample_string = "犬猫魚鳥";
+        let encoded = sample_string.as_bytes();
+
+        let decoded = decode_string(&encoded, &vec![]);
+        assert_eq!(decoded, sample_string);
+    }
+
     // TODO: Invalid encoded string:
     // 0xF5 at the end of the string
     // Missing entry in the table
 
-    // TODO: Multi-byte characters
+    // TODO: Multi-byte characters: invalid UTF-8
 }

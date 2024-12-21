@@ -44,4 +44,16 @@ mod tests {
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, source);
     }
+
+    #[test]
+    fn encode_and_decode_multibyte_string() {
+        let source = "こんにちはこんにちは世界世界".to_string();
+
+        let mut substrings = learn_substrings(&source);
+        clean_short_substrings(&mut substrings);
+
+        let encoded = encode_string(&source, &substrings);
+        let decoded = decode_string(&encoded, &substrings);
+        assert_eq!(decoded, source);
+    }
 }
