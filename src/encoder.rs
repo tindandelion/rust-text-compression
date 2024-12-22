@@ -1,4 +1,5 @@
 pub fn encode_string(source: &str, substrings: &[String]) -> Vec<u8> {
+    assert!(substrings.len() <= 256);
     let mut result = vec![];
 
     let mut head = source;

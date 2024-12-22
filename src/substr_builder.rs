@@ -21,7 +21,12 @@ pub fn learn_substrings(s: &str) -> Vec<String> {
             head = &head[char.len_utf8()..];
         }
     }
-    dict.values().iter().map(|s| s.to_string()).collect()
+
+    // TODO: Hard-coded size of strings to return
+    dict.get_most_impactful_strings(256)
+        .iter()
+        .map(|s| s.to_string())
+        .collect()
 }
 
 pub fn clean_short_substrings(substrings: &mut Vec<String>) {

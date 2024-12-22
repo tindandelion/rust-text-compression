@@ -8,8 +8,10 @@ mod encoder;
 mod substr_builder;
 mod substring_dictionary;
 
+const INPUT_FILENAME: &str = "hamlet_trunc.txt";
+
 fn main() {
-    let s = fs::read_to_string("hamlet.txt").unwrap();
+    let s = fs::read_to_string(INPUT_FILENAME).unwrap();
     let mut substrings = learn_substrings(&s);
     clean_short_substrings(&mut substrings);
 
@@ -17,15 +19,15 @@ fn main() {
     println!("{:?}", &substrings[0..10]);
 
     let encoded = encode_string(&s, &substrings);
+    let encoded_len = encoded.len();
+    let original_len = s.bytes().len();
+    let compression_ratio = (1.0 - (encoded_len as f32 / original_len as f32)) * 100.0;
     println!(
-        "Original size: {} bytes, encoded size: {} bytes",
-        s.bytes().len(),
-        encoded.len()
+        "Original size: {} bytes, encoded size: {} bytes, compression ratio: {:.2}%",
+        original_len, encoded_len, compression_ratio
     );
-    println!("{:?}", encoded);
 
     let decoded = decode_string(&encoded, &substrings);
-    println!("{}", decoded);
     println!("Decoded matches original: {}", decoded == s);
 }
 
