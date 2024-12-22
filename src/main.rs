@@ -62,4 +62,13 @@ mod tests {
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, source);
     }
+
+    #[test]
+    fn learning_stability() {
+        let source = fs::read_to_string(INPUT_FILENAME).unwrap();
+        let learned_1 = learn_substrings(&source);
+        let learned_2 = learn_substrings(&source);
+
+        assert_eq!(learned_1, learned_2);
+    }
 }
