@@ -1,7 +1,8 @@
 use decoder::decode_string;
 use encoder::encode_string;
 use std::fs;
-use substr_builder::{clean_short_substrings, learn_substrings};
+use substr_builder::learn_substrings;
+use substring_dictionary::EncoderSpec;
 
 mod decoder;
 mod encoder;
@@ -9,11 +10,14 @@ mod substr_builder;
 mod substring_dictionary;
 
 const INPUT_FILENAME: &str = "hamlet_trunc.txt";
+const ENCODER_SPEC: EncoderSpec = EncoderSpec {
+    num_strings: 256,
+    encoded_size: 2,
+};
 
 fn main() {
     let s = fs::read_to_string(INPUT_FILENAME).unwrap();
-    let mut substrings = learn_substrings(&s);
-    clean_short_substrings(&mut substrings);
+    let substrings = learn_substrings(&s, &ENCODER_SPEC);
 
     println!("Some common substrings:");
     println!("{:?}", &substrings[0..10]);
@@ -41,8 +45,7 @@ mod tests {
         "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new"
             .to_string();
 
-        let mut substrings = learn_substrings(&source);
-        clean_short_substrings(&mut substrings);
+        let substrings = learn_substrings(&source, &ENCODER_SPEC);
 
         let encoded = encode_string(&source, &substrings);
         let decoded = decode_string(&encoded, &substrings);
@@ -53,9 +56,7 @@ mod tests {
     fn encode_and_decode_multibyte_string() {
         let source = "こんにちはこんにちは世界世界".to_string();
 
-        let mut substrings = learn_substrings(&source);
-        clean_short_substrings(&mut substrings);
-
+        let substrings = learn_substrings(&source, &ENCODER_SPEC);
         assert_eq!(10, substrings.len());
 
         let encoded = encode_string(&source, &substrings);
@@ -64,10 +65,15 @@ mod tests {
     }
 
     #[test]
+
     fn learning_stability() {
+        let encoder_spec = EncoderSpec {
+            num_strings: 10,
+            encoded_size: 2,
+        };
         let source = fs::read_to_string(INPUT_FILENAME).unwrap();
-        let learned_1 = learn_substrings(&source);
-        let learned_2 = learn_substrings(&source);
+        let learned_1 = learn_substrings(&source, &encoder_spec);
+        let learned_2 = learn_substrings(&source, &encoder_spec);
 
         assert_eq!(learned_1, learned_2);
     }

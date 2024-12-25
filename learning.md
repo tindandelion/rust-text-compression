@@ -22,6 +22,7 @@
 
 # Topics to mention
 
+- HashMap: no order on keys
 - BTreeMap
 - PartialOrd, PartialEq, Ord, Eq
 - Strings: different kinds of strings in Rust

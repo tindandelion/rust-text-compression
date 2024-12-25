@@ -4,6 +4,21 @@ pub struct SubstringDictionary {
     strings: HashMap<String, u32>,
 }
 
+pub struct EncoderSpec {
+    pub num_strings: usize,
+    pub encoded_size: usize,
+}
+
+impl EncoderSpec {
+    pub fn compression_gain(&self, string: &str, count: usize) -> usize {
+        let unencoded_total_size = string.len() * count;
+        let encoded_total_size = self.encoded_size * count;
+        unencoded_total_size
+            .checked_sub(encoded_total_size)
+            .unwrap_or(0)
+    }
+}
+
 impl SubstringDictionary {
     pub fn new() -> Self {
         Self {
@@ -36,26 +51,27 @@ impl SubstringDictionary {
         keys
     }
 
-    pub fn get_most_impactful_strings(&self, max_size: usize) -> Vec<&String> {
+    pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> Vec<&String> {
         struct Impact<'a> {
             string: &'a String,
-            total_size: usize,
+            compression_gain: usize,
         }
 
         let mut x: Vec<Impact> = self
             .strings
             .iter()
-            .map(|(string, &count)| {
-                let total_size = string.len() * (count as usize);
-                Impact { string, total_size }
+            .map(|(string, &count)| Impact {
+                string,
+                compression_gain: encoder_spec.compression_gain(string, count as usize),
             })
+            .filter(|impact| impact.compression_gain > 0)
             .collect();
-        x.sort_by(|a, b| b.total_size.cmp(&a.total_size));
+        x.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
 
         let mut most_impactful: Vec<&String> = x
             .into_iter()
             .map(|impact| impact.string)
-            .take(max_size)
+            .take(encoder_spec.num_strings)
             .collect();
         most_impactful.sort_by(|a, b| compare_substrings(a, b));
         most_impactful
@@ -110,29 +126,45 @@ mod tests {
 
     #[test]
     fn most_impactful_substring_found_by_string_length() {
+        /*
+         * For equal counts, longer strings make bigger impact on compression.
+         */
         let mut dict = SubstringDictionary::new();
         dict.insert_new("a");
         dict.insert_new("aa");
         dict.insert_new("aaaaa");
         dict.insert_new("b");
 
-        let most_impactful = dict.get_most_impactful_strings(1);
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 1,
+            encoded_size: 0,
+        });
         assert_eq!(vec!["aaaaa"], most_impactful);
     }
 
     #[test]
     fn most_impactful_substring_found_by_count() {
+        /*
+         * For equal string lengths, more frequent substrings make bigger impact on compression.
+         */
         let mut dict = SubstringDictionary::new();
         dict.insert_new("a");
+
         dict.insert_new("b");
         dict.increment_count("b");
 
-        let most_impactful = dict.get_most_impactful_strings(1);
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 1,
+            encoded_size: 0,
+        });
         assert_eq!(vec!["b"], most_impactful);
     }
 
     #[test]
     fn most_impactful_substring_found_by_count_and_string_length() {
+        /*
+         * The string has more impact, when the total length of all its occurrences is bigger.
+         */
         let mut dict = SubstringDictionary::new();
         dict.insert_new("a");
         dict.insert_new("aaa");
@@ -142,8 +174,62 @@ mod tests {
         dict.increment_count("b");
         dict.increment_count("b");
 
-        let most_impactful = dict.get_most_impactful_strings(1);
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 1,
+            encoded_size: 0,
+        });
         assert_eq!(vec!["b"], most_impactful);
+    }
+
+    #[test]
+    fn most_impactful_substring_removes_short_strings() {
+        /*
+         * Short strings are not encoded, because their encoded size is bigger than or equal to the string's length itself.
+         */
+        let mut dict = SubstringDictionary::new();
+
+        dict.insert_new("aaa");
+
+        dict.insert_new("a");
+        dict.insert_new("aa");
+        dict.increment_count("aa");
+        dict.increment_count("aa");
+
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 1,
+            encoded_size: 2,
+        });
+        assert_eq!(vec!["aaa"], most_impactful);
+    }
+
+    #[test]
+    fn most_impactful_substring_takes_total_encoded_size_into_account() {
+        /*
+         * A longer, but less frequent string can have more impact on compression,
+         * than a shorter, but more frequent string.
+         * Consider the following example:
+         *
+         * "aaaaa" - 1 occurrence, 5 bytes
+         * "aaa" - 2 occurrence, 3 bytes
+         *
+         * When replacing "aaaaa" with its encoded form, we'll replace 1 5-byte string with 2 bytes (gain of 3 bytes).
+         * When replacing "aaa" with its encoded form, we'll replace 2 3-bytes string with 2 2-byte encoded versions.
+         * In that case, we gain (2 * 3 - 2 * 2) = 2 bytes.
+         *
+         * So, "aaaaa" has more impact on compression, even though it's less frequent.
+         */
+        let mut dict = SubstringDictionary::new();
+
+        dict.insert_new("aaaaa");
+
+        dict.insert_new("aaa");
+        dict.increment_count("aaa");
+
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 1,
+            encoded_size: 2,
+        });
+        assert_eq!(vec!["aaaaa"], most_impactful);
     }
 
     #[test]
@@ -157,9 +243,13 @@ mod tests {
         dict.increment_count("aa");
         dict.increment_count("aa");
 
-        let most_impactful = dict.get_most_impactful_strings(2);
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 2,
+            encoded_size: 1,
+        });
         assert_eq!(vec!["aaaaaa", "aa"], most_impactful);
     }
 
     // TODO: Increment count of a non-existing substring
+    // TODO: Inserting already existing substring
 }
