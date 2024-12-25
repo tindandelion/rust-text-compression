@@ -1,16 +1,16 @@
-use crate::substring_dictionary::{EncoderSpec, SubstringDictionary};
+use super::{encoder_spec::EncoderSpec, SubstringLedger};
 
 pub fn learn_substrings(s: &str, encoder_spec: &EncoderSpec) -> Vec<String> {
-    let dict = build_substring_dictionary(s);
+    let dict = build_substring_ledger(s);
     dict.get_most_impactful_strings(&encoder_spec)
         .iter()
         .map(|s| s.to_string())
         .collect()
 }
 
-pub fn build_substring_dictionary(s: &str) -> SubstringDictionary {
-    let mut dict = SubstringDictionary::new();
-    let mut head: &str = s;
+fn build_substring_ledger(source: &str) -> SubstringLedger {
+    let mut dict = SubstringLedger::new();
+    let mut head: &str = source;
 
     while let Some(next_char) = head.chars().next() {
         if let Some(substr_match) = dict.find_longest_match(head) {

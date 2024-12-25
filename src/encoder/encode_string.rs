@@ -1,3 +1,10 @@
+use super::encoder_spec::EncoderSpec;
+
+pub const SPEC: EncoderSpec = EncoderSpec {
+    num_strings: 256,
+    encoded_size: 2,
+};
+
 pub fn encode_string(source: &str, substrings: &[String]) -> Vec<u8> {
     assert!(substrings.len() <= 256);
     let mut result = vec![];

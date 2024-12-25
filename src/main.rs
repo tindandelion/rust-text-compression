@@ -1,29 +1,20 @@
 use decoder::decode_string;
-use encoder::encode_string;
+use encoder::encode;
 use std::fs;
-use substr_builder::learn_substrings;
-use substring_dictionary::EncoderSpec;
 
 mod decoder;
 mod encoder;
-mod substr_builder;
-mod substring_dictionary;
 
 const INPUT_FILENAME: &str = "hamlet-100.txt";
-const ENCODER_SPEC: EncoderSpec = EncoderSpec {
-    num_strings: 256,
-    encoded_size: 2,
-};
 
 fn main() {
     let s = fs::read_to_string(INPUT_FILENAME).unwrap();
-    let substrings = learn_substrings(&s, &ENCODER_SPEC);
+    let (encoded, substrings) = encode(&s);
 
     println!("Substrings size: {}", substrings.len());
     println!("Some common substrings:");
     println!("{:?}", &substrings[0..20]);
 
-    let encoded = encode_string(&s, &substrings);
     let encoded_len = encoded.len();
     let original_len = s.bytes().len();
     let compression_ratio = (1.0 - (encoded_len as f32 / original_len as f32)) * 100.0;
@@ -46,10 +37,9 @@ mod tests {
         "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new"
             .to_string();
 
-        let substrings = learn_substrings(&source, &ENCODER_SPEC);
-
-        let encoded = encode_string(&source, &substrings);
+        let (encoded, substrings) = encode(&source);
         let decoded = decode_string(&encoded, &substrings);
+
         assert_eq!(decoded, source);
     }
 
@@ -57,10 +47,9 @@ mod tests {
     fn encode_and_decode_multibyte_string() {
         let source = "こんにちはこんにちは世界世界".to_string();
 
-        let substrings = learn_substrings(&source, &ENCODER_SPEC);
+        let (encoded, substrings) = encode(&source);
         assert_eq!(10, substrings.len());
 
-        let encoded = encode_string(&source, &substrings);
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, source);
     }
