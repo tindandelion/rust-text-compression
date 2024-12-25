@@ -11,10 +11,14 @@ pub fn learn_substrings(s: &str, encoder_spec: &EncoderSpec) -> Vec<String> {
 pub fn build_substring_dictionary(s: &str) -> SubstringDictionary {
     let mut dict = SubstringDictionary::new();
     let mut head: &str = s;
+
     while head.len() > 0 {
         if let Some(substr_match) = dict.find_longest_match(head) {
-            if let Some(following_string) = dict.find_longest_match(&head[substr_match.len()..]) {
-                let new_string = substr_match.clone() + &following_string;
+            let rest = &head[substr_match.len()..];
+            if let Some(follow_up_match) = dict.find_longest_match(rest) {
+                dict.increment_count(&follow_up_match);
+
+                let new_string = substr_match.clone() + &follow_up_match;
                 head = &head[new_string.len()..];
                 dict.insert_new(&new_string);
             } else {

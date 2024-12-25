@@ -19,8 +19,9 @@ fn main() {
     let s = fs::read_to_string(INPUT_FILENAME).unwrap();
     let substrings = learn_substrings(&s, &ENCODER_SPEC);
 
+    println!("Substrings size: {}", substrings.len());
     println!("Some common substrings:");
-    println!("{:?}", &substrings[0..10]);
+    println!("{:?}", &substrings[0..20]);
 
     let encoded = encode_string(&s, &substrings);
     let encoded_len = encoded.len();
