@@ -43,11 +43,11 @@ impl SubstringLedger {
         keys
     }
 
-    pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> Vec<&String> {
+    pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> Vec<String> {
         let impacts = self.calculate_impacts(encoder_spec);
-        let mut most_impactful: Vec<&String> = impacts
+        let mut most_impactful: Vec<String> = impacts
             .into_iter()
-            .map(|impact| impact.substring)
+            .map(|impact| impact.substring.clone())
             .take(encoder_spec.num_strings)
             .collect();
         most_impactful.sort_by(|a, b| compare_substrings(a, b));

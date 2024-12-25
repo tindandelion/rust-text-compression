@@ -1,14 +1,6 @@
-use super::{encoder_spec::EncoderSpec, SubstringLedger};
+use super::SubstringLedger;
 
-pub fn learn_substrings(s: &str, encoder_spec: &EncoderSpec) -> Vec<String> {
-    let dict = build_substring_ledger(s);
-    dict.get_most_impactful_strings(&encoder_spec)
-        .iter()
-        .map(|s| s.to_string())
-        .collect()
-}
-
-fn build_substring_ledger(source: &str) -> SubstringLedger {
+pub fn build_ledger(source: &str) -> SubstringLedger {
     let mut dict = SubstringLedger::new();
     let mut head: &str = source;
 
@@ -38,6 +30,8 @@ fn build_substring_ledger(source: &str) -> SubstringLedger {
 mod tests {
     use std::collections::HashSet;
 
+    use crate::encoder::encoder_spec::EncoderSpec;
+
     use super::*;
 
     const ENCODER_SPEC: EncoderSpec = EncoderSpec {
@@ -49,6 +43,7 @@ mod tests {
     fn learn_unique_chars() {
         let s = "abc";
         let expected = as_strings(vec!["a", "b", "c"]);
+
         let substrings = learn_substrings(s, &ENCODER_SPEC);
         assert_eq!(as_set(expected), as_set(substrings));
     }
@@ -75,6 +70,10 @@ mod tests {
         let expected = as_strings(vec!["犬", "猫", "魚", "鳥"]);
         let substrings = learn_substrings(s, &ENCODER_SPEC);
         assert_eq!(as_set(expected), as_set(substrings));
+    }
+
+    fn learn_substrings(s: &str, encoder_spec: &EncoderSpec) -> Vec<String> {
+        build_ledger(s).get_most_impactful_strings(&encoder_spec)
     }
 
     fn as_strings(v: Vec<&str>) -> Vec<String> {
