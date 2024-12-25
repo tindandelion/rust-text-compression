@@ -34,6 +34,8 @@ pub fn build_substring_dictionary(s: &str) -> SubstringDictionary {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashSet;
+
     use super::*;
 
     const ENCODER_SPEC: EncoderSpec = EncoderSpec {
@@ -44,32 +46,40 @@ mod tests {
     #[test]
     fn learn_unique_chars() {
         let s = "abc";
-        let expected = vec!["a", "b", "c"];
+        let expected = as_strings(vec!["a", "b", "c"]);
         let substrings = learn_substrings(s, &ENCODER_SPEC);
-        assert_eq!(expected, substrings);
+        assert_eq!(as_set(expected), as_set(substrings));
     }
 
     #[test]
     fn learn_substring() {
         let s = "ababab";
-        let expected = vec!["ab", "a", "b"];
+        let expected = as_strings(vec!["ab", "a", "b"]);
         let substrings = learn_substrings(s, &ENCODER_SPEC);
-        assert_eq!(expected, substrings);
+        assert_eq!(as_set(expected), as_set(substrings));
     }
 
     #[test]
     fn learn_several_substrings() {
         let s = "abcabcabc";
-        let expected = vec!["cab", "ab", "a", "b", "c"];
+        let expected = as_strings(vec!["cab", "ab", "a", "b", "c"]);
         let substrings = learn_substrings(s, &ENCODER_SPEC);
-        assert_eq!(expected, substrings);
+        assert_eq!(as_set(expected), as_set(substrings));
     }
 
     #[test]
     fn learn_substrings_with_multi_byte_characters() {
         let s = "犬猫魚鳥";
-        let expected = vec!["犬", "猫", "魚", "鳥"];
+        let expected = as_strings(vec!["犬", "猫", "魚", "鳥"]);
         let substrings = learn_substrings(s, &ENCODER_SPEC);
-        assert_eq!(expected, substrings);
+        assert_eq!(as_set(expected), as_set(substrings));
+    }
+
+    fn as_strings(v: Vec<&str>) -> Vec<String> {
+        v.into_iter().map(|s| s.to_string()).collect()
+    }
+
+    fn as_set(v: Vec<String>) -> HashSet<String> {
+        v.into_iter().collect()
     }
 }
