@@ -9,7 +9,7 @@ mod encoder;
 mod substr_builder;
 mod substring_dictionary;
 
-const INPUT_FILENAME: &str = "hamlet_trunc.txt";
+const INPUT_FILENAME: &str = "hamlet-100.txt";
 const ENCODER_SPEC: EncoderSpec = EncoderSpec {
     num_strings: 256,
     encoded_size: 2,
