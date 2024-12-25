@@ -12,25 +12,23 @@ pub fn build_substring_dictionary(s: &str) -> SubstringDictionary {
     let mut dict = SubstringDictionary::new();
     let mut head: &str = s;
 
-    while head.len() > 0 {
+    while let Some(next_char) = head.chars().next() {
         if let Some(substr_match) = dict.find_longest_match(head) {
             let rest = &head[substr_match.len()..];
             if let Some(follow_up_match) = dict.find_longest_match(rest) {
                 dict.increment_count(&follow_up_match);
 
-                let new_string = substr_match.clone() + &follow_up_match;
-                head = &head[new_string.len()..];
-                dict.insert_new(&new_string);
+                let new_substring = substr_match.clone() + &follow_up_match;
+                head = &head[new_substring.len()..];
+                dict.insert_new(&new_substring);
             } else {
                 head = &head[substr_match.len()..];
             }
 
             dict.increment_count(&substr_match);
         } else {
-            // TODO: Using unwrap()
-            let char = head.chars().next().unwrap();
-            dict.insert_new(&char.to_string());
-            head = &head[char.len_utf8()..];
+            dict.insert_new(&next_char.to_string());
+            head = &head[next_char.len_utf8()..];
         }
     }
     dict
