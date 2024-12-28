@@ -1,29 +1,31 @@
 use super::SubstringLedger;
 
 pub fn build_ledger(source: &str) -> SubstringLedger {
-    let mut dict = SubstringLedger::new();
+    let mut ledger = SubstringLedger::new();
     let mut head: &str = source;
 
     while let Some(next_char) = head.chars().next() {
-        if let Some(substr_match) = dict.find_longest_match(head) {
+        if let Some(substr_match) = ledger.find_longest_match(head) {
             let rest = &head[substr_match.len()..];
-            if let Some(follow_up_match) = dict.find_longest_match(rest) {
-                dict.increment_count(&follow_up_match);
+
+            if let Some(follow_up_match) = ledger.find_longest_match(rest) {
+                ledger.increment_count(&follow_up_match);
 
                 let new_substring = substr_match.clone() + &follow_up_match;
+                ledger.insert_new(&new_substring);
                 head = &head[new_substring.len()..];
-                dict.insert_new(&new_substring);
             } else {
-                head = &head[substr_match.len()..];
+                head = rest;
             }
 
-            dict.increment_count(&substr_match);
+            ledger.increment_count(&substr_match);
         } else {
-            dict.insert_new(&next_char.to_string());
-            head = &head[next_char.len_utf8()..];
+            let new_substring = next_char.to_string();
+            ledger.insert_new(&new_substring);
+            head = &head[new_substring.len()..];
         }
     }
-    dict
+    ledger
 }
 
 #[cfg(test)]
