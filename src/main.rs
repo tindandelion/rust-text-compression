@@ -5,7 +5,7 @@ use std::fs;
 mod decoder;
 mod encoder;
 
-const INPUT_FILENAME: &str = "hamlet-100.txt";
+const INPUT_FILENAME: &str = "test-data/hamlet-100.txt";
 
 fn main() {
     let s = fs::read_to_string(INPUT_FILENAME).unwrap();
