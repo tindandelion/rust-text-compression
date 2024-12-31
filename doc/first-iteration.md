@@ -6,7 +6,7 @@
   - HashMap;
   - Strings
 
-# Make it work: the first iteration
+# The first iteration: Make It Work
 
 At the heart of the text compression is the algorithm that builds the dictionary of most frequent substrings. The original algorithm, as described in [1], focuses a lot on keeping the dictionary size limited. It does so by applying strategies for adding new substrings, and removing the least frequent ones when the size limit is reached. There's a lot of room for experimentation here.
 
