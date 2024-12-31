@@ -28,7 +28,7 @@ My program works with UTF-8 encoded strings, which are natural in Rust. The ques
 
 The answer here is to use a special marker byte to indicate the replacement. The marker byte should be a value that would never occur in the original text, so that we don't mistake it for an uncompressed portion at the decoding stage.
 
-As per the UTF-8 specification, there are bytes that could never appear in a valid UTF-8 string. In particular, bytes 0xF5-0xFF are invalid. I chose to use 0xF5 as a marker, and the substring replacement will be a 2-byte sequence of a form `0xF5 0xNN`, where `NN` is the index of the substring in the dictionary. That would limit the total number of representable substrings to 256, which should be enough for starters.
+As per the [UTF-8 specification](https://en.wikipedia.org/wiki/UTF-8), there are bytes that could never appear in a valid UTF-8 string. In particular, bytes 0xF5-0xFF are invalid. I chose to use 0xF5 as a marker, and the substring replacement will be a 2-byte sequence of a form `0xF5 0xNN`, where `NN` is the index of the substring in the dictionary. That would limit the total number of representable substrings to 256, which should be enough for starters.
 
 As a slight future improvement, I could expand the size of the dictionary beyond 256, still using 2 bytes for the representation. Since the entire range 0xF5-0xFF is not represented in the UTF-8, I can use the portion of the marker byte as a part of the index. That would allow me to increase the dictionary size to 11 \* 256 = 2816 substrings. I might consider it later, when I start playing with optimizations.
 
