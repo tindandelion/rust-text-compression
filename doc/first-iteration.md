@@ -33,3 +33,22 @@ As per the [UTF-8 specification](https://en.wikipedia.org/wiki/UTF-8), there are
 As a slight future improvement, I could expand the size of the dictionary beyond 256, still using 2 bytes for the representation. Since the entire range 0xF5-0xFF is not represented in the UTF-8, I can use the portion of the marker byte as a part of the index. That would allow me to increase the dictionary size to 11 \* 256 = 2816 substrings. I might consider it later, when I start playing with optimizations.
 
 ## Selecting the most impactful substrings
+
+TODO
+
+## Trying out the first version
+
+Once I have the the first version end-to-end working, let's go on an try it out on a few samples.
+
+What I'm interested in is:
+
+- Does it do encoding and decoding correctly (obviously);
+- The compression ratio;
+- Most common substrings found in the text;
+- Time performance compressing texts of different lengths.
+
+To keep things simple, I just grabbed Shakespeare's "Hamlet" from the Web, and created a few samples from it, taking first 100, 200, 400, and 800 lines from the text. I wrote a simple `main` program to perform the encoding / decoding round on each, and record the data that interests me.
+
+Here's the results we get after running this program:
+
+| File name | 5 top substrings | Compression ratio | Time elapsed |
