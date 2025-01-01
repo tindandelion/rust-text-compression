@@ -5,6 +5,7 @@ use std::time::Instant;
 
 mod decoder;
 mod encoder;
+mod substring_dictionary;
 
 struct ExperimentResult {
     source_length_chars: usize,
@@ -50,7 +51,7 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
     let compression_ratio = (1.0 - (encoded.len() as f32 / source.len() as f32)) * 100.0;
     ExperimentResult {
         source_length_chars: source.len(),
-        substrings: substrings[..5].to_vec(),
+        substrings: substrings.top(5).to_vec(),
         compression_ratio,
         time_elapsed,
     }

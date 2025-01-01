@@ -1,4 +1,6 @@
-pub fn decode_string(encoded_bytes: &[u8], substrings: &[String]) -> String {
+use crate::substring_dictionary::SubstringDictionary;
+
+pub fn decode_string(encoded_bytes: &[u8], substrings: &SubstringDictionary) -> String {
     let mut result = String::new();
 
     let mut head = encoded_bytes;
@@ -6,7 +8,7 @@ pub fn decode_string(encoded_bytes: &[u8], substrings: &[String]) -> String {
         let byte = head[0];
         if byte == 0xF5 {
             let index = head[1];
-            result.push_str(&substrings[index as usize]);
+            result.push_str(substrings.get(index as usize));
             head = &head[2..];
         } else {
             let (char, width) = decode_first_char(head);
@@ -44,15 +46,16 @@ mod tests {
     #[test]
     fn decode_simple_encoded_string() {
         let string = "abcdef";
+        let substrings = SubstringDictionary::new(vec![]);
 
-        let decoded = decode_string(string.as_bytes(), &vec![]);
+        let decoded = decode_string(string.as_bytes(), &substrings);
         assert_eq!(string, decoded);
     }
 
     #[test]
     fn decode_string_with_encoded_substring() {
         let encoded = vec![0xF5, 0x00];
-        let substrings = vec!["abc".to_string()];
+        let substrings = SubstringDictionary::new(vec!["abc".to_string()]);
 
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, "abc");
@@ -61,7 +64,7 @@ mod tests {
     #[test]
     fn decode_string_with_encoded_substrings_and_single_characters() {
         let encoded = vec![0xF5, 0x00, 0x41, 0xF5, 0x01, 0x41, 0x42, 0x43];
-        let substrings = vec!["abc".to_string(), "def".to_string()];
+        let substrings = SubstringDictionary::new(vec!["abc".to_string(), "def".to_string()]);
 
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, "abcAdefABC");
@@ -72,13 +75,13 @@ mod tests {
         let sample_string = "犬猫魚鳥";
         let encoded = sample_string.as_bytes();
 
-        let decoded = decode_string(&encoded, &vec![]);
+        let decoded = decode_string(&encoded, &SubstringDictionary::new(vec![]));
         assert_eq!(decoded, sample_string);
     }
 
     // TODO: Invalid encoded string:
     // 0xF5 at the end of the string
-    // Missing entry in the table
+    // Missing entry in the substring dictionary
 
     // TODO: Multi-byte characters: invalid UTF-8
 }

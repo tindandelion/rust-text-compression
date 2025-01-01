@@ -1,3 +1,5 @@
+use crate::substring_dictionary::SubstringDictionary;
+
 use super::encoder_spec::EncoderSpec;
 
 pub const SPEC: EncoderSpec = EncoderSpec {
@@ -5,18 +7,13 @@ pub const SPEC: EncoderSpec = EncoderSpec {
     encoded_size: 2,
 };
 
-pub fn encode_string(source: &str, substrings: &[String]) -> Vec<u8> {
-    assert!(substrings.len() <= 256);
+pub fn encode_string(source: &str, substrings: &SubstringDictionary) -> Vec<u8> {
+    assert!(substrings.len() <= SPEC.num_strings);
     let mut result = vec![];
 
     let mut head = source;
     while head.len() > 0 {
-        let found = substrings
-            .iter()
-            .enumerate()
-            .find(|(_, substr)| head.starts_with(*substr));
-
-        match found {
+        match substrings.find_match(&head) {
             Some((index, substr)) => {
                 result.extend([0xF5, index as u8]);
                 head = &head[substr.len()..];
@@ -38,7 +35,7 @@ mod tests {
     fn encode_string_with_empty_substrings() {
         let source = "abc";
 
-        let encoded = encode_string(&source, &vec![]);
+        let encoded = encode_string(&source, &make_dictionary(vec![]));
         assert_eq!(source.as_bytes(), encoded);
     }
 
@@ -47,7 +44,7 @@ mod tests {
         let source = "abc";
         let substrings = vec!["abc".to_string()];
 
-        let encoded = encode_string(&source, &substrings);
+        let encoded = encode_string(&source, &make_dictionary(substrings));
         assert_eq!(vec![0xF5, 0x00], encoded);
     }
 
@@ -56,7 +53,7 @@ mod tests {
         let source = "abcabc";
         let substrings = vec!["abc".to_string()];
 
-        let encoded = encode_string(&source, &substrings);
+        let encoded = encode_string(&source, &make_dictionary(substrings));
         assert_eq!(vec![0xF5, 0x00, 0xF5, 0x00], encoded);
     }
 
@@ -65,7 +62,7 @@ mod tests {
         let source = "abcdef";
         let substrings = vec!["abc".to_string(), "def".to_string()];
 
-        let encoded = encode_string(&source, &substrings);
+        let encoded = encode_string(&source, &make_dictionary(substrings));
         assert_eq!(vec![0xF5, 0x00, 0xF5, 0x01], encoded);
     }
 
@@ -74,10 +71,14 @@ mod tests {
         let source = "abcxyzdef";
         let substrings = vec!["abc".to_string(), "def".to_string()];
 
-        let encoded = encode_string(&source, &substrings);
+        let encoded = encode_string(&source, &make_dictionary(substrings));
         assert_eq!(
             vec![0xF5, 0x00, 'x' as u8, 'y' as u8, 'z' as u8, 0xF5, 0x01],
             encoded
         );
+    }
+
+    fn make_dictionary(substrings: Vec<String>) -> SubstringDictionary {
+        SubstringDictionary::new(substrings)
     }
 }

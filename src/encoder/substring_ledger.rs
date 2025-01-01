@@ -1,5 +1,7 @@
 use std::{cmp::Ordering, collections::HashMap};
 
+use crate::substring_dictionary::SubstringDictionary;
+
 use super::encoder_spec::EncoderSpec;
 
 pub struct SubstringLedger {
@@ -43,7 +45,7 @@ impl SubstringLedger {
         keys
     }
 
-    pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> Vec<String> {
+    pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> SubstringDictionary {
         let impacts = self.calculate_impacts(encoder_spec);
         let mut most_impactful: Vec<String> = impacts
             .into_iter()
@@ -51,7 +53,7 @@ impl SubstringLedger {
             .take(encoder_spec.num_strings)
             .collect();
         most_impactful.sort_by(|a, b| compare_substrings(a, b));
-        most_impactful
+        SubstringDictionary::new(most_impactful)
     }
 
     fn calculate_impacts(&self, encoder_spec: &EncoderSpec) -> Vec<EncodingImpact<'_>> {
@@ -130,7 +132,7 @@ mod tests {
             num_strings: 1,
             encoded_size: 0,
         });
-        assert_eq!(vec!["aaaaa"], most_impactful);
+        assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
     }
 
     #[test]
@@ -148,7 +150,7 @@ mod tests {
             num_strings: 1,
             encoded_size: 0,
         });
-        assert_eq!(vec!["b"], most_impactful);
+        assert_eq!(vec!["b"], most_impactful.to_vec());
     }
 
     #[test]
@@ -169,7 +171,7 @@ mod tests {
             num_strings: 1,
             encoded_size: 0,
         });
-        assert_eq!(vec!["b"], most_impactful);
+        assert_eq!(vec!["b"], most_impactful.to_vec());
     }
 
     #[test]
@@ -190,7 +192,7 @@ mod tests {
             num_strings: 1,
             encoded_size: 2,
         });
-        assert_eq!(vec!["aaa"], most_impactful);
+        assert_eq!(vec!["aaa"], most_impactful.to_vec());
     }
 
     #[test]
@@ -220,7 +222,7 @@ mod tests {
             num_strings: 1,
             encoded_size: 2,
         });
-        assert_eq!(vec!["aaaaa"], most_impactful);
+        assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
     }
 
     #[test]
@@ -238,7 +240,7 @@ mod tests {
             num_strings: 2,
             encoded_size: 1,
         });
-        assert_eq!(vec!["aaaaaa", "aa"], most_impactful);
+        assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
     }
 
     // TODO: Increment count of a non-existing substring
