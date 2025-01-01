@@ -51,4 +51,18 @@ To keep things simple, I just grabbed Shakespeare's "Hamlet" from the Web, and c
 
 Here's the results we get after running this program:
 
-| File name | 5 top substrings | Compression ratio | Time elapsed |
+| File Name       | Source Length (chars) | Compression Ratio | Time (seconds) | Top 5 Substrings                                                                                                                                                                                                                                                                                              |
+| --------------- | --------------------: | ----------------: | -------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| hamlet-100.txt  |                 2,763 |            41.40% |           0.25 | `["                 E", "?\n  Fran. Bernardo", "                ", ".\n  Mar. Horatio", "n, courtier.\n  A"]`                                                                                                                                                                                                 |
+| hamlet-200.txt  |                 7,103 |            33.99% |           1.09 | `["                                 E", "\n                    ", "                    ", "it, Horatio.\n  Hor. ", "\n\n                "]`                                                                                                                                                                   |
+| hamlet-400.txt  |                16,122 |            32.22% |           4.42 | `["                                            ", "                                        ", "                                 Exit ", "                                 E", ".\n                                "]`                                                                                         |
+| hamlet-800.txt  |                32,894 |            30.43% |          15.50 | `["                                            ", ", my lord.\n                                ", "                                        E", "                                        ", "ewell.\n                                "]`                                                                       |
+| hamlet-1600.txt |                67,730 |            28.67% |          54.51 | `[".\n                                                         ", "                                                     Exe", "                                                      ", " him.\n                                                ", ".\n                                                   "]` |
+
+It's good to see the program working, and even giving some sensible results! I'm curious about the compression ratio, it's clear that it goes down as the text length increases. I wonder how much it would go down when the text length is increased further.
+
+But one other thing I'm worried about is the time performance. It's clear that the running times grows rapidly as the text length increases. Let's put that data into a graph.
+
+![Running times](./images/running-times.png)
+
+That absolutely looks like a quadratic curve, and the running time for 1600 lines of 54 seconds is preventing me from doing any experiments with larger texts. It's quite obvious that I need to optimize the algorithm before I can move forward.

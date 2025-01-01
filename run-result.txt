@@ -1,0 +1,32 @@
+* Running experiments...
+File name: hamlet-100.txt
+Source length in chars: 2763
+Compression ratio: 41.40%
+Time elapsed: 0.25s
+Top 5 substrings: ["                 E", "?\n  Fran. Bernardo", "                ", ".\n  Mar. Horatio", "n, courtier.\n  A"]
+================================================
+File name: hamlet-200.txt
+Source length in chars: 7103
+Compression ratio: 33.99%
+Time elapsed: 1.09s
+Top 5 substrings: ["                                 E", "\n                    ", "                    ", "it, Horatio.\n  Hor. ", "\n\n                "]
+================================================
+File name: hamlet-400.txt
+Source length in chars: 16122
+Compression ratio: 32.22%
+Time elapsed: 4.42s
+Top 5 substrings: ["                                            ", "                                        ", "                                 Exit ", "                                 E", ".\n                                "]
+================================================
+File name: hamlet-800.txt
+Source length in chars: 32894
+Compression ratio: 30.43%
+Time elapsed: 15.50s
+Top 5 substrings: ["                                            ", ", my lord.\n                                ", "                                        E", "                                        ", "ewell.\n                                "]
+================================================
+File name: hamlet-1600.txt
+Source length in chars: 67730
+Compression ratio: 28.67%
+Time elapsed: 54.51s
+Top 5 substrings: [".\n                                                         ", "                                                     Exe", "                                                      ", " him.\n                                                ", ".\n                                                   "]
+================================================
+* Experiments finished.
