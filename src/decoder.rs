@@ -35,6 +35,7 @@ fn utf8_char_width(first_byte: u8) -> usize {
         192..=223 => 2,
         224..=239 => 3,
         240..=247 => 4,
+        // TODO: handle invalid UTF-8 leading byte
         _ => 0, // Invalid UTF-8 leading byte
     }
 }
