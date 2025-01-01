@@ -34,7 +34,9 @@ As a slight future improvement, I could expand the size of the dictionary beyond
 
 ## Selecting the most impactful substrings
 
-TODO
+Once all substrings are discovered in the source text, we need to select the top 256 that give the most impact on compression. One approach is to select the longest ones, but that might not be the best approach. Let's consider the following example. Suppose I have a substring 'CAMELOT' that appears in the text 2 times, and the substring 'CAME', which appears 10 times. If I pick 'CAMELOT', I would save `(len('CAMELOT') - encoded_size) * count('CAMELOT') = (7 - 2) * 2 = 10` bytes. On the other hand, if I pick 'CAME', I would save `(len('CAME') - encoded_size) * count('CAME') = (4 - 2) * 10 = 20` bytes. Obviously, the second option is better for compression.
+
+So when I build the result dictionary, I calculate the compression gain for each, order them by the gain in descending order, and pick the top 256 from the list.
 
 ## Trying out the first version
 
@@ -59,9 +61,7 @@ Here's the results we get after running this program:
 | hamlet-800.txt  |                32,894 |            30.43% |          15.50 | `["                                            ", ", my lord.\n                                ", "                                        E", "                                        ", "ewell.\n                                "]`                                                                       |
 | hamlet-1600.txt |                67,730 |            28.67% |          54.51 | `[".\n                                                         ", "                                                     Exe", "                                                      ", " him.\n                                                ", ".\n                                                   "]` |
 
-It's good to see the program working, and even giving some sensible results! I'm curious about the compression ratio, it's clear that it goes down as the text length increases. I wonder how much it would go down when the text length is increased further.
-
-But one other thing I'm worried about is the time performance. It's clear that the running times grows rapidly as the text length increases. Let's put that data into a graph.
+It's good to see the program working, and even giving some sensible results! I'm curious about the compression ratio, it's clear that it goes down as the text length increases. I wonder how much it would go down when the text length is increased further. But another, more worrying thing, is the time performance. It's clear that the running times grows rapidly as the text length increases. Let's put that data into a graph.
 
 ![Running times](./images/running-times.png)
 
