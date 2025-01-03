@@ -1,11 +1,7 @@
-use decoder::decode_string;
-use encoder::encode;
 use std::fs;
 use std::time::Instant;
-
-mod decoder;
-mod encoder;
-mod substring_dictionary;
+use text_compression::decoder::decode_string;
+use text_compression::encoder::encode;
 
 struct ExperimentResult {
     source_length_chars: usize,

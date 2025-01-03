@@ -1,10 +1,7 @@
 [package]
-name = "string-compression-rust"
+name = "text_compression"
 version = "0.1.0"
 edition = "2021"
+default-run = "main"
 
 [dependencies]
-
-[[bin]]
-name = "string-compression-rust"
-path = "src/main.rs"

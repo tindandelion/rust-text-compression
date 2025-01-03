@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "string-compression-rust"
+name = "text_compression"
 version = "0.1.0"
