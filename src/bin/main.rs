@@ -1,7 +1,7 @@
 use std::fs;
 use std::time::Instant;
-use text_compression::decoder::decode_string;
-use text_compression::encoder::encode;
+use text_compression::decode;
+use text_compression::encode;
 
 struct ExperimentResult {
     source_length_chars: usize,
@@ -41,7 +41,7 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
     let end = Instant::now();
     let time_elapsed = end.duration_since(start).as_secs_f32();
 
-    let decoded = decode_string(&encoded, &substrings);
+    let decoded = decode(&encoded, &substrings);
     assert_eq!(decoded, source);
 
     let compression_ratio = (1.0 - (encoded.len() as f32 / source.len() as f32)) * 100.0;
@@ -50,33 +50,5 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
         substrings: substrings.top(5).to_vec(),
         compression_ratio,
         time_elapsed,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn encode_and_decode_ascii_string() {
-        let source =
-        "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new"
-            .to_string();
-
-        let (encoded, substrings) = encode(&source);
-        let decoded = decode_string(&encoded, &substrings);
-
-        assert_eq!(decoded, source);
-    }
-
-    #[test]
-    fn encode_and_decode_multibyte_string() {
-        let source = "こんにちはこんにちは世界世界".to_string();
-
-        let (encoded, substrings) = encode(&source);
-        assert_eq!(10, substrings.len());
-
-        let decoded = decode_string(&encoded, &substrings);
-        assert_eq!(decoded, source);
     }
 }

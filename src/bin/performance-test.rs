@@ -1,7 +1,7 @@
 use std::fs;
 use std::time::Instant;
-use text_compression::decoder::decode_string;
-use text_compression::encoder::encode;
+use text_compression::decode;
+use text_compression::encode;
 
 const INPUT_FILENAME: &str = "test-data/hamlet-800.txt";
 
@@ -11,7 +11,7 @@ fn main() {
 
     let start = Instant::now();
     let (encoded, substrings) = encode(&source);
-    let decoded = decode_string(&encoded, &substrings);
+    let decoded = decode(&encoded, &substrings);
     assert_eq!(decoded, source);
 
     println!("* Finished in {:?}", start.elapsed());

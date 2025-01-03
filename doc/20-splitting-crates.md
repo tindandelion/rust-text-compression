@@ -10,3 +10,5 @@ As I've mentioned in the [previous post](TODO: Link), I'm not happy with the per
 - Create a new binary crate `performance-test.rs` in `src/bin/` directory
 - Set up the default run crate in `Cargo.toml`
 - Run `cargo run --bin performance-test` to run the performance test
+- Export the `encode` and `decode` functions from the library crate
+- Place the tests in the library crate
