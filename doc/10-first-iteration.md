@@ -40,7 +40,7 @@ So when I build the result dictionary, I calculate the compression gain for each
 
 ## Trying out the first version
 
-Once I have the the first version end-to-end working, let's go on an try it out on a few samples.
+Once I have the the [first version](TODO: Link to tag 0.0.1) end-to-end working, let's go on an try it out on a few samples.
 
 What I'm interested in is:
 
