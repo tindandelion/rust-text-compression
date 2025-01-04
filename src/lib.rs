@@ -1,6 +1,6 @@
-pub mod decoder;
-pub mod encoder;
-pub mod substring_dictionary;
+mod decoder;
+mod encoder;
+mod substring_dictionary;
 
 pub use decoder::decode_string as decode;
 pub use encoder::encode;
