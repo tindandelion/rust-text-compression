@@ -1,4 +1,4 @@
-use super::SubstringLedger;
+use super::{substring_ledger::Substring, SubstringLedger};
 
 pub fn build_ledger(source: &str) -> SubstringLedger {
     let mut ledger = SubstringLedger::new();
@@ -11,18 +11,18 @@ pub fn build_ledger(source: &str) -> SubstringLedger {
             if let Some(follow_up_match) = ledger.find_longest_match(rest) {
                 ledger.increment_count(&follow_up_match);
 
-                let new_substring = substr_match.clone() + &follow_up_match;
-                ledger.insert_new(&new_substring);
+                let new_substring = substr_match.concat(&follow_up_match);
                 head = &head[new_substring.len()..];
+                ledger.insert_new(new_substring);
             } else {
                 head = rest;
             }
 
             ledger.increment_count(&substr_match);
         } else {
-            let new_substring = next_char.to_string();
-            ledger.insert_new(&new_substring);
+            let new_substring = Substring::from_char(next_char);
             head = &head[new_substring.len()..];
+            ledger.insert_new(new_substring);
         }
     }
     ledger

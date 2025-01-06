@@ -8,17 +8,35 @@ pub struct SubstringLedger {
     substrings: HashMap<Substring, u32>,
 }
 
-#[derive(PartialEq, Eq, Hash)]
-struct Substring(String);
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
+pub struct Substring(String);
 
-struct EncodingImpact<'a> {
-    substring: &'a Substring,
+struct EncodingImpact {
+    substring: Substring,
     compression_gain: usize,
 }
 
 impl Substring {
-    fn new(value: &str) -> Self {
-        Self(value.to_string())
+    pub fn from_char(c: char) -> Self {
+        Self(c.to_string())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn concat(&self, other: &Substring) -> Substring {
+        Substring(self.0.clone() + &other.0)
+    }
+
+    pub fn matches_start(&self, text: &str) -> bool {
+        text.starts_with(&self.0)
+    }
+}
+
+impl ToString for Substring {
+    fn to_string(&self) -> String {
+        self.0.clone()
     }
 }
 
@@ -29,50 +47,53 @@ impl SubstringLedger {
         }
     }
 
-    pub fn insert_new(&mut self, str: &str) {
-        self.substrings.insert(Substring::new(str), 1);
+    pub fn insert_new(&mut self, substr: Substring) {
+        self.substrings.insert(substr, 1);
     }
 
-    pub fn find_longest_match(&self, s: &str) -> Option<String> {
+    // TODO: Convert to Option<&Substring>
+    pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
         self.values()
             .iter()
-            .find(|&&k| s.starts_with(k))
-            .map(|s| s.to_string())
+            .find(|&&substr| substr.matches_start(text))
+            .map(|&substr| substr.clone())
     }
 
-    // TODO: Convert argument to Substring
-    pub fn increment_count(&mut self, str: &str) {
+    pub fn increment_count(&mut self, substr: &Substring) {
         let count = self
             .substrings
-            .get_mut(&Substring::new(str))
-            .expect(format!("Substring [{}] not found", str).as_str());
+            .get_mut(substr)
+            .expect(format!("Substring [{}] not found", substr.to_string()).as_str());
         *count += 1;
     }
 
-    pub fn values(&self) -> Vec<&String> {
+    fn values(&self) -> Vec<&Substring> {
         let mut keys: Vec<_> = self.substrings.keys().collect();
-        keys.sort_by(|a, b| compare_substrings2(a, b));
-        keys.into_iter().map(|k| &k.0).collect()
+        keys.sort_by(|a, b| compare_substrings(a, b));
+        keys
     }
 
-    pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> SubstringDictionary {
+    pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> SubstringDictionary {
         let impacts = self.calculate_impacts(encoder_spec);
-        let mut most_impactful: Vec<String> = impacts
+        let mut most_impactful: Vec<Substring> = impacts
             .into_iter()
-            .map(|impact| impact.substring.0.clone())
+            .map(|impact| impact.substring)
             .take(encoder_spec.num_strings)
             .collect();
         most_impactful.sort_by(|a, b| compare_substrings(a, b));
-        SubstringDictionary::new(most_impactful)
+        SubstringDictionary::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
-    fn calculate_impacts(&self, encoder_spec: &EncoderSpec) -> Vec<EncodingImpact<'_>> {
+    fn calculate_impacts(self, encoder_spec: &EncoderSpec) -> Vec<EncodingImpact> {
         let mut impacts: Vec<EncodingImpact> = self
             .substrings
-            .iter()
-            .map(|(substring, &count)| EncodingImpact {
-                substring,
-                compression_gain: encoder_spec.compression_gain(&substring.0, count as usize),
+            .into_iter()
+            .map(|(substring, count)| {
+                let compression_gain = encoder_spec.compression_gain(&substring.0, count as usize);
+                EncodingImpact {
+                    substring,
+                    compression_gain,
+                }
             })
             .filter(|impact| impact.compression_gain > 0)
             .collect();
@@ -81,16 +102,7 @@ impl SubstringLedger {
     }
 }
 
-fn compare_substrings(a: &str, b: &str) -> Ordering {
-    let by_length = (b.len()).cmp(&a.len());
-    if by_length.is_eq() {
-        a.cmp(b)
-    } else {
-        by_length
-    }
-}
-
-fn compare_substrings2(a: &Substring, b: &Substring) -> Ordering {
+fn compare_substrings(a: &Substring, b: &Substring) -> Ordering {
     let by_length = (b.0.len()).cmp(&a.0.len());
     if by_length.is_eq() {
         a.0.cmp(&b.0)
@@ -106,35 +118,32 @@ mod tests {
     #[test]
     fn find_longest_match_when_found() {
         let mut dict = SubstringLedger::new();
-        dict.insert_new("a");
-        dict.insert_new("aa");
-        dict.insert_new("aaa");
-        dict.insert_new("b");
+        dict.insert_new(substring("a"));
+        dict.insert_new(substring("aa"));
+        dict.insert_new(substring("aaa"));
+        dict.insert_new(substring("b"));
 
         let found = dict.find_longest_match("aaa");
-        assert_eq!(Some("aaa".to_string()), found);
+        assert_eq!(Some(substring("aaa")), found);
 
         let found = dict.find_longest_match("aab");
-        assert_eq!(Some("aa".to_string()), found);
+        assert_eq!(Some(substring("aa")), found);
 
         let found = dict.find_longest_match("bba");
-        assert_eq!(Some("b".to_string()), found);
+        assert_eq!(Some(substring("b")), found);
     }
 
     #[test]
     fn find_longest_match_when_not_found() {
         let mut dict = SubstringLedger::new();
-        dict.insert_new("a");
-        dict.insert_new("aa");
-        dict.insert_new("aaa");
-        dict.insert_new("b");
+        dict.insert_new(substring("a"));
+        dict.insert_new(substring("aa"));
+        dict.insert_new(substring("aaa"));
+        dict.insert_new(substring("b"));
 
         let found = dict.find_longest_match("ccc");
         assert_eq!(None, found);
     }
-
-    // I have a dictionary of substrings and their counts.
-    // I want to find the substring, excluding which I'd gain the maximum compression gain
 
     #[test]
     fn most_impactful_substring_found_by_string_length() {
@@ -142,10 +151,10 @@ mod tests {
          * For equal counts, longer strings make bigger impact on compression.
          */
         let mut dict = SubstringLedger::new();
-        dict.insert_new("a");
-        dict.insert_new("aa");
-        dict.insert_new("aaaaa");
-        dict.insert_new("b");
+        dict.insert_new(substring("a"));
+        dict.insert_new(substring("aa"));
+        dict.insert_new(substring("aaaaa"));
+        dict.insert_new(substring("b"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 1,
@@ -160,10 +169,10 @@ mod tests {
          * For equal string lengths, more frequent substrings make bigger impact on compression.
          */
         let mut dict = SubstringLedger::new();
-        dict.insert_new("a");
+        dict.insert_new(substring("a"));
 
-        dict.insert_new("b");
-        dict.increment_count("b");
+        dict.insert_new(substring("b"));
+        dict.increment_count(&substring("b"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 1,
@@ -178,13 +187,13 @@ mod tests {
          * The string has more impact, when the total length of all its occurrences is bigger.
          */
         let mut dict = SubstringLedger::new();
-        dict.insert_new("a");
-        dict.insert_new("aaa");
+        dict.insert_new(substring("a"));
+        dict.insert_new(substring("aaa"));
 
-        dict.insert_new("b");
-        dict.increment_count("b");
-        dict.increment_count("b");
-        dict.increment_count("b");
+        dict.insert_new(substring("b"));
+        dict.increment_count(&substring("b"));
+        dict.increment_count(&substring("b"));
+        dict.increment_count(&substring("b"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 1,
@@ -200,12 +209,12 @@ mod tests {
          */
         let mut dict = SubstringLedger::new();
 
-        dict.insert_new("aaa");
+        dict.insert_new(substring("aaa"));
 
-        dict.insert_new("a");
-        dict.insert_new("aa");
-        dict.increment_count("aa");
-        dict.increment_count("aa");
+        dict.insert_new(substring("a"));
+        dict.insert_new(substring("aa"));
+        dict.increment_count(&substring("aa"));
+        dict.increment_count(&substring("aa"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 1,
@@ -232,10 +241,10 @@ mod tests {
          */
         let mut dict = SubstringLedger::new();
 
-        dict.insert_new("aaaaa");
+        dict.insert_new(substring("aaaaa"));
 
-        dict.insert_new("aaa");
-        dict.increment_count("aaa");
+        dict.insert_new(substring("aaa"));
+        dict.increment_count(&substring("aaa"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 1,
@@ -247,19 +256,23 @@ mod tests {
     #[test]
     fn most_impactful_substrings_ordered_by_length() {
         let mut dict = SubstringLedger::new();
-        dict.insert_new("b");
-        dict.insert_new("aaaaaa");
+        dict.insert_new(substring("b"));
+        dict.insert_new(substring("aaaaaa"));
 
-        dict.insert_new("aa");
-        dict.increment_count("aa");
-        dict.increment_count("aa");
-        dict.increment_count("aa");
+        dict.insert_new(substring("aa"));
+        dict.increment_count(&substring("aa"));
+        dict.increment_count(&substring("aa"));
+        dict.increment_count(&substring("aa"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 2,
             encoded_size: 1,
         });
         assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
+    }
+
+    fn substring(s: &str) -> Substring {
+        Substring(s.to_string())
     }
 
     // TODO: Increment count of a non-existing substring
