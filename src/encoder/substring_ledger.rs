@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::collections::BTreeMap;
 
 use crate::substring_dictionary::SubstringDictionary;
 
@@ -6,7 +6,7 @@ use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
 
 pub struct SubstringLedger {
-    substrings: HashMap<Substring, u32>,
+    substrings: BTreeMap<Substring, u32>,
 }
 
 struct EncodingImpact {
@@ -17,7 +17,7 @@ struct EncodingImpact {
 impl SubstringLedger {
     pub fn new() -> Self {
         Self {
-            substrings: HashMap::new(),
+            substrings: BTreeMap::new(),
         }
     }
 
@@ -27,10 +27,10 @@ impl SubstringLedger {
 
     // TODO: Convert to Option<&Substring>
     pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
-        self.values()
-            .iter()
-            .find(|&&substr| substr.matches_start(text))
-            .map(|&substr| substr.clone())
+        self.substrings
+            .keys()
+            .find(|&substr| substr.matches_start(text))
+            .map(|substr| substr.clone())
     }
 
     pub fn increment_count(&mut self, substr: &Substring) {
@@ -39,12 +39,6 @@ impl SubstringLedger {
             .get_mut(substr)
             .expect(format!("Substring [{}] not found", substr.to_string()).as_str());
         *count += 1;
-    }
-
-    fn values(&self) -> Vec<&Substring> {
-        let mut keys: Vec<_> = self.substrings.keys().collect();
-        keys.sort();
-        keys
     }
 
     pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> SubstringDictionary {

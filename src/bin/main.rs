@@ -16,6 +16,8 @@ const INPUT_FILENAMES: &[&str] = &[
     "hamlet-400.txt",
     "hamlet-800.txt",
     "hamlet-1600.txt",
+    "hamlet-3200.txt",
+    "hamlet.txt",
 ];
 
 fn main() {
