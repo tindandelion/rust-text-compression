@@ -5,12 +5,21 @@ use crate::substring_dictionary::SubstringDictionary;
 use super::encoder_spec::EncoderSpec;
 
 pub struct SubstringLedger {
-    substrings: HashMap<String, u32>,
+    substrings: HashMap<Substring, u32>,
 }
 
+#[derive(PartialEq, Eq, Hash)]
+struct Substring(String);
+
 struct EncodingImpact<'a> {
-    substring: &'a String,
+    substring: &'a Substring,
     compression_gain: usize,
+}
+
+impl Substring {
+    fn new(value: &str) -> Self {
+        Self(value.to_string())
+    }
 }
 
 impl SubstringLedger {
@@ -21,7 +30,7 @@ impl SubstringLedger {
     }
 
     pub fn insert_new(&mut self, str: &str) {
-        self.substrings.insert(str.to_string(), 1);
+        self.substrings.insert(Substring::new(str), 1);
     }
 
     pub fn find_longest_match(&self, s: &str) -> Option<String> {
@@ -31,25 +40,26 @@ impl SubstringLedger {
             .map(|s| s.to_string())
     }
 
+    // TODO: Convert argument to Substring
     pub fn increment_count(&mut self, str: &str) {
         let count = self
             .substrings
-            .get_mut(str)
+            .get_mut(&Substring::new(str))
             .expect(format!("Substring [{}] not found", str).as_str());
         *count += 1;
     }
 
     pub fn values(&self) -> Vec<&String> {
         let mut keys: Vec<_> = self.substrings.keys().collect();
-        keys.sort_by(|a, b| compare_substrings(a, b));
-        keys
+        keys.sort_by(|a, b| compare_substrings2(a, b));
+        keys.into_iter().map(|k| &k.0).collect()
     }
 
     pub fn get_most_impactful_strings(&self, encoder_spec: &EncoderSpec) -> SubstringDictionary {
         let impacts = self.calculate_impacts(encoder_spec);
         let mut most_impactful: Vec<String> = impacts
             .into_iter()
-            .map(|impact| impact.substring.clone())
+            .map(|impact| impact.substring.0.clone())
             .take(encoder_spec.num_strings)
             .collect();
         most_impactful.sort_by(|a, b| compare_substrings(a, b));
@@ -60,9 +70,9 @@ impl SubstringLedger {
         let mut impacts: Vec<EncodingImpact> = self
             .substrings
             .iter()
-            .map(|(string, &count)| EncodingImpact {
-                substring: string,
-                compression_gain: encoder_spec.compression_gain(string, count as usize),
+            .map(|(substring, &count)| EncodingImpact {
+                substring,
+                compression_gain: encoder_spec.compression_gain(&substring.0, count as usize),
             })
             .filter(|impact| impact.compression_gain > 0)
             .collect();
@@ -75,6 +85,15 @@ fn compare_substrings(a: &str, b: &str) -> Ordering {
     let by_length = (b.len()).cmp(&a.len());
     if by_length.is_eq() {
         a.cmp(b)
+    } else {
+        by_length
+    }
+}
+
+fn compare_substrings2(a: &Substring, b: &Substring) -> Ordering {
+    let by_length = (b.0.len()).cmp(&a.0.len());
+    if by_length.is_eq() {
+        a.0.cmp(&b.0)
     } else {
         by_length
     }
