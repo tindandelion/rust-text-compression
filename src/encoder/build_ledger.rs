@@ -1,4 +1,4 @@
-use super::{substring_ledger::Substring, SubstringLedger};
+use super::{Substring, SubstringLedger};
 
 pub fn build_ledger(source: &str) -> SubstringLedger {
     let mut ledger = SubstringLedger::new();

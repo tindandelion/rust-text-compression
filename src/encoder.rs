@@ -1,10 +1,12 @@
 mod build_ledger;
 mod encode_string;
 mod encoder_spec;
+mod substring;
 mod substring_ledger;
 
 use build_ledger::build_ledger;
 use encode_string::{encode_string, SPEC as ENCODER_SPEC};
+use substring::Substring;
 use substring_ledger::SubstringLedger;
 
 use crate::substring_dictionary::SubstringDictionary;

@@ -3,41 +3,15 @@ use std::{cmp::Ordering, collections::HashMap};
 use crate::substring_dictionary::SubstringDictionary;
 
 use super::encoder_spec::EncoderSpec;
+use super::substring::Substring;
 
 pub struct SubstringLedger {
     substrings: HashMap<Substring, u32>,
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct Substring(String);
-
 struct EncodingImpact {
     substring: Substring,
     compression_gain: usize,
-}
-
-impl Substring {
-    pub fn from_char(c: char) -> Self {
-        Self(c.to_string())
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn concat(&self, other: &Substring) -> Substring {
-        Substring(self.0.clone() + &other.0)
-    }
-
-    pub fn matches_start(&self, text: &str) -> bool {
-        text.starts_with(&self.0)
-    }
-}
-
-impl ToString for Substring {
-    fn to_string(&self) -> String {
-        self.0.clone()
-    }
 }
 
 impl SubstringLedger {
@@ -69,7 +43,7 @@ impl SubstringLedger {
 
     fn values(&self) -> Vec<&Substring> {
         let mut keys: Vec<_> = self.substrings.keys().collect();
-        keys.sort_by(|a, b| compare_substrings(a, b));
+        keys.sort();
         keys
     }
 
@@ -80,7 +54,7 @@ impl SubstringLedger {
             .map(|impact| impact.substring)
             .take(encoder_spec.num_strings)
             .collect();
-        most_impactful.sort_by(|a, b| compare_substrings(a, b));
+        most_impactful.sort();
         SubstringDictionary::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
@@ -99,15 +73,6 @@ impl SubstringLedger {
             .collect();
         impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
         impacts
-    }
-}
-
-fn compare_substrings(a: &Substring, b: &Substring) -> Ordering {
-    let by_length = (b.0.len()).cmp(&a.0.len());
-    if by_length.is_eq() {
-        a.0.cmp(&b.0)
-    } else {
-        by_length
     }
 }
 
