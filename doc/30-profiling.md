@@ -26,7 +26,7 @@ Here's the flamegraph that was generated:
 
 The way `cargo-flamegraph` works is that it launches the target program and starts sampling stack traces at regular intervals. On Mac OS, it uses a tool called [dtrace](https://dtrace.org/about/) to do that. The sampling process generates a ton of data points, which are then processed by merging the similar stack traces together, and generating the interactive SVG image.
 
-On the Y-axis of the graph, we see the stack traces. Down below is the bottom of the call stack, i.e. the function that was called first, and the tip of each "flame" is the function that was being executed on the CPU at the moment the sample was taken.
+On the Y-axis of the graph, we see the stack frames, bottom to top. Down below is the bottom of the call stack, i.e. the function that was called first, and the tip of each "flame" is the function that was being executed on the CPU at the moment the sample was taken.
 
 On the X-axis, same function calls in stack traces are grouped together into boxes. The width of each box is proportional to the number of samples that contained that function call. So wide boxes represent the functions that take long time to execute, or are called more often than others.
 
