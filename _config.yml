@@ -14,7 +14,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 title: Text Compression in Rust 
-email: your-email@example.com
+email: s.moshnikov@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   This is a learning project in Rust, the implementation of a text compression algorithm.
   Here I'm writing about the progress of the project, the challenges I've faced,
