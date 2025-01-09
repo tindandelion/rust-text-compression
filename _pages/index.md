@@ -8,7 +8,7 @@ permalink: /
 list_title: Project diary
 ---
 
-The best way to learn a programming language is to build something interesting in it. Lately I've been spending some time learning **Rust**, and I at some point I started to feel the itch to go beyond toy exercises and start something more tangible. I wanted my first project to tackle an interesting problem, but be not too complex, since I'm only doing my first steps in Rust. 
+The best way to learn a programming language is to use it to build something interesting. Lately I've been spending some time learning **Rust**, and I at some point I started to feel the itch to go beyond toy exercises and start something more tangible. I wanted my first project to tackle an interesting problem, but be not too complex, since I'm only doing my first steps in Rust. 
 
 An old, but classic book [Edudes for programmers][etudes], by Charles Wetherell, gave me a plethora of ideas. I decided to take on an etude called *Ye Soule of Witte*, which challenges a reader with writing a program that implements an algorithm for text compression. 
 
