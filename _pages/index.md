@@ -14,6 +14,9 @@ An old, but classic book [Edudes for programmers][etudes], by Charles Wetherell,
 
 I've also decided to document my journey through the project, and record my learnings in a series of blog posts. Learning something new is fun, but the new knowledge can quickly fade away. I've found that taking notes on what I've learned is a great way to solidify the understanding of the subject. 
 
+The source code for the project is available on [GitHub][github].
+
 
 [etudes]: https://www.goodreads.com/book/show/3924336-etudes-for-programmers
+[github]: https://github.com/tindandelion/rust-text-compression
 
