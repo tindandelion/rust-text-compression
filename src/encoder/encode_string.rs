@@ -9,6 +9,8 @@ pub const SPEC: EncoderSpec = EncoderSpec {
 
 pub fn encode_string(source: &str, substrings: &SubstringDictionary) -> Vec<u8> {
     assert!(substrings.len() <= SPEC.num_strings);
+
+    let mut encoding_buffer = [0; 4];
     let mut result = vec![];
 
     let mut head = source;
@@ -19,8 +21,10 @@ pub fn encode_string(source: &str, substrings: &SubstringDictionary) -> Vec<u8> 
                 head = &head[substr.len()..];
             }
             None => {
-                result.push(head.as_bytes()[0]);
-                head = &head[1..];
+                // TODO: Error handling here
+                let next_char = head.chars().next().unwrap();
+                result.extend(next_char.encode_utf8(&mut encoding_buffer).as_bytes());
+                head = &head[next_char.len_utf8()..];
             }
         }
     }
@@ -76,6 +80,14 @@ mod tests {
             vec![0xF5, 0x00, 'x' as u8, 'y' as u8, 'z' as u8, 0xF5, 0x01],
             encoded
         );
+    }
+
+    #[test]
+    fn encode_multibyte_string() {
+        let source = "こんにちはこんにちは世界世界";
+
+        let encoded = encode_string(&source, &make_dictionary(vec![]));
+        assert_eq!(source.as_bytes(), encoded);
     }
 
     fn make_dictionary(substrings: Vec<String>) -> SubstringDictionary {
