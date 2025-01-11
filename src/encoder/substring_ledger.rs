@@ -68,6 +68,15 @@ impl SubstringLedger {
         impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
         impacts
     }
+
+    #[cfg(test)]
+    pub fn substrings(&self) -> Vec<String> {
+        self.substrings
+            .keys()
+            .cloned()
+            .map(|s| s.to_string())
+            .collect()
+    }
 }
 
 #[cfg(test)]
