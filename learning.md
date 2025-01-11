@@ -2,7 +2,7 @@
 
 - Clippy - what is it?
 - How does `cargo build` work? Where is the linker?
-- Crates: binary vs library
+- [x] Crates: binary vs library
 - Add dependencies to a crate: manual vs cargo.
 - crates.io - explore
 - Types: enums
@@ -13,7 +13,7 @@
   - Is there memory copying when returning results from functions?
 - Ownership and borrowing
 - I installed `cargo-watch`. Where did it go?
-- Cargo: custom commands
+- [x] Cargo: custom commands
 - Tests: custom formatting
 
 # Unrelated
@@ -27,13 +27,3 @@
 - PartialOrd, PartialEq, Ord, Eq
 - Strings: different kinds of strings in Rust
 - Difference between `&str` and `&String`
-
-# First iteration
-
-- Interesting results: original algorithm gave better results than the algorithm from Etudes
-
-- Encoding: use 2 bytes 0xF5xx to encode a substring
-- That gives us 256 possible substrings
-- We only gain compression if the substring is longer than 2 bytes
-
-- Debug: Why the compression ratio is different for the same input?
