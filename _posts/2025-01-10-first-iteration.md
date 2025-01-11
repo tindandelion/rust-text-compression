@@ -140,7 +140,7 @@ That absolutely looks like a quadratic curve, and the running time for 1600 line
 
 # Next steps 
 
-The implementation of the first iteration is available in the [0.0.1 release][first-iteration]. It's reassuring to see the the program working, but the performance is absolutely abysmal. As the next step, I'm going to tackle the performance issues before I move forward with the algorithm.
+The implementation of the first iteration is available in the [0.0.1 release][first-iteration]. It's reassuring to see the the program working, but the performance is absolutely abysmal. As the [next step][next-step], I'm going to tackle the performance issues before I move forward with the algorithm.
 
 
 [mayne]: https://academic.oup.com/comjnl/article/18/2/157/374138
@@ -149,3 +149,4 @@ The implementation of the first iteration is available in the [0.0.1 release][fi
 [utf-8-spec]: https://en.wikipedia.org/wiki/UTF-8
 [get-most-impactful-strings]: https://github.com/tindandelion/rust-text-compression/blob/0.0.1/src/encoder/substring_ledger.rs#L48C5-L71C6
 [first-iteration]: https://github.com/tindandelion/rust-text-compression/tree/0.0.1
+[next-step]: {{ site.baseurl }}/{% post_url 2025-01-11-splitting-crates %}
