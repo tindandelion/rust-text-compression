@@ -42,7 +42,7 @@ mod build_ledger_step_tests {
     use super::*;
 
     #[test]
-    fn merge_three_consequent_substrings() {
+    fn merge_three_consecutive_substrings() {
         let mut ledger = SubstringLedger::new();
         ledger.insert_new(substring("ca"));
         ledger.insert_new(substring("me"));
