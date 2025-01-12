@@ -78,6 +78,14 @@ impl SubstringLedger {
             .map(|s| s.to_string())
             .collect()
     }
+
+    #[cfg(test)]
+    pub fn entries(&self) -> Vec<(&str, u32)> {
+        self.substrings
+            .iter()
+            .map(|(substring, count)| (substring.as_str(), *count))
+            .collect()
+    }
 }
 
 #[cfg(test)]

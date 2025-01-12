@@ -13,6 +13,11 @@ impl Substring {
         Self(s.to_string())
     }
 
+    #[cfg(test)]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }

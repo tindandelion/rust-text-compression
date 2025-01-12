@@ -18,8 +18,6 @@ fn build_ledger_step<'a>(head: &'a str, ledger: &mut SubstringLedger) -> &'a str
             let rest = &head[substr_match.len()..];
 
             if let Some(follow_up_match) = ledger.find_longest_match(rest) {
-                ledger.increment_count(&follow_up_match);
-
                 let new_substring = substr_match.concat(&follow_up_match);
                 next_head = &head[substr_match.len()..];
                 ledger.insert_new(new_substring);
@@ -40,9 +38,7 @@ fn build_ledger_step<'a>(head: &'a str, ledger: &mut SubstringLedger) -> &'a str
 }
 
 #[cfg(test)]
-mod tests {
-    use std::collections::HashSet;
-
+mod build_ledger_step_tests {
     use super::*;
 
     #[test]
@@ -56,12 +52,36 @@ mod tests {
 
         // Processing "ca" + "me" = "came"
         let next_head = build_ledger_step(source, &mut ledger);
-        // Processing "me" + "lot" = "melot"
-        build_ledger_step(next_head, &mut ledger);
+        assert_eq!(
+            vec![("came", 1), ("lot", 1), ("ca", 2), ("me", 1)],
+            ledger.entries()
+        );
 
-        let expected = as_strings(vec!["ca", "me", "lot", "came", "melot"]);
-        assert_eq!(as_set(expected), as_set(ledger.substrings()));
+        // Processing "me" + "lot" = "melot"
+        let next_head = build_ledger_step(next_head, &mut ledger);
+        assert_eq!(
+            vec![("melot", 1), ("came", 1), ("lot", 1), ("ca", 2), ("me", 2)],
+            ledger.entries()
+        );
+
+        // Processing "lot"
+        build_ledger_step(next_head, &mut ledger);
+        assert_eq!(
+            vec![("melot", 1), ("came", 1), ("lot", 2), ("ca", 2), ("me", 2)],
+            ledger.entries()
+        );
     }
+
+    fn substring(s: &str) -> Substring {
+        Substring::from_str(s)
+    }
+}
+
+#[cfg(test)]
+mod learning_substrings_tests {
+    use std::collections::HashSet;
+
+    use super::*;
 
     #[test]
     fn learn_unique_chars() {
@@ -106,9 +126,5 @@ mod tests {
 
     fn as_set(v: Vec<String>) -> HashSet<String> {
         v.into_iter().collect()
-    }
-
-    fn substring(s: &str) -> Substring {
-        Substring::from_str(s)
     }
 }
