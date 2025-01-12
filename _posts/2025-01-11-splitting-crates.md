@@ -72,7 +72,7 @@ In the hindsight, I think it's worth splitting the project into a library crate 
 
 # Next steps
 
-With all that preliminary work done, I can now start exploring the performance bottlenects, using the [`performance-test`][performance-test-0.0.2] executable.
+With all that preliminary work done, I can now [start exploring][next-step] the performance bottlenects, using the [`performance-test`][performance-test-0.0.2] executable. 
 
 [prev-post]: {{site.baseurl}}/{% post_url 2025-01-10-first-iteration %}
 [main-0.0.1]: https://github.com/tindandelion/rust-text-compression/blob/0.0.1/src/main.rs
@@ -80,7 +80,7 @@ With all that preliminary work done, I can now start exploring the performance b
 [main-0.0.2]: https://github.com/tindandelion/rust-text-compression/blob/0.0.2/src/bin/main.rs
 [performance-test-0.0.2]: https://github.com/tindandelion/rust-text-compression/blob/0.0.2/src/bin/performance-test.rs
 [tag-0.0.2]: https://github.com/tindandelion/rust-text-compression/tree/0.0.2
-
+[next-step]: {{site.baseurl}}/{% post_url 2025-01-12-profiling-with-flamegraphs %}
 
 
 
