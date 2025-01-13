@@ -12,7 +12,7 @@ TODO: Putting the summary here
 
 # Custom sorting order: `Ord` trait
 
-## Ord and PartialOrd: which algorithms need which?
+# Ord and PartialOrd: which algorithms need which?
 
 Looks like PartialOrd is needed for sorting.
 
