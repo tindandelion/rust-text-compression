@@ -6,15 +6,26 @@ date: 2025-01-13
 
 TODO: Putting the summary here
 
-# Switching to BTreeMap
+# _HashMap_ and _BTreeMap_
+
+Rust's standard library provides two different data structures to work with key-value pairs: [`HashMap`][hashmap] and [`BTreeMap`][btreemap]. 
+
+`HashMap` is probably the default choice for most use cases. This data structure is optimized for fast lookups, effectively ensuring constant time performance for inserting, deleting, and accessing elements by key. The data type of the key is required to implement the `Hash` and `Eq` traits. Implementing the efficient hash function is a non-trivial task, but luckily, in most cases we can rely on the default implementations for the standard data types. For custom types, the magic `#derive` macro[^1] can be used to automatically generate the required implementations. It's quite common to see `#[derive(Hash, PartialEq, Eq)]` to supply the required implementations for the key type.
+
+But `HashMap` has a significant drawback for my current use case: it doesn't preserve the order of the keys. When I iterate over the substrings with `HashMap::keys()` method, they will be returned to me in a somewhat random order, and so I always have to sort them by the substring length to find the longest match. [It's clear][profiling-experiment] that at the moment my program is spending most of the time doing that. So I need a different data structure, the one that keeps the map's keys in a sorted order at all times. Enter `BTreeMap`.
+
+In contrast, `BTreeMap` keeps the keys ordanized in a tree structure, called [B-Tree][btree]. Essentially, B-Tree is a balanced tree that taks advantage of the CPU memory cache, so it works better than a regular binary tree on modern CPU architectures. `BTreeMap` provides logarithmic time complexity for accessing the elements by key, but more importantly for us, `BTreeMap::keys()`  always keeps the keys in a sorted order, hence eliminating the need for sorting them each time. `BTreeMap` requires the key type to be sortable, meaning that it must implement the `Ord` trait. Sometimes we can get away with default implementations, provided by the `#[derive]` macro, but in my case I have a custom sorting order, so I need to implement the `Ord` trait manually.
+
+# Custom sorting order: _Ord_ trait
+
+Describe the `Ord` trait here.
+
+#### Ord and PartialOrd: which algorithms need which?
+
+Looks like PartialOrd is needed for sorting.
 
 # The _Tiny Type_ design pattern 
 
-# Custom sorting order: `Ord` trait
-
-# Ord and PartialOrd: which algorithms need which?
-
-Looks like PartialOrd is needed for sorting.
 
 # The results after the change
 
@@ -64,6 +75,13 @@ Option 1 is a very interesting problem to tackle, but I feel that I may be falli
 
 # Next steps
 
+[^1]: `#derive` macro is widely used in Rust programs, but it looks like magic to me. That deserves a separate exploration, so for the time being I assume that it "just works". 
+
+[hashmap]: https://doc.rust-lang.org/std/collections/struct.HashMap.html
+[btreemap]: https://doc.rust-lang.org/std/collections/struct.BTreeMap.html
 [first-iteration]: {{site.baseurl}}/{% post_url 2025-01-10-first-iteration %}
+[profiling-experiment]: {{site.baseurl}}/{% post_url 2025-01-12-profiling-with-flamegraphs %}
 [flamegraph]: {{ site.baseurl }}/assets/images/switching-to-btreemap/profile-flamegraph.svg
 [substring-ledger-longest-match]: https://github.com/tindandelion/rust-text-compression/blob/0.0.3/src/encoder/substring_ledger.rs#L29
+[btree]: https://en.wikipedia.org/wiki/B-tree
+
