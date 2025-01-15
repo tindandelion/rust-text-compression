@@ -16,13 +16,17 @@ But `HashMap` has a significant drawback for my current use case: it doesn't pre
 
 In contrast, `BTreeMap` keeps the keys ordanized in a tree structure, called [B-Tree][btree]. Essentially, B-Tree is a balanced tree that taks advantage of the CPU memory cache, so it works better than a regular binary tree on modern CPU architectures. `BTreeMap` provides logarithmic time complexity for accessing the elements by key, but more importantly for us, `BTreeMap::keys()`  always keeps the keys in a sorted order, hence eliminating the need for sorting them each time. `BTreeMap` requires the key type to be sortable, meaning that it must implement the `Ord` trait. Sometimes we can get away with default implementations, provided by the `#[derive]` macro, but in my case I have a custom sorting order, so I need to implement the `Ord` trait manually.
 
-# Custom sorting order: _Ord_ trait
+# Comparison traits in Rust 
 
-Describe the `Ord` trait here.
+There is a family of traits in Rust that are used to compare values, namely [`PartialEq`][partial-eq-trait], [`Eq`][eq-trait], [`PartialOrd`][partial-ord-trait], and [`Ord`][ord-trait]. These traits have special significance, because if they are present, the compiler will automatically use them for comparison operators, such as `==`, `!=` (for `PartialEq`), and `<`, `<=`, `>`, `>=` (for `PartialOrd`). There also need to be consitence in the implementation of these traits, e.g. `x == y` and `x <= y` must not contradict each other. This is especially important in case you use `#[derive]` some of these traits, and manually implement others.
 
-#### Ord and PartialOrd: which algorithms need which?
+The `Ord` trait is the most important one for my use case, because it's required for the `BTreeMap` data structure. The `Ord` trait is the strongest one, meaning that the type also needs to implements `PartialOrd`, `PartialEq`, and `Eq`, in a consistent way. The [recommendation][rust-doc-ord] here is: if you derive the implementation for `Ord`, you should also derive all four traits. If you implement it manually, you should also implement all four traits, based on the implementation of `Ord`.
 
-Looks like PartialOrd is needed for sorting.
+#### Why separating comparison into multiple traits?
+
+Sortly speaking, separation of different comparison operations into multiple traits adds granularity to what operations are available for the particular data type. For example, some types may support only equality, but not ordering (e.g. vectors of values). Similarly, some algorithms may only need partial order to work. All in all, that separation allows for more flexibility when writing generic algorithms. 
+
+# The _Substring_ type
 
 # The _Tiny Type_ design pattern 
 
@@ -84,4 +88,9 @@ Option 1 is a very interesting problem to tackle, but I feel that I may be falli
 [flamegraph]: {{ site.baseurl }}/assets/images/switching-to-btreemap/profile-flamegraph.svg
 [substring-ledger-longest-match]: https://github.com/tindandelion/rust-text-compression/blob/0.0.3/src/encoder/substring_ledger.rs#L29
 [btree]: https://en.wikipedia.org/wiki/B-tree
+[partial-eq-trait]: https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
+[eq-trait]: https://doc.rust-lang.org/std/cmp/trait.Eq.html
+[partial-ord-trait]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
+[ord-trait]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
+[rust-doc-ord]: https://doc.rust-lang.org/std/cmp/trait.Ord.html#how-can-i-implement-ord
 
