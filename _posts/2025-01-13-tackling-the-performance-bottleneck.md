@@ -26,14 +26,55 @@ The `Ord` trait is the most important one for my use case, because it's required
 
 Sortly speaking, separation of different comparison operations into multiple traits adds granularity to what operations are available for the particular data type. For example, some types may support only equality, but not ordering (e.g. vectors of values). Similarly, some algorithms may only need partial order to work. All in all, that separation allows for more flexibility when writing generic algorithms. 
 
-# The _Substring_ type
+# The _newtype_ design pattern and the _Substring_ type
 
-# The _Tiny Type_ design pattern 
+Rust gives you some flexibility on how you can implement traits on data types. In particular, what you can do is: 
+* Implement an external trait for your custom data type. That's similar to, for example, Java's interfaces, where you can implement an external interface for your class.
+* But in addition to that, you can also implement your own trait on an external type. 
 
+However, you can't implement an external trait on an external type: at least one of them has to be local to your crate. This is called _the orphan rule_. To bypass this restriction, the common way is to use a [_newtype pattern_][newtype-pattern]. The idea is that you define a wrapper type around the external one, usually using a _tuple struct_, and then implement the necessary traits on the wrapper type. 
+
+So I introduced a new type [`Substring`][substring-type] to wrap the `String` type, and then I was able to implement the `Ord` trait on it: 
+
+```rust
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct Substring(pub(crate) String);
+
+impl Ord for Substring {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let by_length = (other.0.len()).cmp(&self.0.len());
+        if by_length.is_eq() {
+            self.0.cmp(&other.0)
+        } else {
+            by_length
+        }
+    }
+}
+
+impl PartialOrd for Substring {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+```
+
+For my purposes, I implemented the `Ord` trait such that the strings are compared by length first, and only if their lengths are equal, the strings are compared lexicographically. I also provided the implementation of the `PartialOrd` trait. `PartialEq` and `Eq` are derived, which somewhat contradicts the previous recommendation. But in this case, it seems that the default implementation is exactly what I need.
+
+Obviously, after that I had to change the [`SubstringLedger`][substring-ledger-type] to use the `BTreeMap` with the `Substring` type as the key.
+
+#### The benefits of the _newtype_ pattern
+
+In addition to that usecase when we need to bypass the orphan rule, the newtype pattern is very useful for the following reasons: 
+
+* It gives you a natural place to put additional methods that are specific to your data type.
+* It allows you to use the specific data type elsewhere in the code, eliminating the ambiguity. Consider, for example, a function `set_password(username: &str, password: &str)`. It's very easy to accidentally mix up the arguments of this function, and pass them in the wrong order: the password instead of the username and vice versa. If instead your signature looked like `set_password(username: &Username, password: &Password)`, the compiler would catch this mistake.
+* It allows you to add special constraints on the wrapped values. In the previous example, we could restrict `Password` to be at least 8 characters long. That validation can be done when constructing the instance of `Password`, and then the rest of the code can assume that the password is valid without having to repeat the validation logic.
+
+All in all, I like to use this pattern to improve the readability of my code. It's worth mentioning that in Rust newtypes are _zero-cost abstractions_: there's no overhead in using them, and the compiler will optimize them away.
 
 # The results after the change
 
-Here are the results of running the main program after the change:
+Having done all the changes, I can now run the new version of the program. Here are the results of running the main program after the change:
 
 | File Name       | Source Length (chars) | Compression Ratio | Time (s) |
 | --------------- | --------------------: | ----------------: | -------: |
@@ -93,4 +134,6 @@ Option 1 is a very interesting problem to tackle, but I feel that I may be falli
 [partial-ord-trait]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 [ord-trait]: https://doc.rust-lang.org/std/cmp/trait.Ord.html
 [rust-doc-ord]: https://doc.rust-lang.org/std/cmp/trait.Ord.html#how-can-i-implement-ord
-
+[substring-type]: https://github.com/tindandelion/rust-text-compression/blob/0.0.3/src/encoder/substring.rs
+[newtype-pattern]: https://www.lurklurk.org/effective-rust/newtype.html
+[substring-ledger-type]: https://github.com/tindandelion/rust-text-compression/blob/0.0.3/src/encoder/substring_ledger.rs
