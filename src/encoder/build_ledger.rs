@@ -4,65 +4,107 @@ pub fn build_ledger(source: &str) -> SubstringLedger {
     let mut ledger = SubstringLedger::new();
     let mut head: &str = source;
 
-    while let Some(next_char) = head.chars().next() {
+    while head.len() > 0 {
+        head = build_ledger_step(head, &mut ledger);
+    }
+    ledger
+}
+
+fn build_ledger_step<'a>(head: &'a str, ledger: &mut SubstringLedger) -> &'a str {
+    if let Some(next_char) = head.chars().next() {
+        let next_head: &'a str;
+
         if let Some(substr_match) = ledger.find_longest_match(head) {
             let rest = &head[substr_match.len()..];
 
             if let Some(follow_up_match) = ledger.find_longest_match(rest) {
-                ledger.increment_count(&follow_up_match);
-
                 let new_substring = substr_match.concat(&follow_up_match);
-                head = &head[new_substring.len()..];
+                next_head = &head[substr_match.len()..];
                 ledger.insert_new(new_substring);
             } else {
-                head = rest;
+                next_head = rest;
             }
 
             ledger.increment_count(&substr_match);
         } else {
             let new_substring = Substring::from_char(next_char);
-            head = &head[new_substring.len()..];
+            next_head = &head[new_substring.len()..];
             ledger.insert_new(new_substring);
         }
+        next_head
+    } else {
+        ""
     }
-    ledger
 }
 
 #[cfg(test)]
-mod tests {
+mod build_ledger_step_tests {
+    use super::*;
+
+    #[test]
+    fn merge_three_consecutive_substrings() {
+        let mut ledger = SubstringLedger::new();
+        ledger.insert_new(substring("ca"));
+        ledger.insert_new(substring("me"));
+        ledger.insert_new(substring("lot"));
+
+        let source = "camelot";
+
+        // Processing "ca" + "me" = "came"
+        let next_head = build_ledger_step(source, &mut ledger);
+        assert_eq!(
+            vec![("came", 1), ("lot", 1), ("ca", 2), ("me", 1)],
+            ledger.entries()
+        );
+
+        // Processing "me" + "lot" = "melot"
+        let next_head = build_ledger_step(next_head, &mut ledger);
+        assert_eq!(
+            vec![("melot", 1), ("came", 1), ("lot", 1), ("ca", 2), ("me", 2)],
+            ledger.entries()
+        );
+
+        // Processing "lot"
+        build_ledger_step(next_head, &mut ledger);
+        assert_eq!(
+            vec![("melot", 1), ("came", 1), ("lot", 2), ("ca", 2), ("me", 2)],
+            ledger.entries()
+        );
+    }
+
+    fn substring(s: &str) -> Substring {
+        Substring::from_str(s)
+    }
+}
+
+#[cfg(test)]
+mod learning_substrings_tests {
     use std::collections::HashSet;
 
     use super::*;
-    use crate::encoder::encoder_spec::EncoderSpec;
-    use crate::substring_dictionary::SubstringDictionary;
-
-    const ENCODER_SPEC: EncoderSpec = EncoderSpec {
-        num_strings: 256,
-        encoded_size: 0,
-    };
 
     #[test]
     fn learn_unique_chars() {
         let s = "abc";
         let expected = as_strings(vec!["a", "b", "c"]);
 
-        let substrings = learn_substrings(s, &ENCODER_SPEC);
-        assert_eq!(as_set(expected), as_set(substrings.to_vec()));
+        let substrings = learn_substrings(s);
+        assert_eq!(as_set(expected), as_set(substrings));
     }
 
     #[test]
     fn learn_substring() {
         let s = "ababab";
-        let expected = as_strings(vec!["ab", "a", "b"]);
-        let substrings = learn_substrings(s, &ENCODER_SPEC);
+        let expected = as_strings(vec!["a", "b", "ab", "bab"]);
+        let substrings = learn_substrings(s);
         assert_eq!(as_set(expected), as_set(substrings.to_vec()));
     }
 
     #[test]
     fn learn_several_substrings() {
         let s = "abcabcabc";
-        let expected = as_strings(vec!["cab", "ab", "a", "b", "c"]);
-        let substrings = learn_substrings(s, &ENCODER_SPEC);
+        let expected = as_strings(vec!["a", "b", "c", "ab", "bc", "cab", "abc"]);
+        let substrings = learn_substrings(s);
         assert_eq!(as_set(expected), as_set(substrings.to_vec()));
     }
 
@@ -70,12 +112,12 @@ mod tests {
     fn learn_substrings_with_multi_byte_characters() {
         let s = "犬猫魚鳥";
         let expected = as_strings(vec!["犬", "猫", "魚", "鳥"]);
-        let substrings = learn_substrings(s, &ENCODER_SPEC);
+        let substrings = learn_substrings(s);
         assert_eq!(as_set(expected), as_set(substrings.to_vec()));
     }
 
-    fn learn_substrings(s: &str, encoder_spec: &EncoderSpec) -> SubstringDictionary {
-        build_ledger(s).get_most_impactful_strings(&encoder_spec)
+    fn learn_substrings(s: &str) -> Vec<String> {
+        build_ledger(s).substrings()
     }
 
     fn as_strings(v: Vec<&str>) -> Vec<String> {

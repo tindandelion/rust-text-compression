@@ -8,6 +8,16 @@ impl Substring {
         Self(c.to_string())
     }
 
+    #[cfg(test)]
+    pub fn from_str(s: &str) -> Self {
+        Self(s.to_string())
+    }
+
+    #[cfg(test)]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }

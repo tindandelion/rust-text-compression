@@ -56,6 +56,7 @@ impl SubstringLedger {
         let mut impacts: Vec<EncodingImpact> = self
             .substrings
             .into_iter()
+            .filter(|(_, count)| *count > 1)
             .map(|(substring, count)| {
                 let compression_gain = encoder_spec.compression_gain(&substring.0, count as usize);
                 EncodingImpact {
@@ -67,6 +68,23 @@ impl SubstringLedger {
             .collect();
         impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
         impacts
+    }
+
+    #[cfg(test)]
+    pub fn substrings(&self) -> Vec<String> {
+        self.substrings
+            .keys()
+            .cloned()
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    #[cfg(test)]
+    pub fn entries(&self) -> Vec<(&str, u32)> {
+        self.substrings
+            .iter()
+            .map(|(substring, count)| (substring.as_str(), *count))
+            .collect()
     }
 }
 
@@ -110,10 +128,10 @@ mod tests {
          * For equal counts, longer strings make bigger impact on compression.
          */
         let mut dict = SubstringLedger::new();
-        dict.insert_new(substring("a"));
-        dict.insert_new(substring("aa"));
-        dict.insert_new(substring("aaaaa"));
-        dict.insert_new(substring("b"));
+        insert_repeated_substring(&mut dict, "a");
+        insert_repeated_substring(&mut dict, "aa");
+        insert_repeated_substring(&mut dict, "aaaaa");
+        insert_repeated_substring(&mut dict, "b");
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
             num_strings: 1,
@@ -162,21 +180,20 @@ mod tests {
     }
 
     #[test]
-    fn most_impactful_substring_removes_short_strings() {
+    fn most_impactful_substring_removes_strings_shorter_than_encoded_representation() {
         /*
          * Short strings are not encoded, because their encoded size is bigger than or equal to the string's length itself.
          */
         let mut dict = SubstringLedger::new();
+        insert_repeated_substring(&mut dict, "aaa");
 
-        dict.insert_new(substring("aaa"));
-
-        dict.insert_new(substring("a"));
-        dict.insert_new(substring("aa"));
+        insert_repeated_substring(&mut dict, "a");
+        insert_repeated_substring(&mut dict, "aa");
         dict.increment_count(&substring("aa"));
         dict.increment_count(&substring("aa"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 1,
+            num_strings: 10,
             encoded_size: 2,
         });
         assert_eq!(vec!["aaa"], most_impactful.to_vec());
@@ -200,9 +217,9 @@ mod tests {
          */
         let mut dict = SubstringLedger::new();
 
-        dict.insert_new(substring("aaaaa"));
+        insert_repeated_substring(&mut dict, "aaaaa");
 
-        dict.insert_new(substring("aaa"));
+        insert_repeated_substring(&mut dict, "aaa");
         dict.increment_count(&substring("aaa"));
 
         let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
@@ -213,12 +230,27 @@ mod tests {
     }
 
     #[test]
-    fn most_impactful_substrings_ordered_by_length() {
+    fn most_impactfult_strings_skip_single_occurence() {
         let mut dict = SubstringLedger::new();
-        dict.insert_new(substring("b"));
         dict.insert_new(substring("aaaaaa"));
 
-        dict.insert_new(substring("aa"));
+        dict.insert_new(substring("bb"));
+        dict.increment_count(&substring("bb"));
+
+        let most_impactful = dict.get_most_impactful_strings(&EncoderSpec {
+            num_strings: 10,
+            encoded_size: 1,
+        });
+        assert_eq!(vec!["bb"], most_impactful.to_vec());
+    }
+
+    #[test]
+    fn most_impactful_substrings_ordered_by_length() {
+        let mut dict = SubstringLedger::new();
+        insert_repeated_substring(&mut dict, "b");
+        insert_repeated_substring(&mut dict, "aaaaaa");
+
+        insert_repeated_substring(&mut dict, "aa");
         dict.increment_count(&substring("aa"));
         dict.increment_count(&substring("aa"));
         dict.increment_count(&substring("aa"));
@@ -232,6 +264,12 @@ mod tests {
 
     fn substring(s: &str) -> Substring {
         Substring(s.to_string())
+    }
+
+    fn insert_repeated_substring(dict: &mut SubstringLedger, s: &str) {
+        let substr = substring(s);
+        dict.insert_new(substr.clone());
+        dict.increment_count(&substr);
     }
 
     // TODO: Increment count of a non-existing substring

@@ -11,13 +11,13 @@ struct ExperimentResult {
 }
 
 const INPUT_FILENAMES: &[&str] = &[
-    "hamlet-100.txt",
-    "hamlet-200.txt",
-    "hamlet-400.txt",
-    "hamlet-800.txt",
-    "hamlet-1600.txt",
-    "hamlet-3200.txt",
-    "hamlet.txt",
+    "wap-100.txt",
+    "wap-200.txt",
+    "wap-400.txt",
+    "wap-800.txt",
+    "wap-1600.txt",
+    "wap-3200.txt",
+    "wap-6400.txt",
 ];
 
 fn main() {

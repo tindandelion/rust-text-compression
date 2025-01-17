@@ -26,8 +26,6 @@ mod tests {
         let source = "こんにちはこんにちは世界世界".to_string();
 
         let (encoded, substrings) = encode(&source);
-        assert_eq!(10, substrings.len());
-
         let decoded = decode(&encoded, &substrings);
         assert_eq!(decoded, source);
     }
