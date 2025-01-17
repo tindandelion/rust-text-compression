@@ -62,9 +62,9 @@ mod tests {
     #[test]
     fn order_substrings_by_length_descending() {
         let mut substrings = vec![
-            Substring("abc".to_string()),
-            Substring("bc".to_string()),
-            Substring("a".to_string()),
+            Substring::from_str("abc"),
+            Substring::from_str("bc"),
+            Substring::from_str("a"),
         ];
 
         substrings.sort();
@@ -74,9 +74,9 @@ mod tests {
     #[test]
     fn order_substrings_of_same_length_lexicographically() {
         let mut substrings = vec![
-            Substring("bcd".to_string()),
-            Substring("abc".to_string()),
-            Substring("xyz".to_string()),
+            Substring::from_str("bcd"),
+            Substring::from_str("abc"),
+            Substring::from_str("xyz"),
         ];
 
         substrings.sort();
