@@ -38,7 +38,7 @@ The left-to-right order of function calls on the X-axis doesn't actually represe
 
 # The verdict
 
-So, what does this flamegraph tell us? Well, the picture is pretty clear: [`SubstringLedger::find_longest_match()`][substring-ledger-longest-match] is the culprit. Essentially, we're spending most of the time sorting the substrings by length. There must be a better way to do that, and I'm going to tackle that as the next step.
+So, what does this flamegraph tell us? Well, the picture is pretty clear: [`SubstringLedger::find_longest_match()`][substring-ledger-longest-match] is the culprit. Essentially, we're spending most of the time sorting the substrings by length. There must be a better way to do that, and I'm going to tackle that as the [next step][next-step].
 
 
 
@@ -48,3 +48,4 @@ So, what does this flamegraph tell us? Well, the picture is pretty clear: [`Subs
 [flamegraph-docs]: https://www.brendangregg.com/flamegraphs.html
 [substring-ledger-values]: https://github.com/tindandelion/rust-text-compression/blob/0.0.2/src/encoder/substring_ledger.rs#L42
 [substring-ledger-longest-match]: https://github.com/tindandelion/rust-text-compression/blob/0.0.2/src/encoder/substring_ledger.rs#L27
+[next-step]: {{site.baseurl}}/{% post_url 2025-01-17-tackling-the-performance-bottleneck %}
