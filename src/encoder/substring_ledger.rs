@@ -71,15 +71,6 @@ impl SubstringLedger {
     }
 
     #[cfg(test)]
-    pub fn substrings(&self) -> Vec<String> {
-        self.substrings
-            .keys()
-            .cloned()
-            .map(|s| s.to_string())
-            .collect()
-    }
-
-    #[cfg(test)]
     pub fn entries(&self) -> Vec<(&str, u32)> {
         self.substrings
             .iter()

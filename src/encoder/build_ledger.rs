@@ -1,12 +1,7 @@
 use super::{Substring, SubstringLedger};
 
 pub fn build_ledger(source: &str) -> SubstringLedger {
-    let mut state = BuildState::new(source);
-
-    while !state.at_end() {
-        state = state.step();
-    }
-    state.ledger
+    BuildState::new(source).run_until_end().ledger
 }
 
 struct BuildState<'a> {
@@ -22,6 +17,13 @@ impl<'a> BuildState<'a> {
             ledger: SubstringLedger::new(),
             last_match: None,
         }
+    }
+
+    fn run_until_end(mut self) -> BuildState<'a> {
+        while !self.at_end() {
+            self = self.step();
+        }
+        self
     }
 
     fn at_end(&self) -> bool {
@@ -88,6 +90,49 @@ mod build_ledger_step_tests {
     use super::*;
 
     #[test]
+    fn learn_unique_characters() {
+        let mut state = BuildState::new("abc");
+        state = state.run_until_end();
+        assert_eq!(vec![("a", 1), ("b", 1), ("c", 1)], state.ledger.entries());
+    }
+
+    #[test]
+    fn learn_substring() {
+        let mut state = BuildState::new("abab");
+        state = state.run_until_end();
+        assert_eq!(vec![("ab", 1), ("a", 2), ("b", 2)], state.ledger.entries());
+    }
+
+    #[test]
+    fn learn_several_substrings_step_by_step() {
+        let mut state = BuildState::new("abcabcabc");
+
+        state = state.run_until_end();
+        assert_eq!(
+            vec![
+                ("abc", 1),
+                ("cab", 1),
+                ("ab", 2),
+                ("bc", 1),
+                ("a", 2),
+                ("b", 2),
+                ("c", 3)
+            ],
+            state.ledger.entries()
+        );
+    }
+
+    #[test]
+    fn learn_substrings_with_multi_byte_characters() {
+        let mut state = BuildState::new("犬猫魚鳥");
+        state = state.run_until_end();
+        assert_eq!(
+            vec![("犬", 1), ("猫", 1), ("魚", 1), ("鳥", 1)],
+            state.ledger.entries()
+        );
+    }
+
+    #[test]
     fn merge_three_consecutive_substrings() {
         let mut state = BuildState::new("camelot");
         state.ledger.insert_new(substring("ca"));
@@ -118,57 +163,5 @@ mod build_ledger_step_tests {
 
     fn substring(s: &str) -> Substring {
         Substring::from_str(s)
-    }
-}
-
-#[cfg(test)]
-mod learning_substrings_tests {
-    use std::collections::HashSet;
-
-    use super::*;
-
-    #[test]
-    fn learn_unique_chars() {
-        let s = "abc";
-        let expected = as_strings(vec!["a", "b", "c"]);
-
-        let substrings = learn_substrings(s);
-        assert_eq!(as_set(expected), as_set(substrings));
-    }
-
-    #[test]
-    fn learn_substring() {
-        let s = "ababab";
-        let expected = as_strings(vec!["a", "b", "ab", "bab"]);
-        let substrings = learn_substrings(s);
-        assert_eq!(as_set(expected), as_set(substrings.to_vec()));
-    }
-
-    #[test]
-    fn learn_several_substrings() {
-        let s = "abcabcabc";
-        let expected = as_strings(vec!["a", "b", "c", "ab", "bc", "cab", "abc"]);
-        let substrings = learn_substrings(s);
-        assert_eq!(as_set(expected), as_set(substrings.to_vec()));
-    }
-
-    #[test]
-    fn learn_substrings_with_multi_byte_characters() {
-        let s = "犬猫魚鳥";
-        let expected = as_strings(vec!["犬", "猫", "魚", "鳥"]);
-        let substrings = learn_substrings(s);
-        assert_eq!(as_set(expected), as_set(substrings.to_vec()));
-    }
-
-    fn learn_substrings(s: &str) -> Vec<String> {
-        build_ledger(s).substrings()
-    }
-
-    fn as_strings(v: Vec<&str>) -> Vec<String> {
-        v.into_iter().map(|s| s.to_string()).collect()
-    }
-
-    fn as_set(v: Vec<String>) -> HashSet<String> {
-        v.into_iter().collect()
     }
 }
