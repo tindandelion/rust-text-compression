@@ -1,13 +1,10 @@
 use super::{Substring, SubstringLedger};
 
 pub fn build_ledger(source: &str) -> SubstringLedger {
-    let mut state = BuildState {
-        head: source,
-        ledger: SubstringLedger::new(),
-    };
+    let mut state = BuildState::new(source);
 
-    while state.head.len() > 0 {
-        state = build_ledger_step(state);
+    while !state.at_end() {
+        state = state.step();
     }
     state.ledger
 }
@@ -17,48 +14,59 @@ struct BuildState<'a> {
     ledger: SubstringLedger,
 }
 
-fn build_ledger_step<'a, 'b>(mut state: BuildState<'a>) -> BuildState<'a> {
-    if let Some(next_char) = state.head.chars().next() {
-        if let Some(substr_match) = state.ledger.find_longest_match(state.head) {
-            state.ledger.increment_count(&substr_match);
-            merge_with_follow_up_match(state, &substr_match)
-        } else {
-            create_single_char_substring(state, next_char)
+impl<'a> BuildState<'a> {
+    fn new(head: &'a str) -> Self {
+        Self {
+            head,
+            ledger: SubstringLedger::new(),
         }
-    } else {
+    }
+
+    fn at_end(&self) -> bool {
+        self.head.len() == 0
+    }
+
+    fn step(mut self) -> BuildState<'a> {
+        if let Some(next_char) = self.head.chars().next() {
+            if let Some(substr_match) = self.ledger.find_longest_match(self.head) {
+                self.ledger.increment_count(&substr_match);
+                self.merge_with_follow_up_match(&substr_match)
+            } else {
+                self.create_single_char_substring(next_char)
+            }
+        } else {
+            self.make_end_state()
+        }
+    }
+
+    fn merge_with_follow_up_match(mut self, substr_match: &Substring) -> BuildState<'a> {
+        let rest = &self.head[substr_match.len()..];
+        if let Some(follow_up_match) = self.ledger.find_longest_match(rest) {
+            let new_substring = substr_match.concat(&follow_up_match);
+            self.ledger.insert_new(new_substring);
+        }
+
+        BuildState {
+            head: rest,
+            ledger: self.ledger,
+        }
+    }
+
+    fn create_single_char_substring(mut self, next_char: char) -> BuildState<'a> {
+        let new_substring = Substring::from_char(next_char);
+        let rest = &self.head[new_substring.len()..];
+        self.ledger.insert_new(new_substring);
+        BuildState {
+            head: rest,
+            ledger: self.ledger,
+        }
+    }
+
+    fn make_end_state(self) -> BuildState<'a> {
         BuildState {
             head: "",
-            ledger: state.ledger,
+            ledger: self.ledger,
         }
-    }
-}
-
-fn merge_with_follow_up_match<'a, 'b>(
-    mut state: BuildState<'a>,
-    substr_match: &Substring,
-) -> BuildState<'a> {
-    let rest = &state.head[substr_match.len()..];
-    if let Some(follow_up_match) = state.ledger.find_longest_match(rest) {
-        let new_substring = substr_match.concat(&follow_up_match);
-        state.ledger.insert_new(new_substring);
-    }
-
-    BuildState {
-        head: rest,
-        ledger: state.ledger,
-    }
-}
-
-fn create_single_char_substring<'a, 'b>(
-    mut state: BuildState<'a>,
-    next_char: char,
-) -> BuildState<'a> {
-    let new_substring = Substring::from_char(next_char);
-    let rest = &state.head[new_substring.len()..];
-    state.ledger.insert_new(new_substring);
-    BuildState {
-        head: rest,
-        ledger: state.ledger,
     }
 }
 
@@ -68,32 +76,27 @@ mod build_ledger_step_tests {
 
     #[test]
     fn merge_three_consecutive_substrings() {
-        let mut ledger = SubstringLedger::new();
-        ledger.insert_new(substring("ca"));
-        ledger.insert_new(substring("me"));
-        ledger.insert_new(substring("lot"));
-
-        let mut state = BuildState {
-            head: "camelot",
-            ledger,
-        };
+        let mut state = BuildState::new("camelot");
+        state.ledger.insert_new(substring("ca"));
+        state.ledger.insert_new(substring("me"));
+        state.ledger.insert_new(substring("lot"));
 
         // Processing "ca" + "me" = "came"
-        state = build_ledger_step(state);
+        state = state.step();
         assert_eq!(
             vec![("came", 1), ("lot", 1), ("ca", 2), ("me", 1)],
             state.ledger.entries()
         );
 
         // Processing "me" + "lot" = "melot"
-        state = build_ledger_step(state);
+        state = state.step();
         assert_eq!(
             vec![("melot", 1), ("came", 1), ("lot", 1), ("ca", 2), ("me", 2)],
             state.ledger.entries()
         );
 
         // Processing "lot"
-        state = build_ledger_step(state);
+        state = state.step();
         assert_eq!(
             vec![("melot", 1), ("came", 1), ("lot", 2), ("ca", 2), ("me", 2)],
             state.ledger.entries()
