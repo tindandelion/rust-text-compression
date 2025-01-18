@@ -1,39 +1,64 @@
 use super::{Substring, SubstringLedger};
 
 pub fn build_ledger(source: &str) -> SubstringLedger {
-    let mut ledger = SubstringLedger::new();
-    let mut head: &str = source;
+    let mut state = BuildState {
+        head: source,
+        ledger: SubstringLedger::new(),
+    };
 
-    while head.len() > 0 {
-        head = build_ledger_step(head, &mut ledger);
+    while state.head.len() > 0 {
+        state = build_ledger_step(state);
     }
-    ledger
+    state.ledger
 }
 
-fn build_ledger_step<'a>(head: &'a str, ledger: &mut SubstringLedger) -> &'a str {
-    if let Some(next_char) = head.chars().next() {
-        let next_head: &'a str;
+struct BuildState<'a> {
+    head: &'a str,
+    ledger: SubstringLedger,
+}
 
-        if let Some(substr_match) = ledger.find_longest_match(head) {
-            let rest = &head[substr_match.len()..];
-
-            if let Some(follow_up_match) = ledger.find_longest_match(rest) {
-                let new_substring = substr_match.concat(&follow_up_match);
-                next_head = &head[substr_match.len()..];
-                ledger.insert_new(new_substring);
-            } else {
-                next_head = rest;
-            }
-
-            ledger.increment_count(&substr_match);
+fn build_ledger_step<'a, 'b>(mut state: BuildState<'a>) -> BuildState<'a> {
+    if let Some(next_char) = state.head.chars().next() {
+        if let Some(substr_match) = state.ledger.find_longest_match(state.head) {
+            state.ledger.increment_count(&substr_match);
+            merge_with_follow_up_match(state, &substr_match)
         } else {
-            let new_substring = Substring::from_char(next_char);
-            next_head = &head[new_substring.len()..];
-            ledger.insert_new(new_substring);
+            create_single_char_substring(state, next_char)
         }
-        next_head
     } else {
-        ""
+        BuildState {
+            head: "",
+            ledger: state.ledger,
+        }
+    }
+}
+
+fn merge_with_follow_up_match<'a, 'b>(
+    mut state: BuildState<'a>,
+    substr_match: &Substring,
+) -> BuildState<'a> {
+    let rest = &state.head[substr_match.len()..];
+    if let Some(follow_up_match) = state.ledger.find_longest_match(rest) {
+        let new_substring = substr_match.concat(&follow_up_match);
+        state.ledger.insert_new(new_substring);
+    }
+
+    BuildState {
+        head: rest,
+        ledger: state.ledger,
+    }
+}
+
+fn create_single_char_substring<'a, 'b>(
+    mut state: BuildState<'a>,
+    next_char: char,
+) -> BuildState<'a> {
+    let new_substring = Substring::from_char(next_char);
+    let rest = &state.head[new_substring.len()..];
+    state.ledger.insert_new(new_substring);
+    BuildState {
+        head: rest,
+        ledger: state.ledger,
     }
 }
 
@@ -48,27 +73,30 @@ mod build_ledger_step_tests {
         ledger.insert_new(substring("me"));
         ledger.insert_new(substring("lot"));
 
-        let source = "camelot";
+        let mut state = BuildState {
+            head: "camelot",
+            ledger,
+        };
 
         // Processing "ca" + "me" = "came"
-        let next_head = build_ledger_step(source, &mut ledger);
+        state = build_ledger_step(state);
         assert_eq!(
             vec![("came", 1), ("lot", 1), ("ca", 2), ("me", 1)],
-            ledger.entries()
+            state.ledger.entries()
         );
 
         // Processing "me" + "lot" = "melot"
-        let next_head = build_ledger_step(next_head, &mut ledger);
+        state = build_ledger_step(state);
         assert_eq!(
             vec![("melot", 1), ("came", 1), ("lot", 1), ("ca", 2), ("me", 2)],
-            ledger.entries()
+            state.ledger.entries()
         );
 
         // Processing "lot"
-        build_ledger_step(next_head, &mut ledger);
+        state = build_ledger_step(state);
         assert_eq!(
             vec![("melot", 1), ("came", 1), ("lot", 2), ("ca", 2), ("me", 2)],
-            ledger.entries()
+            state.ledger.entries()
         );
     }
 
