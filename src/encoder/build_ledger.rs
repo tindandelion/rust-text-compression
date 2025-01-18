@@ -12,6 +12,7 @@ pub fn build_ledger(source: &str) -> SubstringLedger {
 struct BuildState<'a> {
     head: &'a str,
     ledger: SubstringLedger,
+    last_match: Option<Substring>,
 }
 
 impl<'a> BuildState<'a> {
@@ -19,6 +20,7 @@ impl<'a> BuildState<'a> {
         Self {
             head,
             ledger: SubstringLedger::new(),
+            last_match: None,
         }
     }
 
@@ -28,7 +30,7 @@ impl<'a> BuildState<'a> {
 
     fn step(mut self) -> BuildState<'a> {
         if let Some(next_char) = self.head.chars().next() {
-            if let Some(substr_match) = self.ledger.find_longest_match(self.head) {
+            if let Some(substr_match) = self.find_longest_match() {
                 self.ledger.increment_count(&substr_match);
                 self.merge_with_follow_up_match(&substr_match)
             } else {
@@ -39,16 +41,25 @@ impl<'a> BuildState<'a> {
         }
     }
 
+    fn find_longest_match(&self) -> Option<Substring> {
+        self.last_match
+            .clone()
+            .or_else(|| self.ledger.find_longest_match(self.head))
+    }
+
     fn merge_with_follow_up_match(mut self, substr_match: &Substring) -> BuildState<'a> {
         let rest = &self.head[substr_match.len()..];
-        if let Some(follow_up_match) = self.ledger.find_longest_match(rest) {
-            let new_substring = substr_match.concat(&follow_up_match);
+        let follow_up_match = self.ledger.find_longest_match(rest);
+
+        if let Some(follow_up_match) = &follow_up_match {
+            let new_substring = substr_match.concat(follow_up_match);
             self.ledger.insert_new(new_substring);
         }
 
         BuildState {
             head: rest,
             ledger: self.ledger,
+            last_match: follow_up_match,
         }
     }
 
@@ -59,6 +70,7 @@ impl<'a> BuildState<'a> {
         BuildState {
             head: rest,
             ledger: self.ledger,
+            last_match: None,
         }
     }
 
@@ -66,6 +78,7 @@ impl<'a> BuildState<'a> {
         BuildState {
             head: "",
             ledger: self.ledger,
+            last_match: None,
         }
     }
 }
