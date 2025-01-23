@@ -5,11 +5,16 @@ use crate::substring_dictionary::SubstringDictionary;
 use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
 
-type SubstringMap = BTreeMap<Substring, u32>;
+pub type SubstringMap = BTreeMap<Substring, u32>;
 
-pub struct SubstringLedger {
+pub trait LedgerPolicy {
+    fn cleanup(&self, substrings: &mut SubstringMap);
+    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool;
+}
+
+pub struct SubstringLedger<LP: LedgerPolicy> {
     substrings: SubstringMap,
-    policy: TestLedgerPolicy,
+    policy: LP,
 }
 
 struct EncodingImpact {
@@ -17,35 +22,12 @@ struct EncodingImpact {
     compression_gain: usize,
 }
 
-struct TestLedgerPolicy {
-    max_entries: usize,
-}
-
-impl TestLedgerPolicy {
-    fn cleanup(&self, substrings: &mut SubstringMap) {
-        if substrings.len() < self.max_entries {
-            return;
-        }
-        substrings.retain(|_, count| *count > 1);
-    }
-
-    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool {
-        let x_count = substrings.get(x).unwrap();
-        let y_count = substrings.get(y).unwrap();
-        return *x_count == 1 && *y_count == 1;
-    }
-}
-
-impl SubstringLedger {
-    pub fn with_policy(policy: TestLedgerPolicy) -> Self {
+impl<LP: LedgerPolicy> SubstringLedger<LP> {
+    pub fn with_policy(policy: LP) -> Self {
         Self {
             substrings: BTreeMap::new(),
             policy,
         }
-    }
-
-    pub fn new() -> Self {
-        Self::with_policy(TestLedgerPolicy { max_entries: 100 })
     }
 
     pub fn insert_new(&mut self, substr: Substring) {
@@ -145,6 +127,8 @@ mod tests {
             assert!(!ledger.should_merge(&substring("a"), &substring("c")));
             assert!(!ledger.should_merge(&substring("c"), &substring("b")));
         }
+
+        // TODO: Error handling for trying to merge non-existing substrings
     }
 
     #[test]
@@ -321,18 +305,41 @@ mod tests {
         Substring(s.to_string())
     }
 
-    fn insert_repeated_substring(ledger: &mut SubstringLedger, s: &str) {
+    fn insert_repeated_substring<LP: LedgerPolicy>(ledger: &mut SubstringLedger<LP>, s: &str) {
         let substr = substring(s);
         ledger.insert_new(substr.clone());
         ledger.increment_count(&substr);
     }
 
-    fn make_ledger() -> SubstringLedger {
-        SubstringLedger::new()
+    fn make_ledger() -> SubstringLedger<TestLedgerPolicy> {
+        make_capped_ledger(usize::MAX)
     }
 
-    fn make_ledger_with_policy(policy: TestLedgerPolicy) -> SubstringLedger {
+    fn make_capped_ledger(max_entries: usize) -> SubstringLedger<TestLedgerPolicy> {
+        SubstringLedger::with_policy(TestLedgerPolicy { max_entries })
+    }
+
+    fn make_ledger_with_policy(policy: TestLedgerPolicy) -> SubstringLedger<TestLedgerPolicy> {
         SubstringLedger::with_policy(policy)
+    }
+
+    struct TestLedgerPolicy {
+        max_entries: usize,
+    }
+
+    impl LedgerPolicy for TestLedgerPolicy {
+        fn cleanup(&self, substrings: &mut SubstringMap) {
+            if substrings.len() < self.max_entries {
+                return;
+            }
+            substrings.retain(|_, count| *count > 1);
+        }
+
+        fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool {
+            let x_count = substrings.get(x).unwrap();
+            let y_count = substrings.get(y).unwrap();
+            return *x_count == 1 && *y_count == 1;
+        }
     }
 
     // TODO: Increment count of a non-existing substring
