@@ -5,8 +5,11 @@ use crate::substring_dictionary::SubstringDictionary;
 use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
 
+type SubstringMap = BTreeMap<Substring, u32>;
+
 pub struct SubstringLedger {
-    substrings: BTreeMap<Substring, u32>,
+    substrings: SubstringMap,
+    policy: TestLedgerPolicy,
 }
 
 struct EncodingImpact {
@@ -14,15 +17,44 @@ struct EncodingImpact {
     compression_gain: usize,
 }
 
+struct TestLedgerPolicy {
+    max_entries: usize,
+}
+
+impl TestLedgerPolicy {
+    fn cleanup(&self, substrings: &mut SubstringMap) {
+        if substrings.len() < self.max_entries {
+            return;
+        }
+        substrings.retain(|_, count| *count > 1);
+    }
+
+    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool {
+        let x_count = substrings.get(x).unwrap();
+        let y_count = substrings.get(y).unwrap();
+        return *x_count == 1 && *y_count == 1;
+    }
+}
+
 impl SubstringLedger {
-    pub fn new() -> Self {
+    pub fn with_policy(policy: TestLedgerPolicy) -> Self {
         Self {
             substrings: BTreeMap::new(),
+            policy,
         }
     }
 
+    pub fn new() -> Self {
+        Self::with_policy(TestLedgerPolicy { max_entries: 100 })
+    }
+
     pub fn insert_new(&mut self, substr: Substring) {
+        self.policy.cleanup(&mut self.substrings);
         self.substrings.insert(substr, 1);
+    }
+
+    pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
+        self.policy.should_merge(x, y, &self.substrings)
     }
 
     // TODO: Convert to Option<&Substring>
@@ -82,6 +114,38 @@ impl SubstringLedger {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod bookkeeping {
+        use super::*;
+
+        #[test]
+        fn cleanup_ledger_according_to_policy_when_inserting_new_substring() {
+            let mut ledger = make_ledger_with_policy(TestLedgerPolicy { max_entries: 3 });
+
+            ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("b"));
+            ledger.insert_new(substring("x"));
+            ledger.increment_count(&substring("x"));
+            assert_eq!(vec![("a", 1), ("b", 1), ("x", 2)], ledger.entries());
+
+            ledger.insert_new(substring("y"));
+            assert_eq!(vec![("x", 2), ("y", 1)], ledger.entries());
+        }
+
+        #[test]
+        fn should_merge_substrings_whose_count_is_one() {
+            let mut ledger = make_ledger_with_policy(TestLedgerPolicy { max_entries: 10 });
+            ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("b"));
+
+            ledger.insert_new(substring("c"));
+            ledger.increment_count(&substring("c"));
+
+            assert!(ledger.should_merge(&substring("a"), &substring("b")));
+            assert!(!ledger.should_merge(&substring("a"), &substring("c")));
+            assert!(!ledger.should_merge(&substring("c"), &substring("b")));
+        }
+    }
 
     #[test]
     fn find_longest_match_when_found() {
@@ -265,6 +329,10 @@ mod tests {
 
     fn make_ledger() -> SubstringLedger {
         SubstringLedger::new()
+    }
+
+    fn make_ledger_with_policy(policy: TestLedgerPolicy) -> SubstringLedger {
+        SubstringLedger::with_policy(policy)
     }
 
     // TODO: Increment count of a non-existing substring
