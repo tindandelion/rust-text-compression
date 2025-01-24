@@ -5,7 +5,7 @@ use crate::substring_dictionary::SubstringDictionary;
 use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
 
-pub type SubstringMap = BTreeMap<Substring, u32>;
+pub type SubstringMap = BTreeMap<Substring, usize>;
 
 pub trait LedgerPolicy {
     fn cleanup(&self, substrings: &mut SubstringMap);
@@ -85,7 +85,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     #[cfg(test)]
-    pub fn entries(&self) -> Vec<(&str, u32)> {
+    pub fn entries(&self) -> Vec<(&str, usize)> {
         self.substrings
             .iter()
             .map(|(substring, count)| (substring.as_str(), *count))
