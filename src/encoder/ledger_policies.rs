@@ -10,6 +10,10 @@ pub struct LimitDictionarySize {
 }
 
 impl LimitDictionarySize {
+    pub fn with_max_size(max_size: usize) -> Self {
+        Self { max_size }
+    }
+
     fn calc_merge_threshold(&self, substrings: &SubstringMap) -> usize {
         let free_space = self.calc_free_space(substrings);
         if free_space <= 0 {

@@ -3,7 +3,7 @@ use std::time::Instant;
 use text_compression::decode;
 use text_compression::encode;
 
-const INPUT_FILENAME: &str = "test-data/hamlet.txt";
+const INPUT_FILENAME: &str = "test-data/wap-6400.txt";
 
 fn main() {
     println!("* Compressing {}...", INPUT_FILENAME);

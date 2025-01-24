@@ -18,6 +18,8 @@ const INPUT_FILENAMES: &[&str] = &[
     "wap-1600.txt",
     "wap-3200.txt",
     "wap-6400.txt",
+    "wap-12800.txt",
+    "wap-25600.txt",
 ];
 
 fn main() {
