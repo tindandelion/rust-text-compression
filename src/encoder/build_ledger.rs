@@ -33,7 +33,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
     fn step(mut self) -> BuildState<'a, LP> {
         if let Some(next_char) = self.head.chars().next() {
             if let Some(substr_match) = self.find_longest_match() {
-                self.ledger.increment_count(&substr_match);
+                self.ledger.increment_count(substr_match.clone());
                 self.merge_with_follow_up_match(&substr_match)
             } else {
                 self.create_single_char_substring(next_char)
@@ -57,7 +57,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
         if let Some(follow_up) = &follow_up_match {
             if self.ledger.should_merge(substr_match, follow_up) {
                 let new_substring = substr_match.concat(follow_up);
-                self.ledger.insert_new(new_substring);
+                self.ledger.increment_count(new_substring);
             }
             if !self.ledger.contains(follow_up) {
                 last_match = None;
@@ -72,7 +72,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
     fn create_single_char_substring(mut self, next_char: char) -> BuildState<'a, LP> {
         let new_substring = Substring::from_char(next_char);
         let rest = &self.head[new_substring.len()..];
-        self.ledger.insert_new(new_substring);
+        self.ledger.increment_count(new_substring);
         self.make_new_state(rest, None)
     }
 
@@ -141,9 +141,9 @@ mod tests {
     #[test]
     fn merge_three_consecutive_substrings() {
         let mut state = BuildState::new("camelot", CaptureAll);
-        state.ledger.insert_new(substring("ca"));
-        state.ledger.insert_new(substring("me"));
-        state.ledger.insert_new(substring("lot"));
+        state.ledger.increment_count(substring("ca"));
+        state.ledger.increment_count(substring("me"));
+        state.ledger.increment_count(substring("lot"));
 
         // Processing "ca" + "me" = "came"
         state = state.step();
@@ -178,7 +178,7 @@ mod tests {
            What we want in this case is to increment the count of "xx" by 1
         */
         let mut state = BuildState::new("xxx", CaptureAll);
-        state.ledger.insert_new(substring("x"));
+        state.ledger.increment_count(substring("x"));
 
         state = state.step();
         assert_eq!(vec![("xx", 1), ("x", 2)], state.ledger.entries());
@@ -195,9 +195,16 @@ mod tests {
 
     #[test]
     fn clear_last_match_if_removed_from_ledger() {
-        let mut state = BuildState::new("abbcab", RemoveAll);
-        state.ledger.insert_new(substring("ab"));
-        state.ledger.insert_new(substring("bc"));
+        /*
+           The edge case when we matched with the follow-up substring,
+           We produce a new substring and put it into the ledger, but
+           the cleanup that occurs when we insert a new substring, also
+           could have removed the original substring from the ledger.
+
+           We need to set last_match to None in that case
+        */
+        let mut state = BuildState::new("ababab", RemoveAll);
+        state.ledger.increment_count(substring("ab"));
 
         let next_state = state.step();
         assert_eq!(None, next_state.last_match)
