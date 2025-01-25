@@ -337,9 +337,8 @@ mod tests {
     }
 
     fn insert_repeated_substring<LP: LedgerPolicy>(ledger: &mut SubstringLedger<LP>, s: &str) {
-        let substr = substring(s);
-        ledger.increment_count(substr.clone());
-        ledger.increment_count(substr);
+        ledger.increment_count(substring(s));
+        ledger.increment_count(substring(s));
     }
 
     fn make_ledger() -> SubstringLedger<TestLedgerPolicy> {
