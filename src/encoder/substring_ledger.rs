@@ -32,7 +32,10 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 
     pub fn insert_new(&mut self, substr: Substring) {
         self.policy.cleanup(&mut self.substrings);
-        self.substrings.insert(substr, 1);
+        let old_count = self.substrings.insert(substr.clone(), 1);
+        if old_count.is_some() {
+            panic!("Substring [{}] already exists", substr.to_string());
+        }
     }
 
     pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
@@ -52,6 +55,11 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
             .substrings
             .get_mut(substr)
             .expect(format!("Substring [{}] not found", substr.to_string()).as_str());
+        *count += 1;
+    }
+
+    pub fn increment_count_2(&mut self, substr: Substring) {
+        let count = self.substrings.entry(substr).or_insert(0);
         *count += 1;
     }
 
@@ -84,6 +92,10 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         impacts
     }
 
+    pub fn contains(&self, substr: &Substring) -> bool {
+        self.substrings.contains_key(substr)
+    }
+
     #[cfg(test)]
     pub fn entries(&self) -> Vec<(&str, usize)> {
         self.substrings
@@ -96,6 +108,28 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod string_counting {
+        use super::*;
+
+        #[test]
+        fn initial_increment_count_adds_to_ledger() {
+            let mut ledger = make_ledger();
+
+            ledger.increment_count_2(substring("a"));
+            assert_eq!(vec![("a", 1)], ledger.entries());
+        }
+
+        #[test]
+        fn subsequent_increment_count_updates_count() {
+            let mut ledger = make_ledger();
+
+            ledger.increment_count_2(substring("a"));
+            ledger.increment_count_2(substring("a"));
+
+            assert_eq!(vec![("a", 2)], ledger.entries());
+        }
+    }
 
     mod bookkeeping {
         use super::*;
@@ -131,174 +165,182 @@ mod tests {
         // TODO: Error handling for trying to merge non-existing substrings
     }
 
-    #[test]
-    fn find_longest_match_when_found() {
-        let mut ledger = make_ledger();
-        ledger.insert_new(substring("a"));
-        ledger.insert_new(substring("aa"));
-        ledger.insert_new(substring("aaa"));
-        ledger.insert_new(substring("b"));
+    mod find_longest_match {
+        use super::*;
 
-        let found = ledger.find_longest_match("aaa");
-        assert_eq!(Some(substring("aaa")), found);
+        #[test]
+        fn match_found() {
+            let mut ledger = make_ledger();
+            ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("aa"));
+            ledger.insert_new(substring("aaa"));
+            ledger.insert_new(substring("b"));
 
-        let found = ledger.find_longest_match("aab");
-        assert_eq!(Some(substring("aa")), found);
+            let found = ledger.find_longest_match("aaa");
+            assert_eq!(Some(substring("aaa")), found);
 
-        let found = ledger.find_longest_match("bba");
-        assert_eq!(Some(substring("b")), found);
+            let found = ledger.find_longest_match("aab");
+            assert_eq!(Some(substring("aa")), found);
+
+            let found = ledger.find_longest_match("bba");
+            assert_eq!(Some(substring("b")), found);
+        }
+
+        #[test]
+        fn match_not_found() {
+            let mut ledger = make_ledger();
+            ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("aa"));
+            ledger.insert_new(substring("aaa"));
+            ledger.insert_new(substring("b"));
+
+            let found = ledger.find_longest_match("ccc");
+            assert_eq!(None, found);
+        }
     }
 
-    #[test]
-    fn find_longest_match_when_not_found() {
-        let mut ledger = make_ledger();
-        ledger.insert_new(substring("a"));
-        ledger.insert_new(substring("aa"));
-        ledger.insert_new(substring("aaa"));
-        ledger.insert_new(substring("b"));
+    mod most_impactful_strings {
+        use super::*;
 
-        let found = ledger.find_longest_match("ccc");
-        assert_eq!(None, found);
-    }
+        #[test]
+        fn found_by_string_length() {
+            /*
+             * For equal counts, longer strings make bigger impact on compression.
+             */
+            let mut ledger = make_ledger();
+            insert_repeated_substring(&mut ledger, "a");
+            insert_repeated_substring(&mut ledger, "aa");
+            insert_repeated_substring(&mut ledger, "aaaaa");
+            insert_repeated_substring(&mut ledger, "b");
 
-    #[test]
-    fn most_impactful_substring_found_by_string_length() {
-        /*
-         * For equal counts, longer strings make bigger impact on compression.
-         */
-        let mut ledger = make_ledger();
-        insert_repeated_substring(&mut ledger, "a");
-        insert_repeated_substring(&mut ledger, "aa");
-        insert_repeated_substring(&mut ledger, "aaaaa");
-        insert_repeated_substring(&mut ledger, "b");
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 1,
+                encoded_size: 0,
+            });
+            assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
+        }
 
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 1,
-            encoded_size: 0,
-        });
-        assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
-    }
+        #[test]
+        fn found_by_count() {
+            /*
+             * For equal string lengths, more frequent substrings make bigger impact on compression.
+             */
+            let mut ledger = make_ledger();
+            ledger.insert_new(substring("a"));
 
-    #[test]
-    fn most_impactful_substring_found_by_count() {
-        /*
-         * For equal string lengths, more frequent substrings make bigger impact on compression.
-         */
-        let mut ledger = make_ledger();
-        ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("b"));
+            ledger.increment_count(&substring("b"));
 
-        ledger.insert_new(substring("b"));
-        ledger.increment_count(&substring("b"));
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 1,
+                encoded_size: 0,
+            });
+            assert_eq!(vec!["b"], most_impactful.to_vec());
+        }
 
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 1,
-            encoded_size: 0,
-        });
-        assert_eq!(vec!["b"], most_impactful.to_vec());
-    }
+        #[test]
+        fn found_by_count_and_string_length() {
+            /*
+             * The string has more impact, when the total length of all its occurrences is bigger.
+             */
+            let mut ledger = make_ledger();
+            ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("aaa"));
 
-    #[test]
-    fn most_impactful_substring_found_by_count_and_string_length() {
-        /*
-         * The string has more impact, when the total length of all its occurrences is bigger.
-         */
-        let mut ledger = make_ledger();
-        ledger.insert_new(substring("a"));
-        ledger.insert_new(substring("aaa"));
+            ledger.insert_new(substring("b"));
+            ledger.increment_count(&substring("b"));
+            ledger.increment_count(&substring("b"));
+            ledger.increment_count(&substring("b"));
 
-        ledger.insert_new(substring("b"));
-        ledger.increment_count(&substring("b"));
-        ledger.increment_count(&substring("b"));
-        ledger.increment_count(&substring("b"));
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 1,
+                encoded_size: 0,
+            });
+            assert_eq!(vec!["b"], most_impactful.to_vec());
+        }
 
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 1,
-            encoded_size: 0,
-        });
-        assert_eq!(vec!["b"], most_impactful.to_vec());
-    }
+        #[test]
+        fn removes_strings_shorter_than_encoded_representation() {
+            /*
+             * Short strings are not encoded, because their encoded size is bigger than or equal to the string's length itself.
+             */
+            let mut ledger = make_ledger();
+            insert_repeated_substring(&mut ledger, "aaa");
 
-    #[test]
-    fn most_impactful_substring_removes_strings_shorter_than_encoded_representation() {
-        /*
-         * Short strings are not encoded, because their encoded size is bigger than or equal to the string's length itself.
-         */
-        let mut ledger = make_ledger();
-        insert_repeated_substring(&mut ledger, "aaa");
+            insert_repeated_substring(&mut ledger, "a");
+            insert_repeated_substring(&mut ledger, "aa");
+            ledger.increment_count(&substring("aa"));
+            ledger.increment_count(&substring("aa"));
 
-        insert_repeated_substring(&mut ledger, "a");
-        insert_repeated_substring(&mut ledger, "aa");
-        ledger.increment_count(&substring("aa"));
-        ledger.increment_count(&substring("aa"));
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 10,
+                encoded_size: 2,
+            });
+            assert_eq!(vec!["aaa"], most_impactful.to_vec());
+        }
 
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 10,
-            encoded_size: 2,
-        });
-        assert_eq!(vec!["aaa"], most_impactful.to_vec());
-    }
+        #[test]
+        fn takes_total_encoded_size_into_account() {
+            /*
+             * A longer, but less frequent string can have more impact on compression,
+             * than a shorter, but more frequent string.
+             * Consider the following example:
+             *
+             * "aaaaa" - 1 occurrence, 5 bytes
+             * "aaa" - 2 occurrence, 3 bytes
+             *
+             * When replacing "aaaaa" with its encoded form, we'll replace 1 5-byte string with 2 bytes (gain of 3 bytes).
+             * When replacing "aaa" with its encoded form, we'll replace 2 3-bytes string with 2 2-byte encoded versions.
+             * In that case, we gain (2 * 3 - 2 * 2) = 2 bytes.
+             *
+             * So, "aaaaa" has more impact on compression, even though it's less frequent.
+             */
+            let mut ledger = make_ledger();
 
-    #[test]
-    fn most_impactful_substring_takes_total_encoded_size_into_account() {
-        /*
-         * A longer, but less frequent string can have more impact on compression,
-         * than a shorter, but more frequent string.
-         * Consider the following example:
-         *
-         * "aaaaa" - 1 occurrence, 5 bytes
-         * "aaa" - 2 occurrence, 3 bytes
-         *
-         * When replacing "aaaaa" with its encoded form, we'll replace 1 5-byte string with 2 bytes (gain of 3 bytes).
-         * When replacing "aaa" with its encoded form, we'll replace 2 3-bytes string with 2 2-byte encoded versions.
-         * In that case, we gain (2 * 3 - 2 * 2) = 2 bytes.
-         *
-         * So, "aaaaa" has more impact on compression, even though it's less frequent.
-         */
-        let mut ledger = make_ledger();
+            insert_repeated_substring(&mut ledger, "aaaaa");
 
-        insert_repeated_substring(&mut ledger, "aaaaa");
+            insert_repeated_substring(&mut ledger, "aaa");
+            ledger.increment_count(&substring("aaa"));
 
-        insert_repeated_substring(&mut ledger, "aaa");
-        ledger.increment_count(&substring("aaa"));
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 1,
+                encoded_size: 2,
+            });
+            assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
+        }
 
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 1,
-            encoded_size: 2,
-        });
-        assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
-    }
+        #[test]
+        fn skip_single_occurrence() {
+            let mut ledger = make_ledger();
+            ledger.insert_new(substring("aaaaaa"));
 
-    #[test]
-    fn most_impactfult_strings_skip_single_occurence() {
-        let mut ledger = make_ledger();
-        ledger.insert_new(substring("aaaaaa"));
+            ledger.insert_new(substring("bb"));
+            ledger.increment_count(&substring("bb"));
 
-        ledger.insert_new(substring("bb"));
-        ledger.increment_count(&substring("bb"));
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 10,
+                encoded_size: 1,
+            });
+            assert_eq!(vec!["bb"], most_impactful.to_vec());
+        }
 
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 10,
-            encoded_size: 1,
-        });
-        assert_eq!(vec!["bb"], most_impactful.to_vec());
-    }
+        #[test]
+        fn ordered_by_length() {
+            let mut ledger = make_ledger();
+            insert_repeated_substring(&mut ledger, "b");
+            insert_repeated_substring(&mut ledger, "aaaaaa");
 
-    #[test]
-    fn most_impactful_substrings_ordered_by_length() {
-        let mut ledger = make_ledger();
-        insert_repeated_substring(&mut ledger, "b");
-        insert_repeated_substring(&mut ledger, "aaaaaa");
+            insert_repeated_substring(&mut ledger, "aa");
+            ledger.increment_count(&substring("aa"));
+            ledger.increment_count(&substring("aa"));
+            ledger.increment_count(&substring("aa"));
 
-        insert_repeated_substring(&mut ledger, "aa");
-        ledger.increment_count(&substring("aa"));
-        ledger.increment_count(&substring("aa"));
-        ledger.increment_count(&substring("aa"));
-
-        let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
-            num_strings: 2,
-            encoded_size: 1,
-        });
-        assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
+            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+                num_strings: 2,
+                encoded_size: 1,
+            });
+            assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
+        }
     }
 
     fn substring(s: &str) -> Substring {
@@ -342,6 +384,22 @@ mod tests {
         }
     }
 
-    // TODO: Increment count of a non-existing substring
-    // TODO: Inserting already existing substring
+    mod substring_counting {
+        use super::*;
+
+        #[test]
+        #[should_panic]
+        fn panics_when_incrementing_count_of_non_existing_substring() {
+            let mut ledger = make_ledger();
+            ledger.increment_count(&substring("a"));
+        }
+
+        #[test]
+        #[should_panic]
+        fn panics_when_trying_to_insert_already_existing_substring() {
+            let mut ledger = make_ledger();
+            ledger.insert_new(substring("a"));
+            ledger.insert_new(substring("a"));
+        }
+    }
 }

@@ -52,43 +52,45 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
     fn merge_with_follow_up_match(mut self, substr_match: &Substring) -> BuildState<'a, LP> {
         let rest = &self.head[substr_match.len()..];
         let follow_up_match = self.ledger.find_longest_match(rest);
+        let mut last_match = follow_up_match.clone();
 
-        if let Some(follow_up_match) = &follow_up_match {
-            if self.ledger.should_merge(substr_match, follow_up_match) {
-                let new_substring = substr_match.concat(follow_up_match);
+        if let Some(follow_up) = &follow_up_match {
+            if self.ledger.should_merge(substr_match, follow_up) {
+                let new_substring = substr_match.concat(follow_up);
                 self.ledger.insert_new(new_substring);
             }
+            if !self.ledger.contains(follow_up) {
+                last_match = None;
+            }
+        } else {
+            last_match = None;
         }
 
-        BuildState {
-            head: rest,
-            ledger: self.ledger,
-            last_match: follow_up_match,
-        }
+        self.make_new_state(rest, last_match)
     }
 
     fn create_single_char_substring(mut self, next_char: char) -> BuildState<'a, LP> {
         let new_substring = Substring::from_char(next_char);
         let rest = &self.head[new_substring.len()..];
         self.ledger.insert_new(new_substring);
-        BuildState {
-            head: rest,
-            ledger: self.ledger,
-            last_match: None,
-        }
+        self.make_new_state(rest, None)
     }
 
     fn make_end_state(self) -> BuildState<'a, LP> {
+        self.make_new_state("", None)
+    }
+
+    fn make_new_state(self, head: &'a str, last_match: Option<Substring>) -> BuildState<'a, LP> {
         BuildState {
-            head: "",
+            head,
             ledger: self.ledger,
-            last_match: None,
+            last_match,
         }
     }
 }
 
 #[cfg(test)]
-mod build_ledger_step_tests {
+mod tests {
     use crate::encoder::{ledger_policies::CaptureAll, substring_ledger::SubstringMap};
 
     use super::*;
@@ -166,16 +168,46 @@ mod build_ledger_step_tests {
     }
 
     #[test]
+    fn learn_same_substring_at_next_step() {
+        /*
+           A boundary case when we learn the same substring at the next step
+           Breakdown is as follows:
+            1. We learn "xx" from "x" + "x" => "xx"
+            2. We use last matched value "x" with rest of the string ("x") => learn the same "xx" again
+           This is a side effect of reusing the last matched value
+           What we want in this case is to increment the count of "xx" by 1
+        */
+        let mut state = BuildState::new("xxx", CaptureAll);
+        state.ledger.insert_new(substring("x"));
+
+        state = state.step();
+        assert_eq!(vec![("xx", 1), ("x", 2)], state.ledger.entries());
+        state = state.step();
+        assert_eq!(vec![("xx", 2), ("x", 3)], state.ledger.entries());
+    }
+
+    #[test]
     fn do_not_merge_substrings_if_not_allowed_by_policy() {
-        let mut state = BuildState::new("ababab", DisallowMerging);
-        state = state.run_until_end();
-        assert_eq!(vec![("a", 3), ("b", 3)], state.ledger.entries());
+        let state = BuildState::new("ababab", DisallowMerging);
+        let next_state = state.run_until_end();
+        assert_eq!(vec![("a", 3), ("b", 3)], next_state.ledger.entries());
+    }
+
+    #[test]
+    fn clear_last_match_if_removed_from_ledger() {
+        let mut state = BuildState::new("abbcab", RemoveAll);
+        state.ledger.insert_new(substring("ab"));
+        state.ledger.insert_new(substring("bc"));
+
+        let next_state = state.step();
+        assert_eq!(None, next_state.last_match)
     }
 
     fn substring(s: &str) -> Substring {
         Substring::from_str(s)
     }
 
+    struct RemoveAll;
     struct DisallowMerging;
 
     impl LedgerPolicy for DisallowMerging {
@@ -184,5 +216,15 @@ mod build_ledger_step_tests {
         }
 
         fn cleanup(&self, _substrings: &mut SubstringMap) {}
+    }
+
+    impl LedgerPolicy for RemoveAll {
+        fn cleanup(&self, substrings: &mut SubstringMap) {
+            substrings.clear();
+        }
+
+        fn should_merge(&self, _x: &Substring, _y: &Substring, _substrings: &SubstringMap) -> bool {
+            true
+        }
     }
 }
