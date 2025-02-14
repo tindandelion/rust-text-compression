@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Traits in Rust
+title: Limiting the ledger size
 date: 2025-02-12
 ---
 
@@ -17,9 +17,9 @@ The [original article][mayne] suggests a few different strategies when it comes 
 - The initial count of a new compound substring is _1_.  
 - To clean up, we remove the substrings whose counts are below the median value.
 
-The complete algorithm should look like this: 
+The complete algorithm looks like this: 
 
-![Complete algorithm](/assets/images/complete-algorithm.png)
+![Complete algorithm]({{ site.baseurl }}/assets/images/limit-ledger-size/complete-algo.svg)
 
 # Ledger policy implementation
 
@@ -36,7 +36,12 @@ This allows me to use different policies without having to change the main algor
 
 Essentially, the structure of this part of the program looks like this: 
 
-![Ledger policy](/assets/images/ledger-policy.png)
+![SubstringLedger relations]({{ site.baseurl }}/assets/images/limit-ledger-size/build-ledger-relations.svg)
+
+# Next steps
+
+#TODO: Write it  
+
 
 [mayne]: https://academic.oup.com/comjnl/article/18/2/157/374138
 [etudes]: https://www.goodreads.com/book/show/3924336-etudes-for-programmers
