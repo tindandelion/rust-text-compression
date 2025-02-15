@@ -42,8 +42,7 @@ Essentially, the structure of this part of the program looks like this:
 
 # Next steps
 
-#TODO: Write it  
-
+Putting a limit to the number of known substrings impacts the overall algorithm performance, both in terms of speed and compression quality. I'm now going to experiment with that, to see the impact. 
 
 [mayne]: https://academic.oup.com/comjnl/article/18/2/157/374138
 [etudes]: https://www.goodreads.com/book/show/3924336-etudes-for-programmers
