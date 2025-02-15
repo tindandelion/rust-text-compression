@@ -6,6 +6,8 @@ date: 2025-02-12
 
 Now it's time to look into another aspect of building the substring dictionary: how do we keep its size limited? So far, I've been skipping this part, letting it grow indefinitely, but the original task is to put a limit on the size of the substring ledger while we're looking for common substrings. 
 
+# The strategy to limits
+
 There are two aspects to the strategy of keeping the ledger size under control: 
 
 - When do we add a new compound string to the ledger? The criteria here is that we only add a new compound string, when the counts of its components are above a certain threshold. 
