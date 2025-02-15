@@ -8,8 +8,8 @@ use super::substring::Substring;
 pub type SubstringMap = BTreeMap<Substring, usize>;
 
 pub trait LedgerPolicy {
-    fn cleanup(&self, substrings: &mut SubstringMap);
     fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool;
+    fn cleanup(&self, substrings: &mut SubstringMap);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {

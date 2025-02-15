@@ -7,7 +7,7 @@ pub use encoder::encode_with_policy;
 pub use encoder::ENCODER_SPEC;
 
 pub mod policies {
-    pub use super::encoder::ledger_policies::{CaptureAll, LimitDictionarySize};
+    pub use super::encoder::ledger_policies::{CaptureAll, LimitLedgerSize};
 }
 
 #[cfg(test)]

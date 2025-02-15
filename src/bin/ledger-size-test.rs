@@ -2,7 +2,7 @@ use std::fs;
 use std::time::Instant;
 use text_compression::decode;
 use text_compression::encode_with_policy;
-use text_compression::policies::LimitDictionarySize;
+use text_compression::policies::LimitLedgerSize;
 use text_compression::ENCODER_SPEC;
 
 struct ExperimentResult {
@@ -12,7 +12,7 @@ struct ExperimentResult {
     time_elapsed: f32,
 }
 
-const INPUT_FILENAME: &str = "wap-25600.txt";
+const INPUT_FILENAME: &str = "war-and-peace.txt";
 const LEDGER_SIZE_FACTORS: &[usize] = &[1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 fn main() {
@@ -33,7 +33,7 @@ fn main() {
 fn run_experiment(ledger_factor: usize) -> ExperimentResult {
     let source = fs::read_to_string("test-data/".to_string() + INPUT_FILENAME).unwrap();
     let ledger_size = ENCODER_SPEC.num_strings * ledger_factor;
-    let policy = LimitDictionarySize::with_max_size(ledger_size);
+    let policy = LimitLedgerSize::with_max_size(ledger_size);
 
     let start = Instant::now();
     let (encoded, substrings) = encode_with_policy(&source, policy);

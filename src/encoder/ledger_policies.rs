@@ -5,11 +5,11 @@ use super::{
 
 pub struct CaptureAll;
 
-pub struct LimitDictionarySize {
+pub struct LimitLedgerSize {
     max_size: usize,
 }
 
-impl LimitDictionarySize {
+impl LimitLedgerSize {
     pub fn with_max_size(max_size: usize) -> Self {
         Self { max_size }
     }
@@ -53,7 +53,7 @@ impl LedgerPolicy for CaptureAll {
     }
 }
 
-impl LedgerPolicy for LimitDictionarySize {
+impl LedgerPolicy for LimitLedgerSize {
     fn cleanup(&self, substrings: &mut SubstringMap) {
         if self.should_cleanup(substrings) {
             let median_count = self.calc_median_count(substrings);
@@ -84,7 +84,7 @@ mod limit_dictionary_size_tests {
         fn should_merge_when_both_counts_are_bigger_than_threshold() {
             let x = Substring::from_str("x");
             let y = Substring::from_str("y");
-            let policy = LimitDictionarySize { max_size: 4 };
+            let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(x.clone(), 3);
@@ -98,7 +98,7 @@ mod limit_dictionary_size_tests {
         fn should_merge_when_count_is_equal_to_threshold() {
             let x = Substring::from_str("x");
             let y = Substring::from_str("y");
-            let policy = LimitDictionarySize { max_size: 4 };
+            let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(x.clone(), 2);
@@ -112,7 +112,7 @@ mod limit_dictionary_size_tests {
         fn should_not_merge_when_at_least_one_count_is_less_than_threshold() {
             let x = Substring::from_str("x");
             let y = Substring::from_str("y");
-            let policy = LimitDictionarySize { max_size: 4 };
+            let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(x.clone(), 1);
@@ -129,7 +129,7 @@ mod limit_dictionary_size_tests {
             */
             let x = Substring::from_str("x");
             let y = Substring::from_str("y");
-            let policy = LimitDictionarySize { max_size: 2 };
+            let policy = LimitLedgerSize { max_size: 2 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(x.clone(), usize::MAX);
@@ -148,7 +148,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from_str("x");
             let y = Substring::from_str("y");
             let z = Substring::from_str("z");
-            let policy = LimitDictionarySize { max_size: 7 };
+            let policy = LimitLedgerSize { max_size: 7 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(x.clone(), 3);
@@ -170,7 +170,7 @@ mod limit_dictionary_size_tests {
         fn keeps_everything_when_dict_has_enough_space() {
             let x = Substring::from_str("x");
             let y = Substring::from_str("y");
-            let policy = LimitDictionarySize { max_size: 10 };
+            let policy = LimitLedgerSize { max_size: 10 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(x.clone(), 1);
@@ -188,7 +188,7 @@ mod limit_dictionary_size_tests {
                When the there are less then 2 free slots, we should
                remove the substrings whose counts are less than median
             */
-            let policy = LimitDictionarySize { max_size: 6 };
+            let policy = LimitLedgerSize { max_size: 6 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(Substring::from_str("a"), 9);
@@ -204,7 +204,7 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn keeps_everything_when_exactly_at_median() {
-            let policy = LimitDictionarySize { max_size: 4 };
+            let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
             // All substrings have count 2, which is the median
@@ -218,7 +218,7 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn handles_single_element_dictionary() {
-            let policy = LimitDictionarySize { max_size: 2 };
+            let policy = LimitLedgerSize { max_size: 2 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(Substring::from_str("a"), 1);
@@ -229,7 +229,7 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn handles_empty_dictionary() {
-            let policy = LimitDictionarySize { max_size: 2 };
+            let policy = LimitLedgerSize { max_size: 2 };
             let mut substrings = SubstringMap::new();
 
             policy.cleanup(&mut substrings);
@@ -238,7 +238,7 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn removes_below_median_with_even_number_of_elements() {
-            let policy = LimitDictionarySize { max_size: 5 };
+            let policy = LimitLedgerSize { max_size: 5 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(Substring::from_str("a"), 1);
@@ -252,7 +252,7 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn preserves_substrings_at_median_counts() {
-            let policy = LimitDictionarySize { max_size: 6 };
+            let policy = LimitLedgerSize { max_size: 6 };
             let mut substrings = SubstringMap::new();
 
             substrings.insert(Substring::from_str("a"), 1);
