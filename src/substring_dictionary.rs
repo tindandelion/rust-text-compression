@@ -22,6 +22,10 @@ impl SubstringDictionary {
         &self.substrings[..n]
     }
 
+    pub fn bottom(&self, n: usize) -> &[String] {
+        &self.substrings[self.substrings.len() - n..]
+    }
+
     pub fn get(&self, index: usize) -> &String {
         &self.substrings[index]
     }

@@ -11,7 +11,7 @@ fn main() {
     let source = fs::read_to_string(INPUT_FILENAME).unwrap();
 
     let start = Instant::now();
-    let (encoded, substrings) = encode_with_policy(&source, CaptureAll);
+    let (encoded, substrings, _) = encode_with_policy(&source, CaptureAll);
     let decoded = decode(&encoded, &substrings);
     assert_eq!(decoded, source);
 

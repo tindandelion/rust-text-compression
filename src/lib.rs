@@ -21,7 +21,7 @@ mod tests {
         "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new"
             .to_string();
 
-        let (encoded, substrings) = encode_with_policy(&source, CaptureAll);
+        let (encoded, substrings, _) = encode_with_policy(&source, CaptureAll);
         let decoded = decode(&encoded, &substrings);
 
         assert_eq!(decoded, source);
@@ -31,7 +31,7 @@ mod tests {
     fn encode_and_decode_multibyte_string() {
         let source = "こんにちはこんにちは世界世界".to_string();
 
-        let (encoded, substrings) = encode_with_policy(&source, CaptureAll);
+        let (encoded, substrings, _) = encode_with_policy(&source, CaptureAll);
         let decoded = decode(&encoded, &substrings);
         assert_eq!(decoded, source);
     }

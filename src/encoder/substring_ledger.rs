@@ -30,6 +30,10 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.substrings.len()
+    }
+
     pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
         self.policy.should_merge(x, y, &self.substrings)
     }
