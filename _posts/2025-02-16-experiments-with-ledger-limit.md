@@ -53,3 +53,7 @@ Experimenting with different substring ledger limits.
 "Prince Andre"
 " Prince And"
 ```
+
+The questions I'm getting: 
+- Is it a specific aberration in the input text? 
+- Would the result be different if I selected the strings simply by their frequency? 
