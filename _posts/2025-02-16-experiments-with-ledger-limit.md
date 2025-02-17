@@ -4,13 +4,23 @@ title: Experimenting with substring ledger limits
 date: 2025-02-16
 ---
 
-Experimenting with different substring ledger limits. 
+Having introduced the substring ledger limit, I can now experiment with different values of the limit, to see how it affects the compression ratio and the time performance of the compression algorithm. My expectation is that the time performance will be better, because smaller ledger size means that we'll need to sieve through fewer substrings to find the longest match. With compression ratio, it's not so clear yet how it's going to be affected. 
 
-# Baseline experiment 
+# Establishing the baseline
+
+Let's start by establishing the baseline. I'm going to use an excerpt from the novel "War and Peace" by Leo Tolstoy. The full text is available [here][tolstoy-gutenberg]. To make a test dataset, I'm taking the first 25600 lines of the text. I can't use the entire text yet, because the algorithm is too slow to compress it in all entirety. 
+
+Also, in time measurements, I'm switching to using the _release_ build. Release builds use more aggressive optimizations, and remove some runtime checks. As a result, the release build runs significantly faster, which allows me to use larger input dataset.
+
+So, to establish the baseline, I've run the compression of the input text using the `CaptureAll` ledger policy. This policy doesn't put a limit on the ledger size during construction: it captures all substrings that repeated at least once, and lets the ledger grow as much as needed. 
+
+Here's the result of running the compression: 
 
 | Substring Ledger Size | Compression Ratio | Time Elapsed |
 |----------------------:|------------------:|-------------:|
 |               210 453 |            25.36% |       67.02s |
+
+And the top 10 most impactful substrings are: 
 
 ```
 "EN: 1812\n\n    CHAPTER I\n\n    CHAPTER II\n\n    CHAPTER III\n\n    CHAPTER IV\n\n    CHAPTER V\n\n    CHAPTER VI\n\n    CHAPTER VII\n\n    CHAPTER VIII\n\n    CHAPTER IX\n\n    CHAPTER X\n\n    CHAPTER XI\n\n    CHAPTER XII\n\n    CHAPTER XIII\n\n    CHAPTER XIV\n\n    CHAPTER XV\n\n    CHAPTER XVI\n\n    CHAPTER X"
@@ -57,3 +67,5 @@ Experimenting with different substring ledger limits.
 The questions I'm getting: 
 - Is it a specific aberration in the input text? 
 - Would the result be different if I selected the strings simply by their frequency? 
+
+[tolstoy-gutenberg]: https://www.gutenberg.org/cache/epub/2600/pg2600.txt
