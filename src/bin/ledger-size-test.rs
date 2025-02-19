@@ -51,8 +51,7 @@ fn run_baseline() -> ExperimentResult {
 
     let start = Instant::now();
     let (encoded, substrings, ledger_size) = encode_with_policy(&source, CaptureAll);
-    let end = Instant::now();
-    let time_elapsed = end.duration_since(start).as_secs_f32();
+    let time_elapsed = start.elapsed().as_secs_f32();
 
     let decoded = decode(&encoded, &substrings);
     assert_eq!(decoded, source);
@@ -73,8 +72,7 @@ fn run_experiment(ledger_size: usize) -> ExperimentResult {
 
     let start = Instant::now();
     let (encoded, substrings, ledger_size) = encode_with_policy(&source, policy);
-    let end = Instant::now();
-    let time_elapsed = end.duration_since(start).as_secs_f32();
+    let time_elapsed = start.elapsed().as_secs_f32();
 
     let decoded = decode(&encoded, &substrings);
     assert_eq!(decoded, source);
