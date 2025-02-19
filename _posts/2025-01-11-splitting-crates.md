@@ -4,7 +4,7 @@ title: "Splitting crates"
 date: 2025-01-11 
 ---
 
-As I mentioned in the [previous post][prev-post], I'm not happy with the performance of my initial implementation, and I'm eager to dive into exploring the bottlenecks. But to make experiments more convenient, I would like to create a second, simpler executable that I could use in performance testing. It will peform the compression on a single input file, so the execution time will be much shorter, compared to the main executable that processes many files.
+As I mentioned in the [previous post][prev-post], I'm not happy with the performance of my initial implementation, and I'm eager to dive into exploring the bottlenecks. But to make experiments more convenient, I would like to create a second, simpler executable that I could use in performance testing. It will perform the compression on a single input file, so the execution time will be much shorter, compared to the main executable that processes many files.
 
 # More about crates
 
@@ -16,7 +16,7 @@ A library crate, on the other hand, does not produce an executable file. Instead
 
 Your package can consist of multiple crates, both library and binary. There can be only one library crate in the package, but multiple binary crates. By default, there are some conventions that Cargo uses to determine crate roots. For example, if the crate is binary, the root is the file named `src/main.rs`. If the crate is a library, the root will be `src/lib.rs`. When working with several binary crates, it makes sense to put them all into `src/bin/` directory: each file there will be considered a separate binary crate root by Cargo. 
 
-The `src/bin/` is a resaonable default convention that Cargo uses. It can be overridden in the `Cargo.toml` file, but that's beyond the scope: for now, I'm quite satisfied with the defaults.
+The `src/bin/` is a reasonable default convention that Cargo uses. It can be overridden in the `Cargo.toml` file, but that's beyond the scope: for now, I'm quite satisfied with the defaults.
 
 # Reorganizing the project into multiple crates
 
@@ -72,7 +72,7 @@ In the hindsight, I think it's worth splitting the project into a library crate 
 
 # Next steps
 
-With all that preliminary work done, I can now [start exploring][next-step] the performance bottlenects, using the [`performance-test`][performance-test-0.0.2] executable. 
+With all that preliminary work done, I can now [start exploring][next-step] the performance bottlenecks, using the [`performance-test`][performance-test-0.0.2] executable. 
 
 [prev-post]: {{site.baseurl}}/{% post_url 2025-01-10-first-iteration %}
 [main-0.0.1]: https://github.com/tindandelion/rust-text-compression/blob/0.0.1/src/main.rs
