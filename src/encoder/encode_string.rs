@@ -1,4 +1,4 @@
-use crate::substring_dictionary::SubstringDictionary;
+use crate::encoding_table::EncodingTable;
 
 use super::encoder_spec::EncoderSpec;
 
@@ -7,7 +7,7 @@ pub const SPEC: EncoderSpec = EncoderSpec {
     encoded_size: 2,
 };
 
-pub fn encode_string(source: &str, substrings: &SubstringDictionary) -> Vec<u8> {
+pub fn encode_string(source: &str, substrings: &EncodingTable) -> Vec<u8> {
     assert!(substrings.len() <= SPEC.num_strings);
 
     let mut encoding_buffer = [0; 4];
@@ -90,7 +90,7 @@ mod tests {
         assert_eq!(source.as_bytes(), encoded);
     }
 
-    fn make_dictionary(substrings: Vec<String>) -> SubstringDictionary {
-        SubstringDictionary::new(substrings)
+    fn make_dictionary(substrings: Vec<String>) -> EncodingTable {
+        EncodingTable::new(substrings)
     }
 }

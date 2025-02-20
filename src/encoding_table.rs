@@ -1,8 +1,8 @@
-pub struct SubstringDictionary {
+pub struct EncodingTable {
     substrings: Vec<String>,
 }
 
-impl SubstringDictionary {
+impl EncodingTable {
     pub fn new(substrings: Vec<String>) -> Self {
         Self { substrings }
     }

@@ -30,7 +30,7 @@ fn main() {
     println!("Bottom 10 substrings: {:?}", baseline_result.bottom_10);
     println!("================================================\n\n\n");
 
-    println!("* Running experiments ledger size experiments...");
+    println!("* Running ledger size experiments...");
     for factor in LEDGER_SIZE_FACTORS {
         let ledger_size = ENCODER_SPEC.num_strings * factor;
         println!("Max ledger size: {}", ledger_size);

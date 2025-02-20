@@ -11,12 +11,12 @@ pub use encode_string::SPEC as ENCODER_SPEC;
 use substring::Substring;
 use substring_ledger::{LedgerPolicy, SubstringLedger};
 
-use crate::substring_dictionary::SubstringDictionary;
+use crate::encoding_table::EncodingTable;
 
 pub fn encode_with_policy<P: LedgerPolicy>(
     string: &str,
     policy: P,
-) -> (Vec<u8>, SubstringDictionary, usize) {
+) -> (Vec<u8>, EncodingTable, usize) {
     let ledger = build_ledger(string, policy);
     let ledger_size = ledger.len();
     let substrings = ledger.get_most_impactful_strings(&ENCODER_SPEC);

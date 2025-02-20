@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::substring_dictionary::SubstringDictionary;
+use crate::encoding_table::EncodingTable;
 
 use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
@@ -56,7 +56,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         }
     }
 
-    pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> SubstringDictionary {
+    pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> EncodingTable {
         let impacts = self.calculate_impacts(encoder_spec);
         let mut most_impactful: Vec<Substring> = impacts
             .into_iter()
@@ -64,7 +64,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
             .take(encoder_spec.num_strings)
             .collect();
         most_impactful.sort();
-        SubstringDictionary::new(most_impactful.into_iter().map(|s| s.0).collect())
+        EncodingTable::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
     fn calculate_impacts(self, encoder_spec: &EncoderSpec) -> Vec<EncodingImpact> {

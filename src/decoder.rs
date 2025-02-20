@@ -1,6 +1,6 @@
-use crate::substring_dictionary::SubstringDictionary;
+use crate::encoding_table::EncodingTable;
 
-pub fn decode_string(encoded_bytes: &[u8], substrings: &SubstringDictionary) -> String {
+pub fn decode_string(encoded_bytes: &[u8], substrings: &EncodingTable) -> String {
     let mut result = String::new();
 
     let mut head = encoded_bytes;
@@ -47,7 +47,7 @@ mod tests {
     #[test]
     fn decode_simple_encoded_string() {
         let string = "abcdef";
-        let substrings = SubstringDictionary::new(vec![]);
+        let substrings = EncodingTable::new(vec![]);
 
         let decoded = decode_string(string.as_bytes(), &substrings);
         assert_eq!(string, decoded);
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn decode_string_with_encoded_substring() {
         let encoded = vec![0xF5, 0x00];
-        let substrings = SubstringDictionary::new(vec!["abc".to_string()]);
+        let substrings = EncodingTable::new(vec!["abc".to_string()]);
 
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, "abc");
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn decode_string_with_encoded_substrings_and_single_characters() {
         let encoded = vec![0xF5, 0x00, 0x41, 0xF5, 0x01, 0x41, 0x42, 0x43];
-        let substrings = SubstringDictionary::new(vec!["abc".to_string(), "def".to_string()]);
+        let substrings = EncodingTable::new(vec!["abc".to_string(), "def".to_string()]);
 
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, "abcAdefABC");
@@ -76,7 +76,7 @@ mod tests {
         let sample_string = "犬猫魚鳥";
         let encoded = sample_string.as_bytes();
 
-        let decoded = decode_string(&encoded, &SubstringDictionary::new(vec![]));
+        let decoded = decode_string(&encoded, &EncodingTable::new(vec![]));
         assert_eq!(decoded, sample_string);
     }
 
