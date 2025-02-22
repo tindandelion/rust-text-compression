@@ -12,6 +12,14 @@ pub trait LedgerPolicy {
     fn cleanup(&self, substrings: &mut SubstringMap);
 }
 
+pub trait SubstringSelector {
+    fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring>;
+}
+
+struct SelectByCompressionGain<'a> {
+    encoder_spec: &'a EncoderSpec,
+}
+
 pub struct SubstringLedger<LP: LedgerPolicy> {
     substrings: SubstringMap,
     policy: LP,
@@ -56,33 +64,16 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         }
     }
 
-    pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> EncodingTable {
-        let impacts = self.calculate_impacts(encoder_spec);
-        let mut most_impactful: Vec<Substring> = impacts
-            .into_iter()
-            .map(|impact| impact.substring)
-            .take(encoder_spec.num_strings)
-            .collect();
+    pub fn select_substrings(mut self, selector: &impl SubstringSelector) -> EncodingTable {
+        self.substrings.retain(|_, count| *count > 1);
+        let mut most_impactful = selector.select_substrings(self.substrings);
         most_impactful.sort();
         EncodingTable::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
-    fn calculate_impacts(self, encoder_spec: &EncoderSpec) -> Vec<EncodingImpact> {
-        let mut impacts: Vec<EncodingImpact> = self
-            .substrings
-            .into_iter()
-            .filter(|(_, count)| *count > 1)
-            .map(|(substring, count)| {
-                let compression_gain = encoder_spec.compression_gain(&substring.0, count as usize);
-                EncodingImpact {
-                    substring,
-                    compression_gain,
-                }
-            })
-            .filter(|impact| impact.compression_gain > 0)
-            .collect();
-        impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
-        impacts
+    pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> EncodingTable {
+        let selection_policy = SelectByCompressionGain::new(encoder_spec);
+        self.select_substrings(&selection_policy)
     }
 
     pub fn contains(&self, substr: &Substring) -> bool {
@@ -95,6 +86,41 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
             .iter()
             .map(|(substring, count)| (substring.as_str(), *count))
             .collect()
+    }
+}
+
+impl<'a> SubstringSelector for SelectByCompressionGain<'a> {
+    fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring> {
+        let impacts = self.calculate_impacts(substrings);
+        impacts
+            .into_iter()
+            .map(|impact| impact.substring)
+            .take(self.encoder_spec.num_strings)
+            .collect()
+    }
+}
+
+impl<'a> SelectByCompressionGain<'a> {
+    pub fn new(encoder_spec: &'a EncoderSpec) -> Self {
+        Self { encoder_spec }
+    }
+
+    fn calculate_impacts(&self, substrings: SubstringMap) -> Vec<EncodingImpact> {
+        let mut impacts: Vec<EncodingImpact> = substrings
+            .into_iter()
+            .map(|(substring, count)| {
+                let compression_gain = self
+                    .encoder_spec
+                    .compression_gain(&substring.0, count as usize);
+                EncodingImpact {
+                    substring,
+                    compression_gain,
+                }
+            })
+            .filter(|impact| impact.compression_gain > 0)
+            .collect();
+        impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
+        impacts
     }
 }
 
