@@ -3,15 +3,13 @@ mod encoder;
 mod encoding_table;
 
 pub use decoder::decode_string as decode;
+pub use encoder::encode;
 pub use encoder::encode_with_policy;
+pub use encoder::substring_selector::SubstringSelector;
 pub use encoder::ENCODER_SPEC;
 
 pub mod policies {
     pub use super::encoder::ledger_policies::{CaptureAll, LimitLedgerSize};
-}
-
-pub mod substring_selectors {
-    pub use super::encoder::substring_selector::SubstringSelector;
 }
 
 #[cfg(test)]

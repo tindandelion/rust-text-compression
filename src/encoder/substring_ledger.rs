@@ -169,7 +169,7 @@ mod tests {
 
     mod build_encoding_table {
         use super::*;
-        use crate::{encoder::encoder_spec::EncoderSpec, substring_selectors::SubstringSelector};
+        use crate::encoder::encoder_spec::EncoderSpec;
 
         #[test]
         fn limit_number_of_entries_by_capacity() {

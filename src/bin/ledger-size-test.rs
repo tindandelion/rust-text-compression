@@ -1,9 +1,10 @@
 use std::fs;
 use std::time::Instant;
 use text_compression::decode;
-use text_compression::encode_with_policy;
+use text_compression::encode;
 use text_compression::policies::CaptureAll;
 use text_compression::policies::LimitLedgerSize;
+use text_compression::SubstringSelector;
 use text_compression::ENCODER_SPEC;
 
 struct UsageStats {
@@ -41,8 +42,9 @@ const INPUT_FILENAME: &str = "wap-25600.txt";
 const LEDGER_SIZE_FACTORS: &[usize] = &[1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 fn main() {
+    let selector = SubstringSelector::order_by_frequency(ENCODER_SPEC.encoded_size);
     println!("* Running baseline experiment (CaptureAll)...");
-    let baseline_result = run_baseline();
+    let baseline_result = run_baseline(&selector);
     baseline_result.print();
     println!("================================================\n\n\n");
 
@@ -50,18 +52,18 @@ fn main() {
     for factor in LEDGER_SIZE_FACTORS {
         let ledger_size = ENCODER_SPEC.num_strings * factor;
         println!("Max ledger size: {}", ledger_size);
-        let result = run_experiment(ledger_size);
+        let result = run_experiment(ledger_size, &selector);
         result.print();
         println!("================================================");
     }
     println!("* Experiments finished.");
 }
 
-fn run_baseline() -> ExperimentResult {
+fn run_baseline(selector: &SubstringSelector) -> ExperimentResult {
     let source = read_source_file();
 
     let start = Instant::now();
-    let (encoded, substrings, ledger_size) = encode_with_policy(&source, CaptureAll);
+    let (encoded, substrings, ledger_size) = encode(&source, CaptureAll, &selector);
     let time_elapsed = start.elapsed().as_secs_f32();
 
     let decoded = decode(&encoded, &substrings);
@@ -81,12 +83,12 @@ fn run_baseline() -> ExperimentResult {
     }
 }
 
-fn run_experiment(ledger_size: usize) -> ExperimentResult {
+fn run_experiment(ledger_size: usize, selector: &SubstringSelector) -> ExperimentResult {
     let source = read_source_file();
     let policy = LimitLedgerSize::with_max_size(ledger_size);
 
     let start = Instant::now();
-    let (encoded, substrings, ledger_size) = encode_with_policy(&source, policy);
+    let (encoded, substrings, ledger_size) = encode(&source, policy, selector);
     let time_elapsed = start.elapsed().as_secs_f32();
 
     let decoded = decode(&encoded, &substrings);

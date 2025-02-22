@@ -22,14 +22,14 @@ pub fn encode_with_policy<P: LedgerPolicy>(
     encode(
         string,
         policy,
-        SubstringSelector::order_by_compression_gain(ENCODER_SPEC.encoded_size),
+        &SubstringSelector::order_by_compression_gain(ENCODER_SPEC.encoded_size),
     )
 }
 
-fn encode<P: LedgerPolicy>(
+pub fn encode<P: LedgerPolicy>(
     string: &str,
     ledger_policy: P,
-    substring_selector: SubstringSelector,
+    substring_selector: &SubstringSelector,
 ) -> (Vec<u8>, EncodingTable, usize) {
     let ledger = build_ledger(string, ledger_policy);
     let ledger_size = ledger.len();
