@@ -10,6 +10,10 @@ pub mod policies {
     pub use super::encoder::ledger_policies::{CaptureAll, LimitLedgerSize};
 }
 
+pub mod substring_selectors {
+    pub use super::encoder::substring_selectors::SelectByCompressionGain;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

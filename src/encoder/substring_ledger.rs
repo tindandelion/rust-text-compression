@@ -4,6 +4,7 @@ use crate::encoding_table::EncodingTable;
 
 use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
+use super::substring_selectors::SelectByCompressionGain;
 
 pub type SubstringMap = BTreeMap<Substring, usize>;
 
@@ -16,18 +17,9 @@ pub trait SubstringSelector {
     fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring>;
 }
 
-struct SelectByCompressionGain<'a> {
-    encoder_spec: &'a EncoderSpec,
-}
-
 pub struct SubstringLedger<LP: LedgerPolicy> {
     substrings: SubstringMap,
     policy: LP,
-}
-
-struct EncodingImpact {
-    substring: Substring,
-    compression_gain: usize,
 }
 
 impl<LP: LedgerPolicy> SubstringLedger<LP> {
@@ -71,11 +63,6 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         EncodingTable::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
-    pub fn get_most_impactful_strings(self, encoder_spec: &EncoderSpec) -> EncodingTable {
-        let selection_policy = SelectByCompressionGain::new(encoder_spec);
-        self.select_substrings(&selection_policy)
-    }
-
     pub fn contains(&self, substr: &Substring) -> bool {
         self.substrings.contains_key(substr)
     }
@@ -86,41 +73,6 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
             .iter()
             .map(|(substring, count)| (substring.as_str(), *count))
             .collect()
-    }
-}
-
-impl<'a> SubstringSelector for SelectByCompressionGain<'a> {
-    fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring> {
-        let impacts = self.calculate_impacts(substrings);
-        impacts
-            .into_iter()
-            .map(|impact| impact.substring)
-            .take(self.encoder_spec.num_strings)
-            .collect()
-    }
-}
-
-impl<'a> SelectByCompressionGain<'a> {
-    pub fn new(encoder_spec: &'a EncoderSpec) -> Self {
-        Self { encoder_spec }
-    }
-
-    fn calculate_impacts(&self, substrings: SubstringMap) -> Vec<EncodingImpact> {
-        let mut impacts: Vec<EncodingImpact> = substrings
-            .into_iter()
-            .map(|(substring, count)| {
-                let compression_gain = self
-                    .encoder_spec
-                    .compression_gain(&substring.0, count as usize);
-                EncodingImpact {
-                    substring,
-                    compression_gain,
-                }
-            })
-            .filter(|impact| impact.compression_gain > 0)
-            .collect();
-        impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
-        impacts
     }
 }
 
@@ -232,10 +184,11 @@ mod tests {
             insert_repeated_substring(&mut ledger, "aaaaa");
             insert_repeated_substring(&mut ledger, "b");
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 1,
                 encoded_size: 0,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
         }
 
@@ -250,10 +203,11 @@ mod tests {
             ledger.increment_count(substring("b"));
             ledger.increment_count(substring("b"));
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 1,
                 encoded_size: 0,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["b"], most_impactful.to_vec());
         }
 
@@ -271,10 +225,11 @@ mod tests {
             ledger.increment_count(substring("b"));
             ledger.increment_count(substring("b"));
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 1,
                 encoded_size: 0,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["b"], most_impactful.to_vec());
         }
 
@@ -291,10 +246,11 @@ mod tests {
             ledger.increment_count(substring("aa"));
             ledger.increment_count(substring("aa"));
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 10,
                 encoded_size: 2,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaa"], most_impactful.to_vec());
         }
 
@@ -321,10 +277,11 @@ mod tests {
             insert_repeated_substring(&mut ledger, "aaa");
             ledger.increment_count(substring("aaa"));
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 1,
                 encoded_size: 2,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
         }
 
@@ -336,10 +293,11 @@ mod tests {
             ledger.increment_count(substring("bb"));
             ledger.increment_count(substring("bb"));
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 10,
                 encoded_size: 1,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["bb"], most_impactful.to_vec());
         }
 
@@ -354,16 +312,21 @@ mod tests {
             ledger.increment_count(substring("aa"));
             ledger.increment_count(substring("aa"));
 
-            let most_impactful = ledger.get_most_impactful_strings(&EncoderSpec {
+            let encoder_spec = EncoderSpec {
                 num_strings: 2,
                 encoded_size: 1,
-            });
+            };
+            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
         }
     }
 
     fn substring(s: &str) -> Substring {
         Substring(s.to_string())
+    }
+
+    fn make_selector(encoder_spec: &EncoderSpec) -> SelectByCompressionGain {
+        SelectByCompressionGain::new(encoder_spec)
     }
 
     fn insert_repeated_substring<LP: LedgerPolicy>(ledger: &mut SubstringLedger<LP>, s: &str) {
