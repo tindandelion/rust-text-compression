@@ -11,7 +11,8 @@ pub struct EncodingTable {
 }
 
 impl EncodingTable {
-    pub fn new(substrings: Vec<Substring>) -> Self {
+    pub fn new(mut substrings: Vec<Substring>) -> Self {
+        substrings.sort();
         let entries = substrings
             .into_iter()
             .map(|s| TableEntry {
@@ -78,6 +79,18 @@ impl EncodingTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sorts_substrings_by_length_at_creation() {
+        let table = EncodingTable::new(vec![
+            "a".into(),
+            "aa".into(),
+            "aaa".into(),
+            "b".into(),
+            "bb".into(),
+        ]);
+        assert_eq!(vec!["aaa", "aa", "bb", "a", "b"], table.to_vec());
+    }
 
     #[test]
     fn used_entries_count_at_start() {
