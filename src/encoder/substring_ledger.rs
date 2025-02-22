@@ -56,7 +56,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         }
     }
 
-    pub fn select_substrings(mut self, selector: &impl SubstringSelector) -> EncodingTable {
+    pub fn build_encoding_table(mut self, selector: &impl SubstringSelector) -> EncodingTable {
         self.substrings.retain(|_, count| *count > 1);
         let mut most_impactful = selector.select_substrings(self.substrings);
         most_impactful.sort();
@@ -188,7 +188,7 @@ mod tests {
                 num_strings: 1,
                 encoded_size: 0,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
         }
 
@@ -207,7 +207,7 @@ mod tests {
                 num_strings: 1,
                 encoded_size: 0,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["b"], most_impactful.to_vec());
         }
 
@@ -229,7 +229,7 @@ mod tests {
                 num_strings: 1,
                 encoded_size: 0,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["b"], most_impactful.to_vec());
         }
 
@@ -250,7 +250,7 @@ mod tests {
                 num_strings: 10,
                 encoded_size: 2,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaa"], most_impactful.to_vec());
         }
 
@@ -281,7 +281,7 @@ mod tests {
                 num_strings: 1,
                 encoded_size: 2,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
         }
 
@@ -297,7 +297,7 @@ mod tests {
                 num_strings: 10,
                 encoded_size: 1,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["bb"], most_impactful.to_vec());
         }
 
@@ -316,7 +316,7 @@ mod tests {
                 num_strings: 2,
                 encoded_size: 1,
             };
-            let most_impactful = ledger.select_substrings(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
             assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
         }
     }
