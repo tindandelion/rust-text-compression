@@ -15,6 +15,7 @@
         "tolstoy",
         "BuildState",
         "prev",
-        "flamegraphs"
+        "flamegraphs",
+        "codebase"
     ]
 } 
