@@ -11,7 +11,7 @@ pub mod policies {
 }
 
 pub mod substring_selectors {
-    pub use super::encoder::substring_selectors::SelectByCompressionGain;
+    pub use super::encoder::substring_selector::SubstringSelector;
 }
 
 #[cfg(test)]

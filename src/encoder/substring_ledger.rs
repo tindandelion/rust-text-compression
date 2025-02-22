@@ -2,17 +2,13 @@ use std::collections::BTreeMap;
 
 use crate::encoding_table::EncodingTable;
 
-use super::substring::Substring;
+use super::{substring::Substring, substring_selector::SubstringSelector};
 
 pub type SubstringMap = BTreeMap<Substring, usize>;
 
 pub trait LedgerPolicy {
     fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool;
     fn cleanup(&self, substrings: &mut SubstringMap);
-}
-
-pub trait SubstringSelector {
-    fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring>;
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
@@ -55,11 +51,10 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     pub fn build_encoding_table(
-        mut self,
-        selector: &impl SubstringSelector,
+        self,
+        selector: &SubstringSelector,
         capacity: usize,
     ) -> EncodingTable {
-        self.substrings.retain(|_, count| *count > 1);
         let mut most_impactful = selector.select_substrings(self.substrings);
         most_impactful.truncate(capacity);
         EncodingTable::new(most_impactful)
@@ -174,24 +169,7 @@ mod tests {
 
     mod build_encoding_table {
         use super::*;
-        use crate::{
-            encoder::encoder_spec::EncoderSpec, substring_selectors::SelectByCompressionGain,
-        };
-
-        #[test]
-        fn skip_single_occurrence() {
-            let mut ledger = make_ledger();
-            ledger.increment_count(substring("aaaaaa"));
-            ledger.increment_count(substring("bb"));
-            ledger.increment_count(substring("bb"));
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 10,
-                encoded_size: 1,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec), 10);
-            assert_eq!(vec!["bb"], most_impactful.to_vec());
-        }
+        use crate::{encoder::encoder_spec::EncoderSpec, substring_selectors::SubstringSelector};
 
         #[test]
         fn limit_number_of_entries_by_capacity() {
@@ -217,8 +195,8 @@ mod tests {
             assert_eq!(vec!["aaaaaa", "b"], most_impactful.to_vec());
         }
 
-        fn make_selector(encoder_spec: &EncoderSpec) -> SelectByCompressionGain {
-            SelectByCompressionGain::new(encoder_spec.encoded_size)
+        fn make_selector(encoder_spec: &EncoderSpec) -> SubstringSelector {
+            SubstringSelector::order_by_compression_gain(encoder_spec.encoded_size)
         }
     }
 

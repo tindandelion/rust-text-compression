@@ -4,14 +4,14 @@ mod encoder_spec;
 pub mod ledger_policies;
 mod substring;
 mod substring_ledger;
-pub mod substring_selectors;
+pub mod substring_selector;
 
 use build_ledger::build_ledger;
 use encode_string::encode_string;
 pub use encode_string::SPEC as ENCODER_SPEC;
 pub use substring::Substring;
-use substring_ledger::{LedgerPolicy, SubstringLedger, SubstringSelector};
-use substring_selectors::SelectByCompressionGain;
+use substring_ledger::{LedgerPolicy, SubstringLedger};
+use substring_selector::SubstringSelector;
 
 use crate::encoding_table::EncodingTable;
 
@@ -22,14 +22,14 @@ pub fn encode_with_policy<P: LedgerPolicy>(
     encode(
         string,
         policy,
-        SelectByCompressionGain::new(ENCODER_SPEC.encoded_size),
+        SubstringSelector::order_by_compression_gain(ENCODER_SPEC.encoded_size),
     )
 }
 
 fn encode<P: LedgerPolicy>(
     string: &str,
     ledger_policy: P,
-    substring_selector: impl SubstringSelector,
+    substring_selector: SubstringSelector,
 ) -> (Vec<u8>, EncodingTable, usize) {
     let ledger = build_ledger(string, ledger_policy);
     let ledger_size = ledger.len();
