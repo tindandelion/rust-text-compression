@@ -54,10 +54,15 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         }
     }
 
-    pub fn build_encoding_table(mut self, selector: &impl SubstringSelector) -> EncodingTable {
+    pub fn build_encoding_table(
+        mut self,
+        selector: &impl SubstringSelector,
+        capacity: usize,
+    ) -> EncodingTable {
         self.substrings.retain(|_, count| *count > 1);
         let mut most_impactful = selector.select_substrings(self.substrings);
         most_impactful.sort();
+        most_impactful.truncate(capacity);
         EncodingTable::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
@@ -185,7 +190,7 @@ mod tests {
                 num_strings: 10,
                 encoded_size: 1,
             };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec), 10);
             assert_eq!(vec!["bb"], most_impactful.to_vec());
         }
 
@@ -208,12 +213,32 @@ mod tests {
                 num_strings: 3,
                 encoded_size: 0,
             };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec), 3);
             assert_eq!(vec!["aaaaaa", "aa", "b"], most_impactful.to_vec());
         }
 
+        #[test]
+        fn limit_number_of_entries_by_capacity() {
+            let mut ledger = make_ledger();
+            ledger.increment_count(substring("b"));
+            ledger.increment_count(substring("b"));
+
+            ledger.increment_count(substring("aaaaaa"));
+            ledger.increment_count(substring("aaaaaa"));
+
+            ledger.increment_count(substring("aa"));
+            ledger.increment_count(substring("aa"));
+
+            let encoder_spec = EncoderSpec {
+                num_strings: 3,
+                encoded_size: 0,
+            };
+            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec), 2);
+            assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
+        }
+
         fn make_selector(encoder_spec: &EncoderSpec) -> SelectByCompressionGain {
-            SelectByCompressionGain::new(encoder_spec)
+            SelectByCompressionGain::new(encoder_spec.encoded_size)
         }
     }
 

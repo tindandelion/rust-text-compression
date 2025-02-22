@@ -1,11 +1,10 @@
 use super::{
-    encoder_spec::EncoderSpec,
     substring::Substring,
     substring_ledger::{SubstringMap, SubstringSelector},
 };
 
-pub struct SelectByCompressionGain<'a> {
-    encoder_spec: &'a EncoderSpec,
+pub struct SelectByCompressionGain {
+    encoded_size: usize,
 }
 
 struct EncodingImpact {
@@ -13,29 +12,23 @@ struct EncodingImpact {
     compression_gain: usize,
 }
 
-impl<'a> SubstringSelector for SelectByCompressionGain<'a> {
+impl SubstringSelector for SelectByCompressionGain {
     fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring> {
         let impacts = self.calculate_impacts(substrings);
-        impacts
-            .into_iter()
-            .map(|impact| impact.substring)
-            .take(self.encoder_spec.num_strings)
-            .collect()
+        impacts.into_iter().map(|impact| impact.substring).collect()
     }
 }
 
-impl<'a> SelectByCompressionGain<'a> {
-    pub fn new(encoder_spec: &'a EncoderSpec) -> Self {
-        Self { encoder_spec }
+impl SelectByCompressionGain {
+    pub fn new(encoded_size: usize) -> Self {
+        Self { encoded_size }
     }
 
     fn calculate_impacts(&self, substrings: SubstringMap) -> Vec<EncodingImpact> {
         let mut impacts: Vec<EncodingImpact> = substrings
             .into_iter()
             .map(|(substring, count)| {
-                let compression_gain = self
-                    .encoder_spec
-                    .compression_gain(&substring.0, count as usize);
+                let compression_gain = self.calc_compression_gain(&substring.0, count as usize);
                 EncodingImpact {
                     substring,
                     compression_gain,
@@ -45,6 +38,14 @@ impl<'a> SelectByCompressionGain<'a> {
             .collect();
         impacts.sort_by(|a, b| b.compression_gain.cmp(&a.compression_gain));
         impacts
+    }
+
+    fn calc_compression_gain(&self, string: &str, count: usize) -> usize {
+        let unencoded_total_size = string.len() * count;
+        let encoded_total_size = self.encoded_size * count;
+        unencoded_total_size
+            .checked_sub(encoded_total_size)
+            .unwrap_or(0)
     }
 }
 
@@ -57,17 +58,12 @@ mod tests {
 
         use super::*;
 
-        const SAMPLE_SPEC: EncoderSpec = EncoderSpec {
-            num_strings: 1,
-            encoded_size: 0,
-        };
-
         #[test]
         fn select_by_string_length() {
             /*
              * For equal counts, longer strings make bigger impact on compression.
              */
-            let selector = SelectByCompressionGain::new(&SAMPLE_SPEC);
+            let selector = SelectByCompressionGain::new(0);
             let substrings = BTreeMap::from([
                 (Substring("bb".to_string()), 2),
                 (Substring("aa".to_string()), 2),
@@ -75,7 +71,7 @@ mod tests {
             ]);
 
             let selected = selector.select_substrings(substrings);
-            assert_eq!(vec!["aaaaa"], to_strings(selected));
+            assert_eq!(vec!["aaaaa", "aa", "bb"], to_strings(selected));
         }
 
         #[test]
@@ -83,14 +79,14 @@ mod tests {
             /*
              * For equal string lengths, more frequent substrings make bigger impact on compression.
              */
-            let selector = SelectByCompressionGain::new(&SAMPLE_SPEC);
+            let selector = SelectByCompressionGain::new(0);
             let substrings = BTreeMap::from([
                 (Substring("aa".to_string()), 2),
                 (Substring("bb".to_string()), 3),
             ]);
 
             let selected = selector.select_substrings(substrings);
-            assert_eq!(vec!["bb"], to_strings(selected));
+            assert_eq!(vec!["bb", "aa"], to_strings(selected));
         }
 
         #[test]
@@ -98,7 +94,7 @@ mod tests {
             /*
              * The string has more impact, when the total length of all its occurrences is bigger.
              */
-            let selector = SelectByCompressionGain::new(&SAMPLE_SPEC);
+            let selector = SelectByCompressionGain::new(0);
             let substrings = BTreeMap::from([
                 (Substring("a".to_string()), 1),
                 (Substring("aaa".to_string()), 1),
@@ -106,7 +102,7 @@ mod tests {
             ]);
 
             let selected = selector.select_substrings(substrings);
-            assert_eq!(vec!["b"], to_strings(selected));
+            assert_eq!(vec!["b", "aaa", "a"], to_strings(selected));
         }
 
         #[test]
@@ -114,11 +110,7 @@ mod tests {
             /*
              * Short strings are not encoded, because their encoded size is bigger than or equal to the string's length itself.
              */
-            let encoder_spec_with_encoded_size = EncoderSpec {
-                num_strings: 10,
-                encoded_size: 2,
-            };
-            let selector = SelectByCompressionGain::new(&encoder_spec_with_encoded_size);
+            let selector = SelectByCompressionGain::new(2);
             let substrings = BTreeMap::from([
                 (Substring("aaa".to_string()), 2),
                 (Substring("a".to_string()), 2),
@@ -145,14 +137,14 @@ mod tests {
              *
              * So, "aaaaa" has more impact on compression, even though it's less frequent.
              */
-            let selector = SelectByCompressionGain::new(&SAMPLE_SPEC);
+            let selector = SelectByCompressionGain::new(0);
             let substrings = BTreeMap::from([
                 (Substring("aaaaa".to_string()), 2),
                 (Substring("aaa".to_string()), 3),
             ]);
 
             let selected = selector.select_substrings(substrings);
-            assert_eq!(vec!["aaaaa"], to_strings(selected));
+            assert_eq!(vec!["aaaaa", "aaa"], to_strings(selected));
         }
 
         fn to_strings(substrings: Vec<Substring>) -> Vec<String> {
