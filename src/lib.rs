@@ -18,20 +18,19 @@ mod tests {
     #[test]
     fn encode_and_decode_ascii_string() {
         let source =
-        "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new"
-            .to_string();
+        "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new";
 
-        let (encoded, substrings, _) = encode_with_policy(&source, CaptureAll);
+        let (encoded, substrings, _) = encode_with_policy(source, CaptureAll);
         let decoded = decode(&encoded, &substrings);
 
         assert_eq!(decoded, source);
     }
 
     #[test]
-    fn encode_and_decode_multibyte_string() {
-        let source = "こんにちはこんにちは世界世界".to_string();
+    fn encode_and_decode_multi_byte_string() {
+        let source = "こんにちはこんにちは世界世界";
 
-        let (encoded, substrings, _) = encode_with_policy(&source, CaptureAll);
+        let (encoded, substrings, _) = encode_with_policy(source, CaptureAll);
         let decoded = decode(&encoded, &substrings);
         assert_eq!(decoded, source);
     }
