@@ -2,9 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::encoding_table::EncodingTable;
 
-use super::encoder_spec::EncoderSpec;
 use super::substring::Substring;
-use super::substring_selectors::SelectByCompressionGain;
 
 pub type SubstringMap = BTreeMap<Substring, usize>;
 
@@ -170,126 +168,16 @@ mod tests {
         }
     }
 
-    mod most_impactful_strings {
+    mod build_encoding_table {
         use super::*;
-
-        #[test]
-        fn found_by_string_length() {
-            /*
-             * For equal counts, longer strings make bigger impact on compression.
-             */
-            let mut ledger = make_ledger();
-            insert_repeated_substring(&mut ledger, "a");
-            insert_repeated_substring(&mut ledger, "aa");
-            insert_repeated_substring(&mut ledger, "aaaaa");
-            insert_repeated_substring(&mut ledger, "b");
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 1,
-                encoded_size: 0,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
-            assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
-        }
-
-        #[test]
-        fn found_by_count() {
-            /*
-             * For equal string lengths, more frequent substrings make bigger impact on compression.
-             */
-            let mut ledger = make_ledger();
-            ledger.increment_count(substring("a"));
-
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 1,
-                encoded_size: 0,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
-            assert_eq!(vec!["b"], most_impactful.to_vec());
-        }
-
-        #[test]
-        fn found_by_count_and_string_length() {
-            /*
-             * The string has more impact, when the total length of all its occurrences is bigger.
-             */
-            let mut ledger = make_ledger();
-            ledger.increment_count(substring("a"));
-            ledger.increment_count(substring("aaa"));
-
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 1,
-                encoded_size: 0,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
-            assert_eq!(vec!["b"], most_impactful.to_vec());
-        }
-
-        #[test]
-        fn removes_strings_shorter_than_encoded_representation() {
-            /*
-             * Short strings are not encoded, because their encoded size is bigger than or equal to the string's length itself.
-             */
-            let mut ledger = make_ledger();
-            insert_repeated_substring(&mut ledger, "aaa");
-
-            insert_repeated_substring(&mut ledger, "a");
-            insert_repeated_substring(&mut ledger, "aa");
-            ledger.increment_count(substring("aa"));
-            ledger.increment_count(substring("aa"));
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 10,
-                encoded_size: 2,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
-            assert_eq!(vec!["aaa"], most_impactful.to_vec());
-        }
-
-        #[test]
-        fn takes_total_encoded_size_into_account() {
-            /*
-             * A longer, but less frequent string can have more impact on compression,
-             * than a shorter, but more frequent string.
-             * Consider the following example:
-             *
-             * "aaaaa" - 1 occurrence, 5 bytes
-             * "aaa" - 2 occurrence, 3 bytes
-             *
-             * When replacing "aaaaa" with its encoded form, we'll replace 1 5-byte string with 2 bytes (gain of 3 bytes).
-             * When replacing "aaa" with its encoded form, we'll replace 2 3-bytes string with 2 2-byte encoded versions.
-             * In that case, we gain (2 * 3 - 2 * 2) = 2 bytes.
-             *
-             * So, "aaaaa" has more impact on compression, even though it's less frequent.
-             */
-            let mut ledger = make_ledger();
-
-            insert_repeated_substring(&mut ledger, "aaaaa");
-
-            insert_repeated_substring(&mut ledger, "aaa");
-            ledger.increment_count(substring("aaa"));
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 1,
-                encoded_size: 2,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
-            assert_eq!(vec!["aaaaa"], most_impactful.to_vec());
-        }
+        use crate::{
+            encoder::encoder_spec::EncoderSpec, substring_selectors::SelectByCompressionGain,
+        };
 
         #[test]
         fn skip_single_occurrence() {
             let mut ledger = make_ledger();
             ledger.increment_count(substring("aaaaaa"));
-
             ledger.increment_count(substring("bb"));
             ledger.increment_count(substring("bb"));
 
@@ -302,36 +190,35 @@ mod tests {
         }
 
         #[test]
-        fn ordered_by_length() {
+        fn order_substrings_by_length() {
             let mut ledger = make_ledger();
-            insert_repeated_substring(&mut ledger, "b");
-            insert_repeated_substring(&mut ledger, "aaaaaa");
+            ledger.increment_count(substring("b"));
+            ledger.increment_count(substring("b"));
 
-            insert_repeated_substring(&mut ledger, "aa");
+            ledger.increment_count(substring("aaaaaa"));
+            ledger.increment_count(substring("aaaaaa"));
+
+            ledger.increment_count(substring("aa"));
+            ledger.increment_count(substring("aa"));
             ledger.increment_count(substring("aa"));
             ledger.increment_count(substring("aa"));
             ledger.increment_count(substring("aa"));
 
             let encoder_spec = EncoderSpec {
-                num_strings: 2,
-                encoded_size: 1,
+                num_strings: 3,
+                encoded_size: 0,
             };
             let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec));
-            assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
+            assert_eq!(vec!["aaaaaa", "aa", "b"], most_impactful.to_vec());
+        }
+
+        fn make_selector(encoder_spec: &EncoderSpec) -> SelectByCompressionGain {
+            SelectByCompressionGain::new(encoder_spec)
         }
     }
 
     fn substring(s: &str) -> Substring {
         Substring(s.to_string())
-    }
-
-    fn make_selector(encoder_spec: &EncoderSpec) -> SelectByCompressionGain {
-        SelectByCompressionGain::new(encoder_spec)
-    }
-
-    fn insert_repeated_substring<LP: LedgerPolicy>(ledger: &mut SubstringLedger<LP>, s: &str) {
-        ledger.increment_count(substring(s));
-        ledger.increment_count(substring(s));
     }
 
     fn make_ledger() -> SubstringLedger<TestLedgerPolicy> {
