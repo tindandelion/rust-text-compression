@@ -61,8 +61,8 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     ) -> EncodingTable {
         self.substrings.retain(|_, count| *count > 1);
         let mut most_impactful = selector.select_substrings(self.substrings);
-        most_impactful.sort();
         most_impactful.truncate(capacity);
+        most_impactful.sort();
         EncodingTable::new(most_impactful.into_iter().map(|s| s.0).collect())
     }
 
@@ -218,8 +218,12 @@ mod tests {
         }
 
         #[test]
-        fn limit_number_of_entries_by_capacity() {
+        fn limit_number_of_entries_by_capacity_before_sorting() {
             let mut ledger = make_ledger();
+            ledger.increment_count(substring("b"));
+            ledger.increment_count(substring("b"));
+            ledger.increment_count(substring("b"));
+            ledger.increment_count(substring("b"));
             ledger.increment_count(substring("b"));
             ledger.increment_count(substring("b"));
 
@@ -234,7 +238,7 @@ mod tests {
                 encoded_size: 0,
             };
             let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec), 2);
-            assert_eq!(vec!["aaaaaa", "aa"], most_impactful.to_vec());
+            assert_eq!(vec!["aaaaaa", "b"], most_impactful.to_vec());
         }
 
         fn make_selector(encoder_spec: &EncoderSpec) -> SelectByCompressionGain {
