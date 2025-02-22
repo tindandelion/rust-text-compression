@@ -42,7 +42,7 @@ const INPUT_FILENAME: &str = "wap-25600.txt";
 const LEDGER_SIZE_FACTORS: &[usize] = &[1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 fn main() {
-    let selector = SubstringSelector::order_by_frequency(ENCODER_SPEC.encoded_size);
+    let selector = SubstringSelector::order_by_frequency(ENCODER_SPEC);
     println!("* Running baseline experiment (CaptureAll)...");
     let baseline_result = run_baseline(&selector);
     baseline_result.print();

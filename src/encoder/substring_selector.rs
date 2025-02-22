@@ -1,11 +1,11 @@
 use std::cmp::Ordering;
 
-use super::{substring::Substring, substring_ledger::SubstringMap};
+use super::{encoder_spec::EncoderSpec, substring::Substring, substring_ledger::SubstringMap};
 
 type ImpactComparator = fn(&EncodingImpact, &EncodingImpact) -> Ordering;
 
 pub struct SubstringSelector {
-    encoded_size: usize,
+    spec: EncoderSpec,
     impact_comparator: ImpactComparator,
 }
 
@@ -16,26 +16,30 @@ struct EncodingImpact {
 }
 
 impl SubstringSelector {
-    fn new(encoded_size: usize, impact_comparator: ImpactComparator) -> Self {
+    fn new(spec: EncoderSpec, impact_comparator: ImpactComparator) -> Self {
         Self {
-            encoded_size,
+            spec,
             impact_comparator,
         }
     }
 
-    pub fn order_by_compression_gain(encoded_size: usize) -> Self {
+    pub fn order_by_compression_gain(spec: EncoderSpec) -> Self {
         let comparator: ImpactComparator = |a, b| b.compression_gain.cmp(&a.compression_gain);
-        Self::new(encoded_size, comparator)
+        Self::new(spec, comparator)
     }
 
-    pub fn order_by_frequency(encoded_size: usize) -> Self {
+    pub fn order_by_frequency(spec: EncoderSpec) -> Self {
         let comparator: ImpactComparator = |a, b| b.count.cmp(&a.count);
-        Self::new(encoded_size, comparator)
+        Self::new(spec, comparator)
     }
 
     pub fn select_substrings(&self, substrings: SubstringMap) -> Vec<Substring> {
         let impacts = self.calculate_impacts(substrings);
-        impacts.into_iter().map(|impact| impact.substring).collect()
+        impacts
+            .into_iter()
+            .take(self.spec.num_strings)
+            .map(|impact| impact.substring)
+            .collect()
     }
 
     fn calculate_impacts(&self, substrings: SubstringMap) -> Vec<EncodingImpact> {
@@ -59,7 +63,7 @@ impl SubstringSelector {
 
     fn calc_compression_gain(&self, string: &str, count: usize) -> usize {
         let unencoded_total_size = string.len() * count;
-        let encoded_total_size = self.encoded_size * count;
+        let encoded_total_size = self.spec.encoded_size * count;
         unencoded_total_size
             .checked_sub(encoded_total_size)
             .unwrap_or(0)
@@ -70,6 +74,11 @@ impl SubstringSelector {
 mod tests {
     use super::*;
 
+    const SPEC: EncoderSpec = EncoderSpec {
+        encoded_size: 0,
+        num_strings: 10,
+    };
+
     mod string_filtering {
         use std::collections::BTreeMap;
 
@@ -79,8 +88,11 @@ mod tests {
 
         #[test]
         fn reject_strings_shorter_than_encoded_representation() {
-            let encoded_size = 3;
-            let selector = SubstringSelector::new(encoded_size, NO_SORTING);
+            let spec = EncoderSpec {
+                encoded_size: 3,
+                num_strings: 10,
+            };
+            let selector = SubstringSelector::new(spec, NO_SORTING);
             let substrings: SubstringMap =
                 BTreeMap::from([("aaaa".into(), 2), ("aaa".into(), 2), ("a".into(), 2)]);
 
@@ -90,13 +102,36 @@ mod tests {
 
         #[test]
         fn reject_single_occurrences() {
-            let encoded_size = 2;
-            let selector = SubstringSelector::new(encoded_size, NO_SORTING);
+            let spec = EncoderSpec {
+                encoded_size: 2,
+                num_strings: 10,
+            };
+
+            let selector = SubstringSelector::new(spec, NO_SORTING);
             let substrings: SubstringMap =
                 BTreeMap::from([("aaaa".into(), 1), ("aaa".into(), 2), ("a".into(), 2)]);
 
             let selected = selector.select_substrings(substrings);
             assert_eq!(vec!["aaa"], to_strings(selected));
+        }
+
+        #[test]
+        fn trim_substrings_to_number_of_strings_from_spec() {
+            let spec = EncoderSpec {
+                encoded_size: 2,
+                num_strings: 2,
+            };
+
+            let selector = SubstringSelector::new(spec, NO_SORTING);
+            let substrings: SubstringMap = BTreeMap::from([
+                ("aaaa".into(), 3),
+                ("aaa".into(), 3),
+                ("bbbbb".into(), 3),
+                ("cccc".into(), 4),
+            ]);
+
+            let selected = selector.select_substrings(substrings);
+            assert_eq!(vec!["bbbbb", "aaaa"], to_strings(selected));
         }
     }
 
@@ -110,7 +145,7 @@ mod tests {
             /*
              * For equal counts, longer strings make bigger impact on compression.
              */
-            let selector = SubstringSelector::order_by_compression_gain(0);
+            let selector = SubstringSelector::order_by_compression_gain(SPEC);
             let substrings: SubstringMap =
                 BTreeMap::from([("bb".into(), 2), ("aa".into(), 2), ("aaaaa".into(), 2)]);
 
@@ -123,7 +158,7 @@ mod tests {
             /*
              * For equal string lengths, more frequent substrings make bigger impact on compression.
              */
-            let selector = SubstringSelector::order_by_compression_gain(0);
+            let selector = SubstringSelector::order_by_compression_gain(SPEC);
             let substrings: SubstringMap = BTreeMap::from([("aa".into(), 2), ("bb".into(), 3)]);
 
             let selected = selector.select_substrings(substrings);
@@ -135,7 +170,7 @@ mod tests {
             /*
              * The string has more impact, when the total length of all its occurrences is bigger.
              */
-            let selector = SubstringSelector::order_by_compression_gain(0);
+            let selector = SubstringSelector::order_by_compression_gain(SPEC);
             let substrings: SubstringMap =
                 BTreeMap::from([("a".into(), 2), ("aaa".into(), 2), ("b".into(), 8)]);
 
@@ -159,7 +194,7 @@ mod tests {
              *
              * So, "aaaaa" has more impact on compression, even though it's less frequent.
              */
-            let selector = SubstringSelector::order_by_compression_gain(0);
+            let selector = SubstringSelector::order_by_compression_gain(SPEC);
             let substrings: SubstringMap = BTreeMap::from([("aaaaa".into(), 2), ("aaa".into(), 3)]);
 
             let selected = selector.select_substrings(substrings);
@@ -174,7 +209,7 @@ mod tests {
 
         #[test]
         fn order_by_occurrence_frequency() {
-            let selector = SubstringSelector::order_by_frequency(0);
+            let selector = SubstringSelector::order_by_frequency(SPEC);
             let substrings: SubstringMap =
                 BTreeMap::from([("a".into(), 3), ("b".into(), 5), ("aaa".into(), 2)]);
 

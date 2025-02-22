@@ -50,13 +50,8 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         }
     }
 
-    pub fn build_encoding_table(
-        self,
-        selector: &SubstringSelector,
-        capacity: usize,
-    ) -> EncodingTable {
-        let mut most_impactful = selector.select_substrings(self.substrings);
-        most_impactful.truncate(capacity);
+    pub fn build_encoding_table(self, selector: &SubstringSelector) -> EncodingTable {
+        let most_impactful = selector.select_substrings(self.substrings);
         EncodingTable::new(most_impactful)
     }
 
@@ -164,39 +159,6 @@ mod tests {
 
             let found = ledger.find_longest_match("ccc");
             assert_eq!(None, found);
-        }
-    }
-
-    mod build_encoding_table {
-        use super::*;
-        use crate::encoder::encoder_spec::EncoderSpec;
-
-        #[test]
-        fn limit_number_of_entries_by_capacity() {
-            let mut ledger = make_ledger();
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("b"));
-
-            ledger.increment_count(substring("aaaaaa"));
-            ledger.increment_count(substring("aaaaaa"));
-
-            ledger.increment_count(substring("aa"));
-            ledger.increment_count(substring("aa"));
-
-            let encoder_spec = EncoderSpec {
-                num_strings: 3,
-                encoded_size: 0,
-            };
-            let most_impactful = ledger.build_encoding_table(&make_selector(&encoder_spec), 2);
-            assert_eq!(vec!["aaaaaa", "b"], most_impactful.to_vec());
-        }
-
-        fn make_selector(encoder_spec: &EncoderSpec) -> SubstringSelector {
-            SubstringSelector::order_by_compression_gain(encoder_spec.encoded_size)
         }
     }
 
