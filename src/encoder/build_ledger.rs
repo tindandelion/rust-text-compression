@@ -211,7 +211,7 @@ mod tests {
     }
 
     fn substring(s: &str) -> Substring {
-        Substring::from_str(s)
+        Substring::from(s)
     }
 
     struct RemoveAll;

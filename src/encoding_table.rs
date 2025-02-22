@@ -1,6 +1,8 @@
+use crate::encoder::Substring;
+
 #[derive(Clone)]
 struct TableEntry {
-    substring: String,
+    substring: Substring,
     hits: std::cell::Cell<usize>,
 }
 
@@ -9,7 +11,7 @@ pub struct EncodingTable {
 }
 
 impl EncodingTable {
-    pub fn new(substrings: Vec<String>) -> Self {
+    pub fn new(substrings: Vec<Substring>) -> Self {
         let entries = substrings
             .into_iter()
             .map(|s| TableEntry {
@@ -20,25 +22,25 @@ impl EncodingTable {
         Self { entries }
     }
 
-    pub fn find_match(&self, text: &str) -> Option<(usize, &String)> {
+    pub fn find_match(&self, text: &str) -> Option<(usize, &str)> {
         let result = self
             .entries
             .iter()
             .enumerate()
-            .find(|(_, entry)| text.starts_with(&entry.substring));
+            .find(|(_, entry)| entry.substring.matches_start(text));
 
         if let Some((_, entry)) = result {
             entry.hits.set(entry.hits.get() + 1);
         }
 
-        result.map(|(i, entry)| (i, &entry.substring))
+        result.map(|(i, entry)| (i, entry.substring.as_str()))
     }
 
     pub fn unused_entries(&self) -> Vec<String> {
         self.entries
             .iter()
             .filter(|entry| entry.hits.get() == 0)
-            .map(|entry| entry.substring.clone())
+            .map(|entry| entry.substring.to_string())
             .collect()
     }
 
@@ -49,24 +51,27 @@ impl EncodingTable {
     pub fn top(&self, n: usize) -> Vec<String> {
         self.entries[..n]
             .iter()
-            .map(|e| e.substring.clone())
+            .map(|e| e.substring.to_string())
             .collect()
     }
 
     pub fn bottom(&self, n: usize) -> Vec<String> {
         self.entries[self.entries.len() - n..]
             .iter()
-            .map(|e| e.substring.clone())
+            .map(|e| e.substring.to_string())
             .collect()
     }
 
-    pub fn get(&self, index: usize) -> &String {
-        &self.entries[index].substring
+    pub fn get(&self, index: usize) -> &str {
+        self.entries[index].substring.as_str()
     }
 
     #[cfg(test)]
     pub fn to_vec(&self) -> Vec<String> {
-        self.entries.iter().map(|e| e.substring.clone()).collect()
+        self.entries
+            .iter()
+            .map(|e| e.substring.to_string())
+            .collect()
     }
 }
 
@@ -76,7 +81,7 @@ mod tests {
 
     #[test]
     fn used_entries_count_at_start() {
-        let table = EncodingTable::new(vec!["hello".to_string(), "world".to_string()]);
+        let table = EncodingTable::new(vec!["hello".into(), "world".into()]);
         assert_eq!(
             vec!["hello".to_string(), "world".to_string()],
             table.unused_entries()
@@ -85,7 +90,7 @@ mod tests {
 
     #[test]
     fn used_entries_count_after_match() {
-        let table = EncodingTable::new(vec!["hello".to_string(), "world".to_string()]);
+        let table = EncodingTable::new(vec!["hello".into(), "world".into()]);
 
         table.find_match("hello");
         table.find_match("hello");
@@ -95,7 +100,7 @@ mod tests {
 
     #[test]
     fn used_entries_count_after_no_match() {
-        let table = EncodingTable::new(vec!["hello".to_string(), "world".to_string()]);
+        let table = EncodingTable::new(vec!["hello".into(), "world".into()]);
 
         table.find_match("brave");
         assert_eq!(
@@ -106,7 +111,7 @@ mod tests {
 
     #[test]
     fn used_entries_count_match_all() {
-        let table = EncodingTable::new(vec!["hello".to_string(), "world".to_string()]);
+        let table = EncodingTable::new(vec!["hello".into(), "world".into()]);
 
         table.find_match("hello");
         table.find_match("world");

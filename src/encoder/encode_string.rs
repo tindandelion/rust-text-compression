@@ -33,6 +33,8 @@ pub fn encode_string(source: &str, substrings: &EncodingTable) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
+    use crate::encoder::Substring;
+
     use super::*;
 
     #[test]
@@ -91,6 +93,6 @@ mod tests {
     }
 
     fn make_dictionary(substrings: Vec<String>) -> EncodingTable {
-        EncodingTable::new(substrings)
+        EncodingTable::new(substrings.into_iter().map(Substring::from).collect())
     }
 }

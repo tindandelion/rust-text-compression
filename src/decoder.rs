@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn decode_string_with_encoded_substring() {
         let encoded = vec![0xF5, 0x00];
-        let substrings = EncodingTable::new(vec!["abc".to_string()]);
+        let substrings = EncodingTable::new(vec!["abc".into()]);
 
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, "abc");
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn decode_string_with_encoded_substrings_and_single_characters() {
         let encoded = vec![0xF5, 0x00, 0x41, 0xF5, 0x01, 0x41, 0x42, 0x43];
-        let substrings = EncodingTable::new(vec!["abc".to_string(), "def".to_string()]);
+        let substrings = EncodingTable::new(vec!["abc".into(), "def".into()]);
 
         let decoded = decode_string(&encoded, &substrings);
         assert_eq!(decoded, "abcAdefABC");

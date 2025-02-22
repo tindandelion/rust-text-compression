@@ -63,7 +63,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         let mut most_impactful = selector.select_substrings(self.substrings);
         most_impactful.truncate(capacity);
         most_impactful.sort();
-        EncodingTable::new(most_impactful.into_iter().map(|s| s.0).collect())
+        EncodingTable::new(most_impactful)
     }
 
     pub fn contains(&self, substr: &Substring) -> bool {
@@ -247,7 +247,7 @@ mod tests {
     }
 
     fn substring(s: &str) -> Substring {
-        Substring(s.to_string())
+        Substring::from(s)
     }
 
     fn make_ledger() -> SubstringLedger<TestLedgerPolicy> {

@@ -82,8 +82,8 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn should_merge_when_both_counts_are_bigger_than_threshold() {
-            let x = Substring::from_str("x");
-            let y = Substring::from_str("y");
+            let x = Substring::from("x");
+            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
@@ -96,8 +96,8 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn should_merge_when_count_is_equal_to_threshold() {
-            let x = Substring::from_str("x");
-            let y = Substring::from_str("y");
+            let x = Substring::from("x");
+            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
@@ -110,8 +110,8 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn should_not_merge_when_at_least_one_count_is_less_than_threshold() {
-            let x = Substring::from_str("x");
-            let y = Substring::from_str("y");
+            let x = Substring::from("x");
+            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
             let mut substrings = SubstringMap::new();
 
@@ -127,8 +127,8 @@ mod limit_dictionary_size_tests {
             /*
                 Do not merge strings when the dictionary is full, regardless of their counts
             */
-            let x = Substring::from_str("x");
-            let y = Substring::from_str("y");
+            let x = Substring::from("x");
+            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 2 };
             let mut substrings = SubstringMap::new();
 
@@ -145,9 +145,9 @@ mod limit_dictionary_size_tests {
                Given the dictionary of max_size = 7, and current size = 3 (threshold = 1.75)
                we should merge substrings whose counts are at least 2 (1.75 rounded up to 2)
             */
-            let x = Substring::from_str("x");
-            let y = Substring::from_str("y");
-            let z = Substring::from_str("z");
+            let x = Substring::from("x");
+            let y = Substring::from("y");
+            let z = Substring::from("z");
             let policy = LimitLedgerSize { max_size: 7 };
             let mut substrings = SubstringMap::new();
 
@@ -168,8 +168,8 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn keeps_everything_when_dict_has_enough_space() {
-            let x = Substring::from_str("x");
-            let y = Substring::from_str("y");
+            let x = Substring::from("x");
+            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 10 };
             let mut substrings = SubstringMap::new();
 
@@ -191,12 +191,12 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 6 };
             let mut substrings = SubstringMap::new();
 
-            substrings.insert(Substring::from_str("a"), 9);
-            substrings.insert(Substring::from_str("b"), 1);
-            substrings.insert(Substring::from_str("c"), 8);
-            substrings.insert(Substring::from_str("x"), 3);
-            substrings.insert(Substring::from_str("y"), 1);
-            substrings.insert(Substring::from_str("z"), 2);
+            substrings.insert(Substring::from("a"), 9);
+            substrings.insert(Substring::from("b"), 1);
+            substrings.insert(Substring::from("c"), 8);
+            substrings.insert(Substring::from("x"), 3);
+            substrings.insert(Substring::from("y"), 1);
+            substrings.insert(Substring::from("z"), 2);
 
             policy.cleanup(&mut substrings);
             assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&substrings));
@@ -208,9 +208,9 @@ mod limit_dictionary_size_tests {
             let mut substrings = SubstringMap::new();
 
             // All substrings have count 2, which is the median
-            substrings.insert(Substring::from_str("a"), 2);
-            substrings.insert(Substring::from_str("b"), 2);
-            substrings.insert(Substring::from_str("c"), 2);
+            substrings.insert(Substring::from("a"), 2);
+            substrings.insert(Substring::from("b"), 2);
+            substrings.insert(Substring::from("c"), 2);
 
             policy.cleanup(&mut substrings);
             assert_eq!(vec!["a", "b", "c"], get_substrings(&substrings));
@@ -221,7 +221,7 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 2 };
             let mut substrings = SubstringMap::new();
 
-            substrings.insert(Substring::from_str("a"), 1);
+            substrings.insert(Substring::from("a"), 1);
 
             policy.cleanup(&mut substrings);
             assert_eq!(vec!["a"], get_substrings(&substrings));
@@ -241,10 +241,10 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 5 };
             let mut substrings = SubstringMap::new();
 
-            substrings.insert(Substring::from_str("a"), 1);
-            substrings.insert(Substring::from_str("b"), 2);
-            substrings.insert(Substring::from_str("c"), 3);
-            substrings.insert(Substring::from_str("d"), 4);
+            substrings.insert(Substring::from("a"), 1);
+            substrings.insert(Substring::from("b"), 2);
+            substrings.insert(Substring::from("c"), 3);
+            substrings.insert(Substring::from("d"), 4);
 
             policy.cleanup(&mut substrings);
             assert_eq!(vec!["b", "c", "d"], get_substrings(&substrings));
@@ -255,11 +255,11 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 6 };
             let mut substrings = SubstringMap::new();
 
-            substrings.insert(Substring::from_str("a"), 1);
-            substrings.insert(Substring::from_str("b"), 2); // median
-            substrings.insert(Substring::from_str("c"), 2); // median
-            substrings.insert(Substring::from_str("d"), 2); // median
-            substrings.insert(Substring::from_str("e"), 3);
+            substrings.insert(Substring::from("a"), 1);
+            substrings.insert(Substring::from("b"), 2); // median
+            substrings.insert(Substring::from("c"), 2); // median
+            substrings.insert(Substring::from("d"), 2); // median
+            substrings.insert(Substring::from("e"), 3);
 
             policy.cleanup(&mut substrings);
             assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&substrings));

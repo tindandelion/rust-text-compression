@@ -9,7 +9,7 @@ pub mod substring_selectors;
 use build_ledger::build_ledger;
 use encode_string::encode_string;
 pub use encode_string::SPEC as ENCODER_SPEC;
-use substring::Substring;
+pub use substring::Substring;
 use substring_ledger::{LedgerPolicy, SubstringLedger, SubstringSelector};
 use substring_selectors::SelectByCompressionGain;
 

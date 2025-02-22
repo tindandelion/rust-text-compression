@@ -1,19 +1,13 @@
 use std::cmp::Ordering;
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub struct Substring(pub(crate) String);
+pub struct Substring(String);
 
 impl Substring {
     pub fn from_char(c: char) -> Self {
         Self(c.to_string())
     }
 
-    #[cfg(test)]
-    pub fn from_str(s: &str) -> Self {
-        Self(s.to_string())
-    }
-
-    #[cfg(test)]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -54,6 +48,18 @@ impl PartialOrd for Substring {
     }
 }
 
+impl From<String> for Substring {
+    fn from(s: String) -> Self {
+        Substring(s)
+    }
+}
+
+impl From<&str> for Substring {
+    fn from(s: &str) -> Self {
+        Substring(s.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -62,9 +68,9 @@ mod tests {
     #[test]
     fn order_substrings_by_length_descending() {
         let mut substrings = vec![
-            Substring::from_str("abc"),
-            Substring::from_str("bc"),
-            Substring::from_str("a"),
+            Substring::from("abc"),
+            Substring::from("bc"),
+            Substring::from("a"),
         ];
 
         substrings.sort();
@@ -74,9 +80,9 @@ mod tests {
     #[test]
     fn order_substrings_of_same_length_lexicographically() {
         let mut substrings = vec![
-            Substring::from_str("bcd"),
-            Substring::from_str("abc"),
-            Substring::from_str("xyz"),
+            Substring::from("bcd"),
+            Substring::from("abc"),
+            Substring::from("xyz"),
         ];
 
         substrings.sort();
