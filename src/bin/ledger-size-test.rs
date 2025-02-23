@@ -39,7 +39,7 @@ impl ExperimentResult {
     }
 }
 const INPUT_FILENAME: &str = "wap-25600.txt";
-const LEDGER_SIZE_FACTORS: &[usize] = &[1, 2, 4, 8, 16, 32, 64, 128, 256];
+const LEDGER_SIZES: &[usize] = &[256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536];
 
 fn main() {
     let selector = SubstringSelector::order_by_frequency(ENCODER_SPEC);
@@ -49,10 +49,9 @@ fn main() {
     println!("================================================\n\n\n");
 
     println!("* Running ledger size experiments...");
-    for factor in LEDGER_SIZE_FACTORS {
-        let ledger_size = ENCODER_SPEC.num_strings * factor;
+    for ledger_size in LEDGER_SIZES {
         println!("Max ledger size: {}", ledger_size);
-        let result = run_experiment(ledger_size, &selector);
+        let result = run_experiment(*ledger_size, &selector);
         result.print();
         println!("================================================");
     }
