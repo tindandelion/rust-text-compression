@@ -2,8 +2,11 @@ use crate::encoding_table::EncodingTable;
 
 use super::encoder_spec::EncoderSpec;
 
+const INDEX_START: u16 = 0xF500;
+const INDEX_END: u16 = 0xFFFF;
+
 pub const SPEC: EncoderSpec = EncoderSpec {
-    num_strings: 256,
+    num_strings: (INDEX_END - INDEX_START) as usize,
     encoded_size: 2,
 };
 
@@ -17,7 +20,8 @@ pub fn encode_string(source: &str, substrings: &EncodingTable) -> Vec<u8> {
     while head.len() > 0 {
         match substrings.find_match(&head) {
             Some((index, substr)) => {
-                result.extend([0xF5, index as u8]);
+                let encoded_index = INDEX_START + index as u16;
+                result.extend(encoded_index.to_be_bytes());
                 head = &head[substr.len()..];
             }
             None => {
@@ -80,6 +84,20 @@ mod tests {
         let encoded = encode_string(&source, &make_dictionary(substrings));
         assert_eq!(
             vec![0xF5, 0x00, 'x' as u8, 'y' as u8, 'z' as u8, 0xF5, 0x01],
+            encoded
+        );
+    }
+
+    #[test]
+    fn encode_string_with_large_dictionary() {
+        let source = "bbccabc";
+        let mut substrings: Vec<String> = (0..256).map(|i| format!("string_{}", i)).collect();
+        substrings.push("bb".to_string());
+        substrings.push("cc".to_string());
+
+        let encoded = encode_string(&source, &make_dictionary(substrings));
+        assert_eq!(
+            vec![0xF6, 0x00, 0xF6, 0x01, 'a' as u8, 'b' as u8, 'c' as u8],
             encoded
         );
     }
