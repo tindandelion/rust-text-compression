@@ -6,7 +6,7 @@ const INDEX_START: u16 = 0xF500;
 const INDEX_END: u16 = 0xFFFF;
 
 pub const SPEC: EncoderSpec = EncoderSpec {
-    num_strings: (INDEX_END - INDEX_START) as usize,
+    num_strings: (INDEX_END - INDEX_START + 1) as usize,
     encoded_size: 2,
 };
 
