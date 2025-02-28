@@ -3,3 +3,6 @@ perf = "flamegraph --root --dev --bin performance-test"
 perf-release = "flamegraph --root --bin performance-test"
 test-watch = ["watch", "-x", "test --lib"]
 test-all = "test --release"
+
+[profile.release]
+debug = true
