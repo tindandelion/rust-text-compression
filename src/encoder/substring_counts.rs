@@ -14,4 +14,8 @@ impl<'a> SubstringCounts<'a> {
     pub fn values(&self) -> Vec<usize> {
         self.0.values().cloned().collect()
     }
+
+    pub fn remove_less_than(&mut self, threshold: usize) {
+        self.0.retain(|_, count| *count >= threshold);
+    }
 }

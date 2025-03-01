@@ -44,6 +44,13 @@ impl LimitLedgerSize {
     fn calc_free_space(&self, counts: &SubstringCounts) -> usize {
         self.max_size - counts.len()
     }
+
+    fn _cleanup(&self, counts: &mut SubstringCounts) {
+        if self.should_cleanup(counts) {
+            let median_count = self.calc_median_count(counts);
+            counts.remove_less_than(median_count);
+        }
+    }
 }
 
 impl LedgerPolicy for CaptureAll {
@@ -56,11 +63,8 @@ impl LedgerPolicy for CaptureAll {
 
 impl LedgerPolicy for LimitLedgerSize {
     fn cleanup(&self, substrings: &mut SubstringMap) {
-        let counts = SubstringCounts(substrings);
-        if self.should_cleanup(&counts) {
-            let median_count = self.calc_median_count(&counts);
-            substrings.retain(|_, count| *count >= median_count);
-        }
+        let mut counts = SubstringCounts(substrings);
+        self._cleanup(&mut counts);
     }
 
     fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
