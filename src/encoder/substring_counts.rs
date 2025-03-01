@@ -2,9 +2,13 @@ use std::collections::BTreeMap;
 
 use super::Substring;
 
-pub struct SubstringCounts<'a>(pub &'a mut BTreeMap<Substring, usize>);
+pub struct SubstringCounts(pub BTreeMap<Substring, usize>);
 
-impl<'a> SubstringCounts<'a> {
+impl SubstringCounts {
+    pub fn new() -> Self {
+        Self(BTreeMap::new())
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -23,5 +27,9 @@ impl<'a> SubstringCounts<'a> {
 
     pub fn insert(&mut self, substring: Substring, count: usize) {
         self.0.insert(substring, count);
+    }
+
+    pub fn to_map(self) -> BTreeMap<Substring, usize> {
+        self.0
     }
 }

@@ -6,22 +6,20 @@ use super::{
     substring::Substring, substring_counts::SubstringCounts, substring_selector::SubstringSelector,
 };
 
-pub type SubstringMap = BTreeMap<Substring, usize>;
-
 pub trait LedgerPolicy {
     fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringCounts) -> bool;
     fn cleanup(&self, substrings: &mut SubstringCounts);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
-    substrings: SubstringMap,
+    substrings: SubstringCounts,
     policy: LP,
 }
 
 impl<LP: LedgerPolicy> SubstringLedger<LP> {
     pub fn with_policy(policy: LP) -> Self {
         Self {
-            substrings: BTreeMap::new(),
+            substrings: SubstringCounts(BTreeMap::new()),
             policy,
         }
     }
@@ -32,41 +30,41 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 
     // TODO: Get rid of the mut self
     pub fn should_merge(&mut self, x: &Substring, y: &Substring) -> bool {
-        self.policy
-            .should_merge(x, y, &SubstringCounts(&mut self.substrings))
+        self.policy.should_merge(x, y, &self.substrings)
     }
 
     // TODO: Convert to Option<&Substring>
     pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
         self.substrings
+            .0
             .keys()
             .find(|&substr| substr.matches_start(text))
             .map(|substr| substr.clone())
     }
 
     pub fn increment_count(&mut self, substr: Substring) {
-        let current_count = self.substrings.get_mut(&substr);
+        let current_count = self.substrings.0.get_mut(&substr);
         if let Some(count) = current_count {
             *count += 1;
         } else {
-            let mut counts = SubstringCounts(&mut self.substrings);
-            self.policy.cleanup(&mut counts);
+            self.policy.cleanup(&mut self.substrings);
             self.substrings.insert(substr, 1);
         }
     }
 
     pub fn build_encoding_table(self, selector: &SubstringSelector) -> EncodingTable {
-        let most_impactful = selector.select_substrings(self.substrings.into_iter());
+        let most_impactful = selector.select_substrings(self.substrings.0.into_iter());
         EncodingTable::new(most_impactful)
     }
 
     pub fn contains(&self, substr: &Substring) -> bool {
-        self.substrings.contains_key(substr)
+        self.substrings.0.contains_key(substr)
     }
 
     #[cfg(test)]
     pub fn entries(&self) -> Vec<(&str, usize)> {
         self.substrings
+            .0
             .iter()
             .map(|(substring, count)| (substring.as_str(), *count))
             .collect()

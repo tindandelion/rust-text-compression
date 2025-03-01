@@ -77,7 +77,6 @@ mod limit_dictionary_size_tests {
     use super::*;
 
     mod merging {
-        use crate::encoder::substring_ledger::SubstringMap;
 
         use super::*;
 
@@ -86,8 +85,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), 3);
             counts.insert(y.clone(), 3);
@@ -101,8 +99,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), 2);
             counts.insert(y.clone(), 3);
@@ -116,8 +113,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), 1);
             counts.insert(y.clone(), 3);
@@ -134,8 +130,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), usize::MAX);
             counts.insert(y.clone(), usize::MAX);
@@ -154,8 +149,7 @@ mod limit_dictionary_size_tests {
             let y = Substring::from("y");
             let z = Substring::from("z");
             let policy = LimitLedgerSize { max_size: 7 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), 3);
             counts.insert(y.clone(), 3);
@@ -170,7 +164,7 @@ mod limit_dictionary_size_tests {
     }
 
     mod cleanup {
-        use crate::encoder::substring_ledger::SubstringMap;
+        use std::collections::BTreeMap;
 
         use super::*;
 
@@ -179,16 +173,15 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 10 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), 1);
             counts.insert(y.clone(), 2);
             counts.insert(y.clone(), 3);
 
             policy.cleanup(&mut counts);
-            assert!(substrings.contains_key(&x));
-            assert!(substrings.contains_key(&y));
+            assert!(counts.0.contains_key(&x));
+            assert!(counts.0.contains_key(&y));
         }
 
         #[test]
@@ -198,8 +191,7 @@ mod limit_dictionary_size_tests {
                remove the substrings whose counts are less than median
             */
             let policy = LimitLedgerSize { max_size: 6 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(Substring::from("a"), 9);
             counts.insert(Substring::from("b"), 1);
@@ -209,14 +201,13 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("z"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&substrings));
+            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&counts.0));
         }
 
         #[test]
         fn keeps_everything_when_exactly_at_median() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             // All substrings have count 2, which is the median
             counts.insert(Substring::from("a"), 2);
@@ -224,36 +215,33 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("c"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "b", "c"], get_substrings(&substrings));
+            assert_eq!(vec!["a", "b", "c"], get_substrings(&counts.0));
         }
 
         #[test]
         fn handles_single_element_dictionary() {
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(Substring::from("a"), 1);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a"], get_substrings(&substrings));
+            assert_eq!(vec!["a"], get_substrings(&counts.0));
         }
 
         #[test]
         fn handles_empty_dictionary() {
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             policy.cleanup(&mut counts);
-            assert_eq!(substrings.len(), 0);
+            assert_eq!(counts.len(), 0);
         }
 
         #[test]
         fn removes_below_median_with_even_number_of_elements() {
             let policy = LimitLedgerSize { max_size: 5 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(Substring::from("a"), 1);
             counts.insert(Substring::from("b"), 2);
@@ -261,14 +249,13 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("d"), 4);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d"], get_substrings(&substrings));
+            assert_eq!(vec!["b", "c", "d"], get_substrings(&counts.0));
         }
 
         #[test]
         fn preserves_substrings_at_median_counts() {
             let policy = LimitLedgerSize { max_size: 6 };
-            let mut substrings = SubstringMap::new();
-            let mut counts = SubstringCounts(&mut substrings);
+            let mut counts = SubstringCounts::new();
 
             counts.insert(Substring::from("a"), 1);
             counts.insert(Substring::from("b"), 2); // median
@@ -277,10 +264,10 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("e"), 3);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&substrings));
+            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts.0));
         }
 
-        fn get_substrings(substrings: &SubstringMap) -> Vec<&str> {
+        fn get_substrings(substrings: &BTreeMap<Substring, usize>) -> Vec<&str> {
             substrings
                 .keys()
                 .into_iter()
