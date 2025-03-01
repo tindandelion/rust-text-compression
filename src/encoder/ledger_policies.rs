@@ -1,5 +1,6 @@
 use super::{
     substring::Substring,
+    substring_counts::SubstringCounts,
     substring_ledger::{LedgerPolicy, SubstringMap},
 };
 
@@ -14,8 +15,8 @@ impl LimitLedgerSize {
         Self { max_size }
     }
 
-    fn calc_merge_threshold(&self, substrings: &SubstringMap) -> usize {
-        let free_space = self.calc_free_space(substrings);
+    fn calc_merge_threshold(&self, counts: &SubstringCounts) -> usize {
+        let free_space = self.calc_free_space(counts.0);
         if free_space <= 0 {
             usize::MAX
         } else {
@@ -23,8 +24,8 @@ impl LimitLedgerSize {
         }
     }
 
-    fn is_full(&self, substrings: &SubstringMap) -> bool {
-        substrings.len() >= self.max_size
+    fn is_full(&self, counts: &SubstringCounts) -> bool {
+        counts.len() >= self.max_size
     }
 
     fn should_cleanup(&self, substrings: &SubstringMap) -> bool {
@@ -42,6 +43,17 @@ impl LimitLedgerSize {
 
     fn calc_free_space(&self, substrings: &SubstringMap) -> usize {
         self.max_size - substrings.len()
+    }
+
+    fn _should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
+        if self.is_full(counts) {
+            return false;
+        }
+
+        let threshold = self.calc_merge_threshold(&counts);
+        let x_count = counts.get(x).unwrap();
+        let y_count = counts.get(y).unwrap();
+        x_count >= threshold && y_count >= threshold
     }
 }
 
@@ -62,14 +74,8 @@ impl LedgerPolicy for LimitLedgerSize {
     }
 
     fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool {
-        if self.is_full(substrings) {
-            return false;
-        }
-
-        let threshold = self.calc_merge_threshold(substrings);
-        let x_count = *substrings.get(x).unwrap();
-        let y_count = *substrings.get(y).unwrap();
-        x_count >= threshold && y_count >= threshold
+        let counts = SubstringCounts(substrings);
+        self._should_merge(x, y, &counts)
     }
 }
 
@@ -90,8 +96,9 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), 3);
             substrings.insert(y.clone(), 3);
 
-            assert!(policy.should_merge(&x, &y, &substrings));
-            assert!(policy.should_merge(&y, &x, &substrings));
+            let counts = SubstringCounts(&substrings);
+            assert!(policy._should_merge(&x, &y, &counts));
+            assert!(policy._should_merge(&y, &x, &counts));
         }
 
         #[test]
@@ -104,8 +111,9 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), 2);
             substrings.insert(y.clone(), 3);
 
-            assert!(policy.should_merge(&x, &y, &substrings));
-            assert!(policy.should_merge(&y, &x, &substrings));
+            let counts = SubstringCounts(&substrings);
+            assert!(policy._should_merge(&x, &y, &counts));
+            assert!(policy._should_merge(&y, &x, &counts));
         }
 
         #[test]
@@ -118,8 +126,9 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), 1);
             substrings.insert(y.clone(), 3);
 
-            assert!(!policy.should_merge(&x, &y, &substrings));
-            assert!(!policy.should_merge(&y, &x, &substrings));
+            let counts = SubstringCounts(&substrings);
+            assert!(!policy._should_merge(&x, &y, &counts));
+            assert!(!policy._should_merge(&y, &x, &counts));
         }
 
         #[test]
@@ -135,8 +144,9 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), usize::MAX);
             substrings.insert(y.clone(), usize::MAX);
 
-            assert!(!policy.should_merge(&x, &y, &substrings));
-            assert!(!policy.should_merge(&y, &x, &substrings));
+            let counts = SubstringCounts(&substrings);
+            assert!(!policy._should_merge(&x, &y, &counts));
+            assert!(!policy._should_merge(&y, &x, &counts));
         }
 
         #[test]
@@ -155,11 +165,13 @@ mod limit_dictionary_size_tests {
             substrings.insert(y.clone(), 3);
             substrings.insert(z.clone(), 1);
 
-            assert!(policy.should_merge(&x, &y, &substrings));
-            assert!(policy.should_merge(&y, &x, &substrings));
+            let counts = SubstringCounts(&substrings);
 
-            assert!(!policy.should_merge(&x, &z, &substrings));
-            assert!(!policy.should_merge(&z, &x, &substrings));
+            assert!(policy._should_merge(&x, &y, &counts));
+            assert!(policy._should_merge(&y, &x, &counts));
+
+            assert!(!policy._should_merge(&x, &z, &counts));
+            assert!(!policy._should_merge(&z, &x, &counts));
         }
     }
 

@@ -3,6 +3,7 @@ mod encode_string;
 mod encoder_spec;
 pub mod ledger_policies;
 mod substring;
+mod substring_counts;
 mod substring_ledger;
 pub mod substring_selector;
 
