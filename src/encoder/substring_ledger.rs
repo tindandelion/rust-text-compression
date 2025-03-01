@@ -10,7 +10,7 @@ pub type SubstringMap = BTreeMap<Substring, usize>;
 
 pub trait LedgerPolicy {
     fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringCounts) -> bool;
-    fn cleanup(&self, substrings: &mut SubstringMap);
+    fn cleanup(&self, substrings: &mut SubstringCounts);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
@@ -49,7 +49,8 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         if let Some(count) = current_count {
             *count += 1;
         } else {
-            self.policy.cleanup(&mut self.substrings);
+            let mut counts = SubstringCounts(&mut self.substrings);
+            self.policy.cleanup(&mut counts);
             self.substrings.insert(substr, 1);
         }
     }
@@ -187,11 +188,11 @@ mod tests {
     }
 
     impl LedgerPolicy for TestLedgerPolicy {
-        fn cleanup(&self, substrings: &mut SubstringMap) {
-            if substrings.len() < self.max_entries {
+        fn cleanup(&self, counts: &mut SubstringCounts) {
+            if counts.len() < self.max_entries {
                 return;
             }
-            substrings.retain(|_, count| *count > 1);
+            counts.remove_less_than(2);
         }
 
         fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
