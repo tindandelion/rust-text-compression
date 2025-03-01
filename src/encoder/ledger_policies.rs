@@ -200,7 +200,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("z"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&counts));
+            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(counts));
         }
 
         #[test]
@@ -214,7 +214,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("c"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "b", "c"], get_substrings(&counts));
+            assert_eq!(vec!["a", "b", "c"], get_substrings(counts));
         }
 
         #[test]
@@ -225,7 +225,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("a"), 1);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a"], get_substrings(&counts));
+            assert_eq!(vec!["a"], get_substrings(counts));
         }
 
         #[test]
@@ -248,7 +248,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("d"), 4);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d"], get_substrings(&counts));
+            assert_eq!(vec!["b", "c", "d"], get_substrings(counts));
         }
 
         #[test]
@@ -263,14 +263,13 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("e"), 3);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts));
+            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(counts));
         }
 
-        fn get_substrings(substrings: &SubstringCounts) -> Vec<&str> {
+        fn get_substrings(substrings: SubstringCounts) -> Vec<String> {
             substrings
-                .keys()
                 .into_iter()
-                .map(|s| s.as_str())
+                .map(|(s, _)| s.to_string())
                 .collect::<Vec<_>>()
         }
     }

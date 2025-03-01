@@ -32,10 +32,6 @@ impl SubstringCounts {
         self.0.contains_key(substr)
     }
 
-    pub fn keys(&self) -> impl Iterator<Item = &Substring> {
-        self.0.keys()
-    }
-
     pub fn values(&self) -> impl Iterator<Item = &usize> {
         self.0.values()
     }
