@@ -10,4 +10,8 @@ impl<'a> SubstringCounts<'a> {
     pub fn get(&self, substr: &Substring) -> Option<usize> {
         self.0.get(substr).map(|&count| count)
     }
+
+    pub fn values(&self) -> Vec<usize> {
+        self.0.values().cloned().collect()
+    }
 }

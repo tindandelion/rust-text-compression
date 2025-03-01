@@ -16,7 +16,7 @@ impl LimitLedgerSize {
     }
 
     fn calc_merge_threshold(&self, counts: &SubstringCounts) -> usize {
-        let free_space = self.calc_free_space(counts.0);
+        let free_space = self.calc_free_space(counts);
         if free_space <= 0 {
             usize::MAX
         } else {
@@ -28,12 +28,12 @@ impl LimitLedgerSize {
         counts.len() >= self.max_size
     }
 
-    fn should_cleanup(&self, substrings: &SubstringMap) -> bool {
-        self.calc_free_space(substrings) < 2
+    fn should_cleanup(&self, counts: &SubstringCounts) -> bool {
+        self.calc_free_space(counts) < 2
     }
 
-    fn calc_median_count(&self, substrings: &SubstringMap) -> usize {
-        let mut counts = substrings.values().cloned().collect::<Vec<_>>();
+    fn calc_median_count(&self, counts: &SubstringCounts) -> usize {
+        let mut counts = counts.values();
         if counts.len() == 1 {
             return counts[0];
         }
@@ -41,8 +41,8 @@ impl LimitLedgerSize {
         counts[counts.len() / 2 - 1]
     }
 
-    fn calc_free_space(&self, substrings: &SubstringMap) -> usize {
-        self.max_size - substrings.len()
+    fn calc_free_space(&self, counts: &SubstringCounts) -> usize {
+        self.max_size - counts.len()
     }
 }
 
@@ -56,20 +56,19 @@ impl LedgerPolicy for CaptureAll {
 
 impl LedgerPolicy for LimitLedgerSize {
     fn cleanup(&self, substrings: &mut SubstringMap) {
-        if self.should_cleanup(substrings) {
-            let median_count = self.calc_median_count(substrings);
+        let counts = SubstringCounts(substrings);
+        if self.should_cleanup(&counts) {
+            let median_count = self.calc_median_count(&counts);
             substrings.retain(|_, count| *count >= median_count);
         }
     }
 
-    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringCounts) -> bool {
-        let this = &self;
-        let counts: &SubstringCounts = &substrings;
-        if this.is_full(counts) {
+    fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
+        if self.is_full(counts) {
             return false;
         }
 
-        let threshold = this.calc_merge_threshold(&counts);
+        let threshold = self.calc_merge_threshold(&counts);
         let x_count = counts.get(x).unwrap();
         let y_count = counts.get(y).unwrap();
         x_count >= threshold && y_count >= threshold
