@@ -180,8 +180,8 @@ mod limit_dictionary_size_tests {
             counts.insert(y.clone(), 3);
 
             policy.cleanup(&mut counts);
-            assert!(counts.0.contains_key(&x));
-            assert!(counts.0.contains_key(&y));
+            assert!(counts.contains_key(&x));
+            assert!(counts.contains_key(&y));
         }
 
         #[test]

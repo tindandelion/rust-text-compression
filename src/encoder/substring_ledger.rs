@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use crate::encoding_table::EncodingTable;
 
 use super::{
@@ -19,7 +17,7 @@ pub struct SubstringLedger<LP: LedgerPolicy> {
 impl<LP: LedgerPolicy> SubstringLedger<LP> {
     pub fn with_policy(policy: LP) -> Self {
         Self {
-            substrings: SubstringCounts(BTreeMap::new()),
+            substrings: SubstringCounts::new(),
             policy,
         }
     }
@@ -28,8 +26,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         self.substrings.len()
     }
 
-    // TODO: Get rid of the mut self
-    pub fn should_merge(&mut self, x: &Substring, y: &Substring) -> bool {
+    pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
         self.policy.should_merge(x, y, &self.substrings)
     }
 

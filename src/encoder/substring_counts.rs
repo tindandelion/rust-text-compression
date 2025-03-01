@@ -17,6 +17,10 @@ impl SubstringCounts {
         self.0.get(substr).map(|&count| count)
     }
 
+    pub fn contains_key(&self, substr: &Substring) -> bool {
+        self.0.contains_key(substr)
+    }
+
     pub fn values(&self) -> Vec<usize> {
         self.0.values().cloned().collect()
     }
@@ -27,9 +31,5 @@ impl SubstringCounts {
 
     pub fn insert(&mut self, substring: Substring, count: usize) {
         self.0.insert(substring, count);
-    }
-
-    pub fn to_map(self) -> BTreeMap<Substring, usize> {
-        self.0
     }
 }
