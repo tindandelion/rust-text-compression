@@ -31,7 +31,7 @@ impl LimitLedgerSize {
     }
 
     fn calc_median_count(&self, counts: &SubstringCounts) -> usize {
-        let mut counts = counts.values();
+        let mut counts = counts.values().cloned().collect::<Vec<_>>();
         if counts.len() == 1 {
             return counts[0];
         }
@@ -56,7 +56,7 @@ impl LedgerPolicy for LimitLedgerSize {
     fn cleanup(&self, counts: &mut SubstringCounts) {
         if self.should_cleanup(counts) {
             let median_count = self.calc_median_count(counts);
-            counts.remove_less_than(median_count);
+            counts.retain(|_, count| *count >= median_count);
         }
     }
 
@@ -164,7 +164,6 @@ mod limit_dictionary_size_tests {
     }
 
     mod cleanup {
-        use std::collections::BTreeMap;
 
         use super::*;
 
@@ -201,7 +200,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("z"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&counts.0));
+            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&counts));
         }
 
         #[test]
@@ -215,7 +214,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("c"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "b", "c"], get_substrings(&counts.0));
+            assert_eq!(vec!["a", "b", "c"], get_substrings(&counts));
         }
 
         #[test]
@@ -226,7 +225,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("a"), 1);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a"], get_substrings(&counts.0));
+            assert_eq!(vec!["a"], get_substrings(&counts));
         }
 
         #[test]
@@ -249,7 +248,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("d"), 4);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d"], get_substrings(&counts.0));
+            assert_eq!(vec!["b", "c", "d"], get_substrings(&counts));
         }
 
         #[test]
@@ -264,10 +263,10 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("e"), 3);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts.0));
+            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts));
         }
 
-        fn get_substrings(substrings: &BTreeMap<Substring, usize>) -> Vec<&str> {
+        fn get_substrings(substrings: &SubstringCounts) -> Vec<&str> {
             substrings
                 .keys()
                 .into_iter()

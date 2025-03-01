@@ -33,14 +33,13 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     // TODO: Convert to Option<&Substring>
     pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
         self.substrings
-            .0
             .keys()
             .find(|&substr| substr.matches_start(text))
             .map(|substr| substr.clone())
     }
 
     pub fn increment_count(&mut self, substr: Substring) {
-        let current_count = self.substrings.0.get_mut(&substr);
+        let current_count = self.substrings.get_mut(&substr);
         if let Some(count) = current_count {
             *count += 1;
         } else {
@@ -50,18 +49,17 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     pub fn build_encoding_table(self, selector: &SubstringSelector) -> EncodingTable {
-        let most_impactful = selector.select_substrings(self.substrings.0.into_iter());
+        let most_impactful = selector.select_substrings(self.substrings.into_iter());
         EncodingTable::new(most_impactful)
     }
 
     pub fn contains(&self, substr: &Substring) -> bool {
-        self.substrings.0.contains_key(substr)
+        self.substrings.contains_key(substr)
     }
 
     #[cfg(test)]
     pub fn entries(&self) -> Vec<(&str, usize)> {
         self.substrings
-            .0
             .iter()
             .map(|(substring, count)| (substring.as_str(), *count))
             .collect()
@@ -187,7 +185,7 @@ mod tests {
             if counts.len() < self.max_entries {
                 return;
             }
-            counts.remove_less_than(2);
+            counts.retain(|_, count| *count > 1);
         }
 
         fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {

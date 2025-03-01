@@ -232,7 +232,7 @@ mod tests {
 
     impl LedgerPolicy for RemoveAll {
         fn cleanup(&self, counts: &mut SubstringCounts) {
-            counts.0.clear();
+            counts.clear();
         }
 
         fn should_merge(
