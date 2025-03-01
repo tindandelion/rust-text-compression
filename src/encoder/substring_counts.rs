@@ -1,6 +1,6 @@
 use super::{substring_ledger::SubstringMap, Substring};
 
-pub struct SubstringCounts<'a>(pub &'a SubstringMap);
+pub struct SubstringCounts<'a>(pub &'a mut SubstringMap);
 
 impl<'a> SubstringCounts<'a> {
     pub fn len(&self) -> usize {

@@ -30,9 +30,10 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         self.substrings.len()
     }
 
-    pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
+    // TODO: Get rid of the mut self
+    pub fn should_merge(&mut self, x: &Substring, y: &Substring) -> bool {
         self.policy
-            .should_merge(x, y, &SubstringCounts(&self.substrings))
+            .should_merge(x, y, &SubstringCounts(&mut self.substrings))
     }
 
     // TODO: Convert to Option<&Substring>

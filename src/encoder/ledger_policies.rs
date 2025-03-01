@@ -93,7 +93,7 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), 3);
             substrings.insert(y.clone(), 3);
 
-            let counts = SubstringCounts(&substrings);
+            let counts = SubstringCounts(&mut substrings);
             assert!(policy.should_merge(&x, &y, &counts));
             assert!(policy.should_merge(&y, &x, &counts));
         }
@@ -108,7 +108,7 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), 2);
             substrings.insert(y.clone(), 3);
 
-            let counts = SubstringCounts(&substrings);
+            let counts = SubstringCounts(&mut substrings);
             assert!(policy.should_merge(&x, &y, &counts));
             assert!(policy.should_merge(&y, &x, &counts));
         }
@@ -123,7 +123,7 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), 1);
             substrings.insert(y.clone(), 3);
 
-            let counts = SubstringCounts(&substrings);
+            let counts = SubstringCounts(&mut substrings);
             assert!(!policy.should_merge(&x, &y, &counts));
             assert!(!policy.should_merge(&y, &x, &counts));
         }
@@ -141,7 +141,7 @@ mod limit_dictionary_size_tests {
             substrings.insert(x.clone(), usize::MAX);
             substrings.insert(y.clone(), usize::MAX);
 
-            let counts = SubstringCounts(&substrings);
+            let counts = SubstringCounts(&mut substrings);
             assert!(!policy.should_merge(&x, &y, &counts));
             assert!(!policy.should_merge(&y, &x, &counts));
         }
@@ -162,7 +162,7 @@ mod limit_dictionary_size_tests {
             substrings.insert(y.clone(), 3);
             substrings.insert(z.clone(), 1);
 
-            let counts = SubstringCounts(&substrings);
+            let counts = SubstringCounts(&mut substrings);
 
             assert!(policy.should_merge(&x, &y, &counts));
             assert!(policy.should_merge(&y, &x, &counts));
