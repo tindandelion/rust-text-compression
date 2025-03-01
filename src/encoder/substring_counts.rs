@@ -13,6 +13,13 @@ impl SubstringCounts {
         self.0.len()
     }
 
+    pub fn find_match(&self, text: &str) -> Option<Substring> {
+        self.0
+            .keys()
+            .find(|&substr| substr.matches_start(text))
+            .map(|substr| substr.clone())
+    }
+
     pub fn get(&self, substr: &Substring) -> Option<usize> {
         self.0.get(substr).map(|&count| count)
     }

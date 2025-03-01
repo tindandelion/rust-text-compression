@@ -32,10 +32,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 
     // TODO: Convert to Option<&Substring>
     pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
-        self.substrings
-            .keys()
-            .find(|&substr| substr.matches_start(text))
-            .map(|substr| substr.clone())
+        self.substrings.find_match(text)
     }
 
     pub fn increment_count(&mut self, substr: Substring) {
