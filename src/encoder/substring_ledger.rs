@@ -2,12 +2,14 @@ use std::collections::BTreeMap;
 
 use crate::encoding_table::EncodingTable;
 
-use super::{substring::Substring, substring_selector::SubstringSelector};
+use super::{
+    substring::Substring, substring_counts::SubstringCounts, substring_selector::SubstringSelector,
+};
 
 pub type SubstringMap = BTreeMap<Substring, usize>;
 
 pub trait LedgerPolicy {
-    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool;
+    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringCounts) -> bool;
     fn cleanup(&self, substrings: &mut SubstringMap);
 }
 
@@ -29,7 +31,8 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
-        self.policy.should_merge(x, y, &self.substrings)
+        self.policy
+            .should_merge(x, y, &SubstringCounts(&self.substrings))
     }
 
     // TODO: Convert to Option<&Substring>
@@ -190,10 +193,10 @@ mod tests {
             substrings.retain(|_, count| *count > 1);
         }
 
-        fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringMap) -> bool {
-            let x_count = substrings.get(x).unwrap();
-            let y_count = substrings.get(y).unwrap();
-            return *x_count == 1 && *y_count == 1;
+        fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
+            let x_count = counts.get(x).unwrap();
+            let y_count = counts.get(y).unwrap();
+            return x_count == 1 && y_count == 1;
         }
     }
 }

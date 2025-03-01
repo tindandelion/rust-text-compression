@@ -91,7 +91,10 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
 
 #[cfg(test)]
 mod tests {
-    use crate::encoder::{ledger_policies::CaptureAll, substring_ledger::SubstringMap};
+    use crate::encoder::{
+        ledger_policies::CaptureAll, substring_counts::SubstringCounts,
+        substring_ledger::SubstringMap,
+    };
 
     use super::*;
 
@@ -218,7 +221,12 @@ mod tests {
     struct DisallowMerging;
 
     impl LedgerPolicy for DisallowMerging {
-        fn should_merge(&self, _x: &Substring, _y: &Substring, _substrings: &SubstringMap) -> bool {
+        fn should_merge(
+            &self,
+            _x: &Substring,
+            _y: &Substring,
+            _substrings: &SubstringCounts,
+        ) -> bool {
             false
         }
 
@@ -230,7 +238,12 @@ mod tests {
             substrings.clear();
         }
 
-        fn should_merge(&self, _x: &Substring, _y: &Substring, _substrings: &SubstringMap) -> bool {
+        fn should_merge(
+            &self,
+            _x: &Substring,
+            _y: &Substring,
+            _substrings: &SubstringCounts,
+        ) -> bool {
             true
         }
     }
