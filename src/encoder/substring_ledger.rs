@@ -32,16 +32,16 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 
     // TODO: Convert to Option<&Substring>
     pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
-        self.substrings.find_match(text)
+        self.substrings.find_match(text).cloned()
     }
 
-    pub fn increment_count(&mut self, substr: Substring) {
-        let current_count = self.substrings.get_mut(&substr);
+    pub fn increment_count(&mut self, substr: &Substring) {
+        let current_count = self.substrings.get_mut(substr);
         if let Some(count) = current_count {
             *count += 1;
         } else {
             self.policy.cleanup(&mut self.substrings);
-            self.substrings.insert(substr, 1);
+            self.substrings.insert(substr.clone(), 1);
         }
     }
 
@@ -74,7 +74,7 @@ mod tests {
         fn initial_increment_count_adds_to_ledger() {
             let mut ledger = make_ledger();
 
-            ledger.increment_count(substring("a"));
+            ledger.increment_count(&substring("a"));
             assert_eq!(vec![("a", 1)], ledger.entries());
         }
 
@@ -82,8 +82,8 @@ mod tests {
         fn subsequent_increment_count_updates_count() {
             let mut ledger = make_ledger();
 
-            ledger.increment_count(substring("a"));
-            ledger.increment_count(substring("a"));
+            ledger.increment_count(&substring("a"));
+            ledger.increment_count(&substring("a"));
 
             assert_eq!(vec![("a", 2)], ledger.entries());
         }
@@ -96,24 +96,24 @@ mod tests {
         fn cleanup_ledger_according_to_policy_when_inserting_new_substring() {
             let mut ledger = make_ledger_with_policy(TestLedgerPolicy { max_entries: 3 });
 
-            ledger.increment_count(substring("a"));
-            ledger.increment_count(substring("b"));
-            ledger.increment_count(substring("x"));
-            ledger.increment_count(substring("x"));
+            ledger.increment_count(&substring("a"));
+            ledger.increment_count(&substring("b"));
+            ledger.increment_count(&substring("x"));
+            ledger.increment_count(&substring("x"));
             assert_eq!(vec![("a", 1), ("b", 1), ("x", 2)], ledger.entries());
 
-            ledger.increment_count(substring("y"));
+            ledger.increment_count(&substring("y"));
             assert_eq!(vec![("x", 2), ("y", 1)], ledger.entries());
         }
 
         #[test]
         fn should_merge_substrings_whose_count_is_one() {
             let mut ledger = make_ledger_with_policy(TestLedgerPolicy { max_entries: 10 });
-            ledger.increment_count(substring("a"));
-            ledger.increment_count(substring("b"));
+            ledger.increment_count(&substring("a"));
+            ledger.increment_count(&substring("b"));
 
-            ledger.increment_count(substring("c"));
-            ledger.increment_count(substring("c"));
+            ledger.increment_count(&substring("c"));
+            ledger.increment_count(&substring("c"));
 
             assert!(ledger.should_merge(&substring("a"), &substring("b")));
             assert!(!ledger.should_merge(&substring("a"), &substring("c")));
@@ -129,10 +129,10 @@ mod tests {
         #[test]
         fn match_found() {
             let mut ledger = make_ledger();
-            ledger.increment_count(substring("a"));
-            ledger.increment_count(substring("aa"));
-            ledger.increment_count(substring("aaa"));
-            ledger.increment_count(substring("b"));
+            ledger.increment_count(&substring("a"));
+            ledger.increment_count(&substring("aa"));
+            ledger.increment_count(&substring("aaa"));
+            ledger.increment_count(&substring("b"));
 
             let found = ledger.find_longest_match("aaa");
             assert_eq!(Some(substring("aaa")), found);
@@ -147,10 +147,10 @@ mod tests {
         #[test]
         fn match_not_found() {
             let mut ledger = make_ledger();
-            ledger.increment_count(substring("a"));
-            ledger.increment_count(substring("aa"));
-            ledger.increment_count(substring("aaa"));
-            ledger.increment_count(substring("b"));
+            ledger.increment_count(&substring("a"));
+            ledger.increment_count(&substring("aa"));
+            ledger.increment_count(&substring("aaa"));
+            ledger.increment_count(&substring("b"));
 
             let found = ledger.find_longest_match("ccc");
             assert_eq!(None, found);
