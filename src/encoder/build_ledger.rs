@@ -55,7 +55,10 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
         let mut last_match = follow_up_match.clone();
 
         if let Some(follow_up) = &follow_up_match {
-            if self.ledger.should_merge(substr_match, follow_up) {
+            let substr_count = self.ledger.get_count(substr_match);
+            let follow_up_count = self.ledger.get_count(follow_up);
+
+            if self.ledger.should_merge(substr_count, follow_up_count) {
                 let new_substring = substr_match.concat(follow_up);
                 self.ledger.increment_count(&new_substring);
             }

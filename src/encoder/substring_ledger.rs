@@ -26,9 +26,11 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         self.substrings.len()
     }
 
-    pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
-        let x_count = self.substrings.get(x).unwrap();
-        let y_count = self.substrings.get(y).unwrap();
+    pub fn get_count(&self, substr: &Substring) -> usize {
+        self.substrings.get(substr).unwrap()
+    }
+
+    pub fn should_merge(&self, x_count: usize, y_count: usize) -> bool {
         self.policy.should_merge(x_count, y_count, &self.substrings)
     }
 
@@ -109,7 +111,7 @@ mod tests {
         }
 
         #[test]
-        fn should_merge_substrings_whose_count_is_one() {
+        fn should_only_merge_substrings_whose_count_is_one() {
             let mut ledger = make_ledger_with_policy(TestLedgerPolicy { max_entries: 10 });
             ledger.increment_count(&substring("a"));
             ledger.increment_count(&substring("b"));
@@ -117,9 +119,9 @@ mod tests {
             ledger.increment_count(&substring("c"));
             ledger.increment_count(&substring("c"));
 
-            assert!(ledger.should_merge(&substring("a"), &substring("b")));
-            assert!(!ledger.should_merge(&substring("a"), &substring("c")));
-            assert!(!ledger.should_merge(&substring("c"), &substring("b")));
+            assert!(ledger.should_merge(1, 1));
+            assert!(!ledger.should_merge(1, 2));
+            assert!(!ledger.should_merge(2, 1));
         }
 
         // TODO: Error handling for trying to merge non-existing substrings
