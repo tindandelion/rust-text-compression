@@ -31,12 +31,12 @@ impl LimitLedgerSize {
     }
 
     fn calc_median_count(&self, counts: &SubstringCounts) -> usize {
-        let mut counts = counts.values().cloned().collect::<Vec<_>>();
+        let mut counts = counts.values().collect::<Vec<_>>();
         if counts.len() == 1 {
-            return counts[0];
+            return *counts[0];
         }
         counts.sort();
-        counts[counts.len() / 2 - 1]
+        *counts[counts.len() / 2 - 1]
     }
 
     fn calc_free_space(&self, counts: &SubstringCounts) -> usize {
