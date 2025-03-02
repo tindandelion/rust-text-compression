@@ -1,6 +1,4 @@
-use super::{
-    substring::Substring, substring_counts::SubstringCounts, substring_ledger::LedgerPolicy,
-};
+use super::{substring_counts::SubstringCounts, substring_ledger::LedgerPolicy};
 
 pub struct CaptureAll;
 
@@ -47,7 +45,12 @@ impl LimitLedgerSize {
 impl LedgerPolicy for CaptureAll {
     fn cleanup(&self, _counts: &mut SubstringCounts) {}
 
-    fn should_merge(&self, _x: &Substring, _y: &Substring, _substrings: &SubstringCounts) -> bool {
+    fn should_merge(
+        &self,
+        _x_count: usize,
+        _y_count: usize,
+        _substrings: &SubstringCounts,
+    ) -> bool {
         true
     }
 }
@@ -60,14 +63,12 @@ impl LedgerPolicy for LimitLedgerSize {
         }
     }
 
-    fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
+    fn should_merge(&self, x_count: usize, y_count: usize, counts: &SubstringCounts) -> bool {
         if self.is_full(counts) {
             return false;
         }
 
         let threshold = self.calc_merge_threshold(&counts);
-        let x_count = counts.get(x).unwrap();
-        let y_count = counts.get(y).unwrap();
         x_count >= threshold && y_count >= threshold
     }
 }
@@ -82,44 +83,34 @@ mod limit_dictionary_size_tests {
 
         #[test]
         fn should_merge_when_both_counts_are_bigger_than_threshold() {
-            let x = Substring::from("x");
-            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
             let mut counts = SubstringCounts::new();
+            counts.insert("x".into(), 1);
+            counts.insert("y".into(), 10);
 
-            counts.insert(x.clone(), 3);
-            counts.insert(y.clone(), 3);
-
-            assert!(policy.should_merge(&x, &y, &counts));
-            assert!(policy.should_merge(&y, &x, &counts));
+            assert!(policy.should_merge(3, 3, &counts));
         }
 
         #[test]
         fn should_merge_when_count_is_equal_to_threshold() {
-            let x = Substring::from("x");
-            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
             let mut counts = SubstringCounts::new();
+            counts.insert("x".into(), 1);
+            counts.insert("y".into(), 10);
 
-            counts.insert(x.clone(), 2);
-            counts.insert(y.clone(), 3);
-
-            assert!(policy.should_merge(&x, &y, &counts));
-            assert!(policy.should_merge(&y, &x, &counts));
+            assert!(policy.should_merge(2, 3, &counts));
+            assert!(policy.should_merge(3, 2, &counts));
         }
 
         #[test]
         fn should_not_merge_when_at_least_one_count_is_less_than_threshold() {
-            let x = Substring::from("x");
-            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 4 };
             let mut counts = SubstringCounts::new();
+            counts.insert("x".into(), 1);
+            counts.insert("y".into(), 10);
 
-            counts.insert(x.clone(), 1);
-            counts.insert(y.clone(), 3);
-
-            assert!(!policy.should_merge(&x, &y, &counts));
-            assert!(!policy.should_merge(&y, &x, &counts));
+            assert!(!policy.should_merge(1, 3, &counts));
+            assert!(!policy.should_merge(3, 1, &counts));
         }
 
         #[test]
@@ -127,16 +118,13 @@ mod limit_dictionary_size_tests {
             /*
                 Do not merge strings when the dictionary is full, regardless of their counts
             */
-            let x = Substring::from("x");
-            let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 2 };
             let mut counts = SubstringCounts::new();
 
-            counts.insert(x.clone(), usize::MAX);
-            counts.insert(y.clone(), usize::MAX);
+            counts.insert("x".into(), 1);
+            counts.insert("y".into(), 100);
 
-            assert!(!policy.should_merge(&x, &y, &counts));
-            assert!(!policy.should_merge(&y, &x, &counts));
+            assert!(!policy.should_merge(usize::MAX, usize::MAX, &counts));
         }
 
         #[test]
@@ -145,25 +133,21 @@ mod limit_dictionary_size_tests {
                Given the dictionary of max_size = 7, and current size = 3 (threshold = 1.75)
                we should merge substrings whose counts are at least 2 (1.75 rounded up to 2)
             */
-            let x = Substring::from("x");
-            let y = Substring::from("y");
-            let z = Substring::from("z");
             let policy = LimitLedgerSize { max_size: 7 };
             let mut counts = SubstringCounts::new();
+            counts.insert("x".into(), 1);
+            counts.insert("y".into(), 2);
+            counts.insert("z".into(), 3);
 
-            counts.insert(x.clone(), 3);
-            counts.insert(y.clone(), 3);
-            counts.insert(z.clone(), 1);
-
-            assert!(policy.should_merge(&x, &y, &counts));
-            assert!(policy.should_merge(&y, &x, &counts));
-
-            assert!(!policy.should_merge(&x, &z, &counts));
-            assert!(!policy.should_merge(&z, &x, &counts));
+            assert!(policy.should_merge(3, 3, &counts));
+            assert!(!policy.should_merge(3, 1, &counts));
+            assert!(!policy.should_merge(1, 3, &counts));
         }
     }
 
     mod cleanup {
+
+        use crate::encoder::Substring;
 
         use super::*;
 

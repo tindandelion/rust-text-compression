@@ -5,7 +5,7 @@ use super::{
 };
 
 pub trait LedgerPolicy {
-    fn should_merge(&self, x: &Substring, y: &Substring, substrings: &SubstringCounts) -> bool;
+    fn should_merge(&self, x_count: usize, y_count: usize, substrings: &SubstringCounts) -> bool;
     fn cleanup(&self, substrings: &mut SubstringCounts);
 }
 
@@ -27,7 +27,9 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     pub fn should_merge(&self, x: &Substring, y: &Substring) -> bool {
-        self.policy.should_merge(x, y, &self.substrings)
+        let x_count = self.substrings.get(x).unwrap();
+        let y_count = self.substrings.get(y).unwrap();
+        self.policy.should_merge(x_count, y_count, &self.substrings)
     }
 
     // TODO: Convert to Option<&Substring>
@@ -185,9 +187,7 @@ mod tests {
             counts.retain(|_, count| *count > 1);
         }
 
-        fn should_merge(&self, x: &Substring, y: &Substring, counts: &SubstringCounts) -> bool {
-            let x_count = counts.get(x).unwrap();
-            let y_count = counts.get(y).unwrap();
+        fn should_merge(&self, x_count: usize, y_count: usize, _counts: &SubstringCounts) -> bool {
             return x_count == 1 && y_count == 1;
         }
     }

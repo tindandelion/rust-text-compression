@@ -220,8 +220,8 @@ mod tests {
     impl LedgerPolicy for DisallowMerging {
         fn should_merge(
             &self,
-            _x: &Substring,
-            _y: &Substring,
+            _x_count: usize,
+            _y_count: usize,
             _substrings: &SubstringCounts,
         ) -> bool {
             false
@@ -237,8 +237,8 @@ mod tests {
 
         fn should_merge(
             &self,
-            _x: &Substring,
-            _y: &Substring,
+            _x_count: usize,
+            _y_count: usize,
             _substrings: &SubstringCounts,
         ) -> bool {
             true
