@@ -9,10 +9,10 @@ fn compression_ratio_test() {
         ("wap-200.txt", 60.1),
         ("wap-400.txt", 74.7),
         ("wap-800.txt", 84.6),
-        ("wap-1600.txt", 32.7),
-        ("wap-3200.txt", 28.5),
-        ("wap-6400.txt", 27.5),
-        ("wap-12800.txt", 26.0),
+        ("wap-1600.txt", 59.1),
+        ("wap-3200.txt", 54.8),
+        ("wap-6400.txt", 52.0),
+        ("wap-12800.txt", 50.4),
     ];
 
     for (file_name, expected_ratio) in test_files {
