@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use super::Substring;
+use super::{substring::SubstringCount, Substring};
 
 pub struct SubstringCounts(BTreeMap<Substring, usize>);
 
@@ -13,12 +13,14 @@ impl SubstringCounts {
         self.0.len()
     }
 
-    pub fn find_match(&self, text: &str) -> Option<&Substring> {
-        self.0.keys().find(|&substr| substr.matches_start(text))
-    }
-
-    pub fn get(&self, substr: &Substring) -> Option<usize> {
-        self.0.get(substr).map(|&count| count)
+    pub fn find_match(&self, text: &str) -> Option<SubstringCount> {
+        self.0
+            .iter()
+            .find(|(substr, _)| substr.matches_start(text))
+            .map(|(substr, count)| SubstringCount {
+                value: substr.clone(),
+                count: *count,
+            })
     }
 
     pub fn get_mut(&mut self, substr: &Substring) -> Option<&mut usize> {

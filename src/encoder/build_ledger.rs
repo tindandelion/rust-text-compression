@@ -1,4 +1,6 @@
-use super::{substring_ledger::LedgerPolicy, Substring, SubstringLedger};
+use super::{
+    substring::SubstringCount, substring_ledger::LedgerPolicy, Substring, SubstringLedger,
+};
 
 pub fn build_ledger<LP: LedgerPolicy>(source: &str, policy: LP) -> SubstringLedger<LP> {
     BuildState::new(source, policy).run_until_end().ledger
@@ -7,7 +9,7 @@ pub fn build_ledger<LP: LedgerPolicy>(source: &str, policy: LP) -> SubstringLedg
 struct BuildState<'a, LP: LedgerPolicy> {
     head: &'a str,
     ledger: SubstringLedger<LP>,
-    last_match: Option<Substring>,
+    last_match: Option<SubstringCount>,
 }
 
 impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
@@ -33,7 +35,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
     fn step(mut self) -> BuildState<'a, LP> {
         if let Some(next_char) = self.head.chars().next() {
             if let Some(substr_match) = self.find_longest_match() {
-                self.ledger.increment_count(&substr_match);
+                self.ledger.increment_count(&substr_match.value);
                 self.merge_with_follow_up_match(&substr_match)
             } else {
                 self.create_single_char_substring(next_char)
@@ -43,26 +45,28 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
         }
     }
 
-    fn find_longest_match(&self) -> Option<Substring> {
+    fn find_longest_match(&self) -> Option<SubstringCount> {
         self.last_match
             .clone()
             .or_else(|| self.ledger.find_longest_match(self.head))
     }
 
-    fn merge_with_follow_up_match(mut self, substr_match: &Substring) -> BuildState<'a, LP> {
-        let rest = &self.head[substr_match.len()..];
+    fn should_merge(&self, substr_match: &SubstringCount, follow_up: &SubstringCount) -> bool {
+        self.ledger
+            .should_merge(substr_match.count, follow_up.count)
+    }
+
+    fn merge_with_follow_up_match(mut self, substr_match: &SubstringCount) -> BuildState<'a, LP> {
+        let rest = &self.head[substr_match.value.len()..];
         let follow_up_match = self.ledger.find_longest_match(rest);
         let mut last_match = follow_up_match.clone();
 
         if let Some(follow_up) = &follow_up_match {
-            let substr_count = self.ledger.get_count(substr_match);
-            let follow_up_count = self.ledger.get_count(follow_up);
-
-            if self.ledger.should_merge(substr_count, follow_up_count) {
-                let new_substring = substr_match.concat(follow_up);
+            if self.should_merge(substr_match, follow_up) {
+                let new_substring = substr_match.value.concat(&follow_up.value);
                 self.ledger.increment_count(&new_substring);
             }
-            if !self.ledger.contains(follow_up) {
+            if !self.ledger.contains(&follow_up.value) {
                 last_match = None;
             }
         } else {
@@ -83,7 +87,11 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
         self.make_new_state("", None)
     }
 
-    fn make_new_state(self, head: &'a str, last_match: Option<Substring>) -> BuildState<'a, LP> {
+    fn make_new_state(
+        self,
+        head: &'a str,
+        last_match: Option<SubstringCount>,
+    ) -> BuildState<'a, LP> {
         BuildState {
             head,
             ledger: self.ledger,
@@ -210,7 +218,7 @@ mod tests {
         state.ledger.increment_count(&substring("ab"));
 
         let next_state = state.step();
-        assert_eq!(None, next_state.last_match)
+        assert!(next_state.last_match.is_none());
     }
 
     fn substring(s: &str) -> Substring {

@@ -1,7 +1,9 @@
 use crate::encoding_table::EncodingTable;
 
 use super::{
-    substring::Substring, substring_counts::SubstringCounts, substring_selector::SubstringSelector,
+    substring::{Substring, SubstringCount},
+    substring_counts::SubstringCounts,
+    substring_selector::SubstringSelector,
 };
 
 pub trait LedgerPolicy {
@@ -26,17 +28,13 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
         self.substrings.len()
     }
 
-    pub fn get_count(&self, substr: &Substring) -> usize {
-        self.substrings.get(substr).unwrap()
-    }
-
     pub fn should_merge(&self, x_count: usize, y_count: usize) -> bool {
         self.policy.should_merge(x_count, y_count, &self.substrings)
     }
 
-    // TODO: Convert to Option<&Substring>
-    pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
-        self.substrings.find_match(text).cloned()
+    // TODO: Convert to references
+    pub fn find_longest_match(&self, text: &str) -> Option<SubstringCount> {
+        self.substrings.find_match(text)
     }
 
     pub fn increment_count(&mut self, substr: &Substring) {
@@ -138,14 +136,14 @@ mod tests {
             ledger.increment_count(&substring("aaa"));
             ledger.increment_count(&substring("b"));
 
-            let found = ledger.find_longest_match("aaa");
-            assert_eq!(Some(substring("aaa")), found);
+            let found = ledger.find_longest_match("aaa").unwrap();
+            assert_eq!(substring("aaa"), found.value);
 
-            let found = ledger.find_longest_match("aab");
-            assert_eq!(Some(substring("aa")), found);
+            let found = ledger.find_longest_match("aab").unwrap();
+            assert_eq!(substring("aa"), found.value);
 
-            let found = ledger.find_longest_match("bba");
-            assert_eq!(Some(substring("b")), found);
+            let found = ledger.find_longest_match("bba").unwrap();
+            assert_eq!(substring("b"), found.value);
         }
 
         #[test]
@@ -157,7 +155,7 @@ mod tests {
             ledger.increment_count(&substring("b"));
 
             let found = ledger.find_longest_match("ccc");
-            assert_eq!(None, found);
+            assert!(found.is_none());
         }
     }
 

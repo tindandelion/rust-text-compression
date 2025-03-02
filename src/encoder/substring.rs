@@ -3,6 +3,12 @@ use std::cmp::Ordering;
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Substring(String);
 
+#[derive(Debug, Clone)]
+pub struct SubstringCount {
+    pub value: Substring,
+    pub count: usize,
+}
+
 impl Substring {
     pub fn from_char(c: char) -> Self {
         Self(c.to_string())
