@@ -38,7 +38,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     pub fn increment_count(&mut self, substr: &Substring) {
-        let current_count = self.substrings.get_mut(substr);
+        let current_count = self.substrings.get_count_mut(substr);
         if let Some(count) = current_count {
             *count += 1;
         } else {

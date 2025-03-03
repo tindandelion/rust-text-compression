@@ -23,7 +23,7 @@ impl SubstringCounts {
             })
     }
 
-    pub fn get_mut(&mut self, substr: &Substring) -> Option<&mut usize> {
+    pub fn get_count_mut(&mut self, substr: &Substring) -> Option<&mut usize> {
         self.0.get_mut(substr)
     }
 
