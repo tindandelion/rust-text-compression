@@ -161,7 +161,7 @@ mod insertion_tests {
         counts.insert("a".to_string(), 10);
 
         assert_eq!(1, counts.len());
-        assert_eq!(Some(10), counts.get_count_mut("a").copied());
+        assert_eq!(Some(&mut 10), counts.get_count_mut("a"));
         assert_eq!(None, counts.get_count_mut("ab"));
     }
 
@@ -173,7 +173,7 @@ mod insertion_tests {
         assert_eq!(1, counts.len());
         assert_eq!(None, counts.get_count_mut("ab"));
         assert_eq!(None, counts.get_count_mut("abc"));
-        assert_eq!(Some(10), counts.get_count_mut("abcd").copied());
+        assert_eq!(Some(&mut 10), counts.get_count_mut("abcd"));
     }
 
     #[test]
@@ -183,7 +183,7 @@ mod insertion_tests {
         counts.insert("abcd".to_string(), 20);
 
         assert_eq!(1, counts.len());
-        assert_eq!(Some(20), counts.get_count_mut("abcd").copied());
+        assert_eq!(Some(&mut 20), counts.get_count_mut("abcd"));
     }
 
     #[test]
@@ -193,8 +193,8 @@ mod insertion_tests {
         counts.insert("abc".to_string(), 20);
 
         assert_eq!(2, counts.len());
-        assert_eq!(Some(20), counts.get_count_mut("abc").copied());
-        assert_eq!(Some(10), counts.get_count_mut("abcd").copied());
+        assert_eq!(Some(&mut 20), counts.get_count_mut("abc"));
+        assert_eq!(Some(&mut 10), counts.get_count_mut("abcd"));
     }
 
     #[test]
@@ -204,8 +204,8 @@ mod insertion_tests {
         counts.insert("def".to_string(), 20);
 
         assert_eq!(2, counts.len());
-        assert_eq!(Some(10), counts.get_count_mut("abc").copied());
-        assert_eq!(Some(20), counts.get_count_mut("def").copied());
+        assert_eq!(Some(&mut 10), counts.get_count_mut("abc"));
+        assert_eq!(Some(&mut 20), counts.get_count_mut("def"));
     }
 }
 
@@ -303,15 +303,15 @@ mod iterator_tests {
     #[test]
     fn empty_trie() {
         let counts = TrieSubstringCounts::new();
-
         let strings = counts.iter().collect::<Vec<_>>();
         assert!(strings.is_empty());
     }
 
     #[test]
-    fn iterate_over_children() {
+    fn iterate_over_entries() {
         let mut counts = TrieSubstringCounts::new();
         counts.insert("abc".to_string(), 10);
+        counts.insert("abx".to_string(), 10);
         counts.insert("abcd".to_string(), 20);
         counts.insert("abcde".to_string(), 30);
         counts.insert("def".to_string(), 40);
@@ -324,6 +324,7 @@ mod iterator_tests {
                 (&"abc".to_string(), &10),
                 (&"abcd".to_string(), &20),
                 (&"abcde".to_string(), &30),
+                (&"abx".to_string(), &10),
                 (&"def".to_string(), &40),
             ],
             entries
