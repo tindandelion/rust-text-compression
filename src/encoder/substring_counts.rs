@@ -31,10 +31,6 @@ impl SubstringCounts {
         self.0.contains_key(substr)
     }
 
-    pub fn values(&self) -> impl Iterator<Item = &usize> {
-        self.0.values()
-    }
-
     pub fn into_iter(self) -> impl Iterator<Item = (Substring, usize)> {
         self.0.into_iter()
     }

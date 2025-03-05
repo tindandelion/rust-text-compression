@@ -29,7 +29,7 @@ impl LimitLedgerSize {
     }
 
     fn calc_median_count(&self, counts: &SubstringCounts) -> usize {
-        let mut counts = counts.values().collect::<Vec<_>>();
+        let mut counts = counts.iter().map(|(_, count)| count).collect::<Vec<_>>();
         if counts.len() == 1 {
             return *counts[0];
         }
