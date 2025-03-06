@@ -71,6 +71,13 @@ impl TrieSubstringCounts {
         TrieIterator::new(self).map(|v| (&v.value, &v.count))
     }
 
+    pub fn retain<F>(&mut self, f: F)
+    where
+        F: Fn(&Substring, &usize) -> bool,
+    {
+        RetainIf::new(self).run(f);
+    }
+
     fn get_count(&self, substring: &Substring) -> Option<&usize> {
         let (first_char, rest_chars) = start_search(substring.as_str())?;
 
@@ -145,6 +152,38 @@ impl<'a> Iterator for TrieIterator<'a> {
             }
         }
         None
+    }
+}
+
+struct RetainIf<'a> {
+    stack: Vec<&'a mut TrieNode>,
+}
+
+impl<'a> RetainIf<'a> {
+    fn new(trie: &'a mut TrieSubstringCounts) -> Self {
+        let mut stack = Vec::with_capacity(trie.len());
+        for node in trie.nodes.values_mut() {
+            stack.push(node);
+        }
+        Self { stack }
+    }
+
+    fn run<F>(&mut self, condition: F)
+    where
+        F: Fn(&Substring, &usize) -> bool,
+    {
+        while let Some(current) = self.stack.pop() {
+            for child in current.children.values_mut() {
+                self.stack.push(child);
+            }
+
+            if let Some(count) = current.count.as_mut() {
+                let should_retain = condition(&count.value, &mut count.count);
+                if !should_retain {
+                    current.count = None;
+                }
+            }
+        }
     }
 }
 
@@ -340,5 +379,31 @@ mod iterator_tests {
             ],
             entries
         );
+    }
+}
+
+#[cfg(test)]
+mod retain_tests {
+    use super::*;
+
+    #[test]
+    fn retain_entries() {
+        let mut counts = TrieSubstringCounts::new();
+        counts.insert("abc".into(), 10);
+        counts.insert("abx".into(), 10);
+        counts.insert("abcd".into(), 20);
+        counts.insert("xyz".into(), 30);
+
+        counts.retain(|_, count| *count > 10);
+        assert_eq!(vec!["abcd", "xyz"], collect_strings(&counts));
+    }
+
+    fn collect_strings(counts: &TrieSubstringCounts) -> Vec<String> {
+        let mut strings = counts
+            .iter()
+            .map(|(s, _)| s.to_string())
+            .collect::<Vec<_>>();
+        strings.sort();
+        strings
     }
 }
