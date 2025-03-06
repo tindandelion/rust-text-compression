@@ -139,15 +139,6 @@ mod insertion_tests {
     use super::*;
 
     #[test]
-    fn insert_empty_string() {
-        let mut counts = TrieSubstringCounts::new();
-        counts.insert("".into(), 10);
-
-        assert_eq!(0, counts.len());
-        assert_eq!(None, counts.get_count_mut(&"".into()));
-    }
-
-    #[test]
     fn insert_single_char() {
         let mut counts = TrieSubstringCounts::new();
         counts.insert("a".into(), 10);

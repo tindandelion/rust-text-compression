@@ -62,12 +62,14 @@ impl PartialOrd for Substring {
 
 impl From<String> for Substring {
     fn from(s: String) -> Self {
+        assert!(!s.is_empty(), "Cannot create Substring from empty string");
         Substring(s)
     }
 }
 
 impl From<&str> for Substring {
     fn from(s: &str) -> Self {
+        assert!(!s.is_empty(), "Cannot create Substring from empty string");
         Substring(s.to_string())
     }
 }
@@ -76,6 +78,18 @@ impl From<&str> for Substring {
 mod tests {
 
     use super::*;
+
+    #[test]
+    #[should_panic]
+    fn substring_from_empty_str() {
+        let _ = Substring::from("");
+    }
+
+    #[test]
+    #[should_panic]
+    fn substring_from_empty_string() {
+        let _ = Substring::from("".to_string());
+    }
 
     #[test]
     fn order_substrings_by_length_descending() {
