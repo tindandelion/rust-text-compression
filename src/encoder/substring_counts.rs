@@ -45,8 +45,4 @@ impl SubstringCounts {
     pub fn insert(&mut self, substring: Substring, count: usize) {
         self.0.insert(substring, count);
     }
-
-    pub fn clear(&mut self) {
-        self.0.clear();
-    }
 }

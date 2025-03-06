@@ -26,7 +26,7 @@ impl TrieSubstringCounts {
     }
 
     pub fn insert(&mut self, substring: Substring, count: usize) {
-        if let Some((first_char, rest_chars)) = self.start_search(substring.as_str()) {
+        if let Some((first_char, rest_chars)) = start_search(substring.as_str()) {
             let root = self.nodes.entry(first_char).or_insert(TrieNode::new());
             let leaf = root.make_children(rest_chars);
 
@@ -37,7 +37,7 @@ impl TrieSubstringCounts {
     }
 
     pub fn get_count_mut(&mut self, substring: &Substring) -> Option<&mut usize> {
-        let (first_char, rest_chars) = self.start_search(substring.as_str())?;
+        let (first_char, rest_chars) = start_search(substring.as_str())?;
 
         let mut current = self.nodes.get_mut(&first_char)?;
         for char in rest_chars {
@@ -46,8 +46,12 @@ impl TrieSubstringCounts {
         current.count.as_mut().map(|v| &mut v.count)
     }
 
+    pub fn contains_key(&self, substring: &Substring) -> bool {
+        self.get_count(substring).is_some()
+    }
+
     pub fn find_match(&self, text: &str) -> Option<&str> {
-        let (first_char, rest_chars) = self.start_search(text)?;
+        let (first_char, rest_chars) = start_search(text)?;
 
         let mut current = self.nodes.get(&first_char)?;
         let mut best_match: Option<&SubstringCount> = current.count.as_ref();
@@ -67,11 +71,21 @@ impl TrieSubstringCounts {
         TrieIterator::new(self).map(|v| (&v.value, &v.count))
     }
 
-    fn start_search<'a>(&self, text: &'a str) -> Option<(char, Chars<'a>)> {
-        let mut chars = text.chars();
-        let first_char = chars.next()?;
-        Some((first_char, chars))
+    fn get_count(&self, substring: &Substring) -> Option<&usize> {
+        let (first_char, rest_chars) = start_search(substring.as_str())?;
+
+        let mut current = self.nodes.get(&first_char)?;
+        for char in rest_chars {
+            current = current.get_child(&char)?;
+        }
+        current.count.as_ref().map(|v| &v.count)
     }
+}
+
+fn start_search<'a>(text: &'a str) -> Option<(char, Chars<'a>)> {
+    let mut chars = text.chars();
+    let first_char = chars.next()?;
+    Some((first_char, chars))
 }
 
 impl TrieNode {
@@ -144,8 +158,8 @@ mod insertion_tests {
         counts.insert("a".into(), 10);
 
         assert_eq!(1, counts.len());
-        assert_eq!(Some(&mut 10), counts.get_count_mut(&"a".into()));
-        assert_eq!(None, counts.get_count_mut(&"ab".into()));
+        assert_contains_substring(&mut counts, "a", 10);
+        assert_does_not_contain_substring(&mut counts, "ab");
     }
 
     #[test]
@@ -154,9 +168,9 @@ mod insertion_tests {
         counts.insert("abcd".into(), 10);
 
         assert_eq!(1, counts.len());
-        assert_eq!(None, counts.get_count_mut(&"ab".into()));
-        assert_eq!(None, counts.get_count_mut(&"abc".into()));
-        assert_eq!(Some(&mut 10), counts.get_count_mut(&"abcd".into()));
+        assert_does_not_contain_substring(&mut counts, "ab");
+        assert_does_not_contain_substring(&mut counts, "abc");
+        assert_contains_substring(&mut counts, "abcd", 10);
     }
 
     #[test]
@@ -166,7 +180,7 @@ mod insertion_tests {
         counts.insert("abcd".into(), 20);
 
         assert_eq!(1, counts.len());
-        assert_eq!(Some(&mut 20), counts.get_count_mut(&"abcd".into()));
+        assert_contains_substring(&mut counts, "abcd", 20);
     }
 
     #[test]
@@ -176,8 +190,8 @@ mod insertion_tests {
         counts.insert("abc".into(), 20);
 
         assert_eq!(2, counts.len());
-        assert_eq!(Some(&mut 20), counts.get_count_mut(&"abc".into()));
-        assert_eq!(Some(&mut 10), counts.get_count_mut(&"abcd".into()));
+        assert_contains_substring(&mut counts, "abc", 20);
+        assert_contains_substring(&mut counts, "abcd", 10);
     }
 
     #[test]
@@ -187,8 +201,22 @@ mod insertion_tests {
         counts.insert("def".into(), 20);
 
         assert_eq!(2, counts.len());
-        assert_eq!(Some(&mut 10), counts.get_count_mut(&"abc".into()));
-        assert_eq!(Some(&mut 20), counts.get_count_mut(&"def".into()));
+        assert_contains_substring(&mut counts, "abc", 10);
+        assert_contains_substring(&mut counts, "def", 20);
+    }
+
+    fn assert_contains_substring(
+        counts: &mut TrieSubstringCounts,
+        substring: &str,
+        mut count: usize,
+    ) {
+        assert_eq!(Some(&mut count), counts.get_count_mut(&substring.into()));
+        assert!(counts.contains_key(&substring.into()));
+    }
+
+    fn assert_does_not_contain_substring(counts: &mut TrieSubstringCounts, substring: &str) {
+        assert_eq!(None, counts.get_count_mut(&substring.into()));
+        assert!(!counts.contains_key(&substring.into()));
     }
 }
 
