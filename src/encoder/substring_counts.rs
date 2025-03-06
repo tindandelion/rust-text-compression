@@ -37,9 +37,9 @@ impl SubstringCounts {
 
     pub fn retain<F>(&mut self, f: F)
     where
-        F: FnMut(&Substring, &mut usize) -> bool,
+        F: Fn(&Substring, usize) -> bool,
     {
-        self.0.retain(f);
+        self.0.retain(|substr, count| f(substr, *count));
     }
 
     pub fn insert(&mut self, substring: Substring, count: usize) {

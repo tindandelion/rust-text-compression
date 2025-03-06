@@ -184,7 +184,7 @@ mod tests {
             if counts.len() < self.max_entries {
                 return;
             }
-            counts.retain(|_, count| *count > 1);
+            counts.retain(|_, count| count > 1);
         }
 
         fn should_merge(&self, x_count: usize, y_count: usize, _counts: &SubstringCounts) -> bool {

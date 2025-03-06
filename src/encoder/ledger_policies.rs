@@ -59,7 +59,7 @@ impl LedgerPolicy for LimitLedgerSize {
     fn cleanup(&self, counts: &mut SubstringCounts) {
         if self.should_cleanup(counts) {
             let median_count = self.calc_median_count(counts);
-            counts.retain(|_, count| *count >= median_count);
+            counts.retain(|_, count| count >= median_count);
         }
     }
 
