@@ -60,7 +60,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     pub fn entries(&self) -> Vec<(&str, usize)> {
         self.substrings
             .iter()
-            .map(|(substring, count)| (substring.as_str(), *count))
+            .map(|(substring, count)| (substring.as_str(), count))
             .collect()
     }
 }

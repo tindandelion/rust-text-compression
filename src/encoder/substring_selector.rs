@@ -35,7 +35,7 @@ impl SubstringSelector {
 
     pub fn select_substrings<'a>(
         &self,
-        substrings: impl Iterator<Item = (&'a Substring, &'a usize)>,
+        substrings: impl Iterator<Item = (&'a Substring, usize)>,
     ) -> Vec<Substring> {
         let impacts = self.calculate_impacts(substrings);
         impacts
@@ -47,16 +47,16 @@ impl SubstringSelector {
 
     fn calculate_impacts<'a>(
         &self,
-        iter: impl Iterator<Item = (&'a Substring, &'a usize)>,
+        iter: impl Iterator<Item = (&'a Substring, usize)>,
     ) -> Vec<EncodingImpact> {
         let mut impacts: Vec<EncodingImpact> = iter
-            .filter(|(_, count)| **count > 1)
+            .filter(|(_, count)| *count > 1)
             .map(|(substring, count)| {
-                let compression_gain = self.calc_compression_gain(substring.as_str(), *count);
+                let compression_gain = self.calc_compression_gain(substring.as_str(), count);
                 EncodingImpact {
                     substring: substring.clone(),
                     compression_gain,
-                    count: *count,
+                    count,
                 }
             })
             .filter(|impact| impact.compression_gain > 0)
@@ -101,8 +101,7 @@ mod tests {
                 substring_count("a", 2),
             ];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["aaaa"], to_strings(selected));
         }
 
@@ -120,8 +119,7 @@ mod tests {
                 substring_count("a", 2),
             ];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["aaa"], to_strings(selected));
         }
 
@@ -140,8 +138,7 @@ mod tests {
                 substring_count("cccc", 4),
             ];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["aaaa", "aaa"], to_strings(selected));
         }
     }
@@ -162,8 +159,7 @@ mod tests {
                 substring_count("aaaaa", 2),
             ];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["aaaaa", "bb", "aa"], to_strings(selected));
         }
 
@@ -175,8 +171,7 @@ mod tests {
             let selector = SubstringSelector::order_by_compression_gain(SPEC);
             let substrings = vec![substring_count("aa", 2), substring_count("bb", 3)];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["bb", "aa"], to_strings(selected));
         }
 
@@ -192,8 +187,7 @@ mod tests {
                 substring_count("b", 8),
             ];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["b", "aaa", "a"], to_strings(selected));
         }
 
@@ -216,8 +210,7 @@ mod tests {
             let selector = SubstringSelector::order_by_compression_gain(SPEC);
             let substrings = vec![substring_count("aaaaa", 2), substring_count("aaa", 3)];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["aaaaa", "aaa"], to_strings(selected));
         }
     }
@@ -235,8 +228,7 @@ mod tests {
                 substring_count("aaa", 2),
             ];
 
-            let iter = substrings.iter().map(|(s, c)| (s, c));
-            let selected = selector.select_substrings(iter);
+            let selected = selector.select_substrings(make_iter(&substrings));
             assert_eq!(vec!["b", "a", "aaa"], to_strings(selected));
         }
     }
@@ -247,5 +239,11 @@ mod tests {
 
     fn to_strings(substrings: Vec<Substring>) -> Vec<String> {
         substrings.into_iter().map(|s| s.to_string()).collect()
+    }
+
+    fn make_iter(
+        substrings: &Vec<(Substring, usize)>,
+    ) -> impl Iterator<Item = (&Substring, usize)> {
+        substrings.iter().map(|(s, c)| (s, *c))
     }
 }

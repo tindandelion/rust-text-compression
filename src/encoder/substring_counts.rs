@@ -31,8 +31,8 @@ impl SubstringCounts {
         self.0.contains_key(substr)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&Substring, &usize)> {
-        self.0.iter()
+    pub fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
+        self.0.iter().map(|(substr, count)| (substr, *count))
     }
 
     pub fn retain<F>(&mut self, f: F)
