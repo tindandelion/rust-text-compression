@@ -48,7 +48,7 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
     }
 
     pub fn build_encoding_table(self, selector: &SubstringSelector) -> EncodingTable {
-        let most_impactful = selector.select_substrings(self.substrings.into_iter());
+        let most_impactful = selector.select_substrings(self.substrings.iter());
         EncodingTable::new(most_impactful)
     }
 
