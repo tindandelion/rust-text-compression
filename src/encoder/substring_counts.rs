@@ -2,6 +2,7 @@ mod btree;
 mod tries;
 
 pub use btree::BTreeSubstringCounts;
+pub use tries::TrieSubstringCounts;
 
 use super::{substring::SubstringCount, Substring};
 
@@ -19,4 +20,8 @@ pub trait SubstringCounts {
 
 pub fn btree() -> BTreeSubstringCounts {
     BTreeSubstringCounts::new()
+}
+
+pub fn tries() -> TrieSubstringCounts {
+    TrieSubstringCounts::new()
 }

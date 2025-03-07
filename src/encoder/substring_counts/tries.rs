@@ -2,6 +2,8 @@ use std::{collections::HashMap, str::Chars};
 
 use crate::encoder::{substring::SubstringCount, Substring};
 
+use super::SubstringCounts;
+
 pub struct TrieSubstringCounts {
     nodes: HashMap<char, TrieNode>,
     length: usize,
@@ -13,19 +15,12 @@ struct TrieNode {
     children: HashMap<char, TrieNode>,
 }
 
-impl TrieSubstringCounts {
-    pub fn new() -> Self {
-        Self {
-            nodes: HashMap::new(),
-            length: 0,
-        }
-    }
-
-    pub fn len(&self) -> usize {
+impl SubstringCounts for TrieSubstringCounts {
+    fn len(&self) -> usize {
         self.length
     }
 
-    pub fn insert(&mut self, substring: Substring, count: usize) {
+    fn insert(&mut self, substring: Substring, count: usize) {
         if let Some((first_char, rest_chars)) = start_search(substring.as_str()) {
             let root = self.nodes.entry(first_char).or_insert(TrieNode::new());
             let leaf = root.make_children(rest_chars);
@@ -36,7 +31,7 @@ impl TrieSubstringCounts {
         }
     }
 
-    pub fn get_count_mut(&mut self, substring: &Substring) -> Option<&mut usize> {
+    fn get_count_mut(&mut self, substring: &Substring) -> Option<&mut usize> {
         let (first_char, rest_chars) = start_search(substring.as_str())?;
 
         let mut current = self.nodes.get_mut(&first_char)?;
@@ -46,11 +41,11 @@ impl TrieSubstringCounts {
         current.count.as_mut().map(|v| &mut v.count)
     }
 
-    pub fn contains_key(&self, substring: &Substring) -> bool {
+    fn contains_key(&self, substring: &Substring) -> bool {
         self.get_count(substring).is_some()
     }
 
-    pub fn find_match(&self, text: &str) -> Option<SubstringCount> {
+    fn find_match(&self, text: &str) -> Option<SubstringCount> {
         let (first_char, rest_chars) = start_search(text)?;
 
         let mut current = self.nodes.get(&first_char)?;
@@ -70,15 +65,24 @@ impl TrieSubstringCounts {
         })
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&Substring, &usize)> {
-        TrieIterator::new(self).map(|v| (&v.value, &v.count))
+    fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
+        TrieIterator::new(self).map(|v| (&v.value, v.count))
     }
 
-    pub fn retain<F>(&mut self, f: F)
+    fn retain<F>(&mut self, f: F)
     where
         F: Fn(&Substring, usize) -> bool,
     {
         RetainIf::new(self).run(f);
+    }
+}
+
+impl TrieSubstringCounts {
+    pub fn new() -> Self {
+        Self {
+            nodes: HashMap::new(),
+            length: 0,
+        }
     }
 
     fn get_count(&self, substring: &Substring) -> Option<&usize> {
@@ -387,11 +391,11 @@ mod iterator_tests {
 
         assert_eq!(
             vec![
-                (&"abc".into(), &10),
-                (&"abcd".into(), &20),
-                (&"abcde".into(), &30),
-                (&"abx".into(), &10),
-                (&"def".into(), &40),
+                (&"abc".into(), 10),
+                (&"abcd".into(), 20),
+                (&"abcde".into(), 30),
+                (&"abx".into(), 10),
+                (&"def".into(), 40),
             ],
             entries
         );
