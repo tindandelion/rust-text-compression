@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Substring(String);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SubstringCount {
     pub value: Substring,
     pub count: usize,

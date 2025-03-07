@@ -50,7 +50,7 @@ impl TrieSubstringCounts {
         self.get_count(substring).is_some()
     }
 
-    pub fn find_match(&self, text: &str) -> Option<&str> {
+    pub fn find_match(&self, text: &str) -> Option<SubstringCount> {
         let (first_char, rest_chars) = start_search(text)?;
 
         let mut current = self.nodes.get(&first_char)?;
@@ -64,7 +64,10 @@ impl TrieSubstringCounts {
                 break;
             }
         }
-        best_match.map(|v| v.value.as_str())
+        best_match.map(|v| SubstringCount {
+            value: v.value.clone(),
+            count: v.count,
+        })
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&Substring, &usize)> {
@@ -283,8 +286,8 @@ mod find_match_tests {
         counts.insert("abcde".into(), 30);
 
         assert_eq!(None, counts.find_match("ab"));
-        assert_eq!(Some("abc"), counts.find_match("abcd"));
-        assert_eq!(Some("abcde"), counts.find_match("abcde"));
+        assert_eq!(substring_count("abc", 10), counts.find_match("abcd"));
+        assert_eq!(substring_count("abcde", 30), counts.find_match("abcde"));
     }
 
     #[test]
@@ -294,7 +297,7 @@ mod find_match_tests {
         counts.insert("abcd".into(), 20);
 
         let best_match = counts.find_match("abcd");
-        assert_eq!(Some("abcd"), best_match);
+        assert_eq!(substring_count("abcd", 20), best_match);
     }
 
     #[test]
@@ -305,10 +308,10 @@ mod find_match_tests {
         counts.insert("def".into(), 20);
         counts.insert("abx".into(), 30);
 
-        assert_eq!(Some("abc"), counts.find_match("abc"));
-        assert_eq!(Some("abcd"), counts.find_match("abcde"));
-        assert_eq!(Some("def"), counts.find_match("def"));
-        assert_eq!(Some("abx"), counts.find_match("abx"));
+        assert_eq!(substring_count("abc", 10), counts.find_match("abc"));
+        assert_eq!(substring_count("abcd", 10), counts.find_match("abcde"));
+        assert_eq!(substring_count("def", 20), counts.find_match("def"));
+        assert_eq!(substring_count("abx", 30), counts.find_match("abx"));
         assert_eq!(None, counts.find_match("xyz"));
     }
 
@@ -317,8 +320,11 @@ mod find_match_tests {
         let mut counts = TrieSubstringCounts::new();
         counts.insert("hello".into(), 10);
 
-        assert_eq!(Some("hello"), counts.find_match("hello world"));
-        assert_eq!(Some("hello"), counts.find_match("hello!"));
+        assert_eq!(
+            substring_count("hello", 10),
+            counts.find_match("hello world")
+        );
+        assert_eq!(substring_count("hello", 10), counts.find_match("hello!"));
     }
 
     #[test]
@@ -329,10 +335,10 @@ mod find_match_tests {
         counts.insert("abc".into(), 30);
         counts.insert("abcd".into(), 40);
 
-        assert_eq!(Some("abcd"), counts.find_match("abcdef"));
-        assert_eq!(Some("abc"), counts.find_match("abc"));
-        assert_eq!(Some("ab"), counts.find_match("abxyz"));
-        assert_eq!(Some("a"), counts.find_match("a"));
+        assert_eq!(substring_count("abcd", 40), counts.find_match("abcdef"));
+        assert_eq!(substring_count("abc", 30), counts.find_match("abc"));
+        assert_eq!(substring_count("ab", 20), counts.find_match("abxyz"));
+        assert_eq!(substring_count("a", 10), counts.find_match("a"));
     }
 
     #[test]
@@ -341,8 +347,18 @@ mod find_match_tests {
         counts.insert("こんにちは".into(), 10);
         counts.insert("世界".into(), 20);
 
-        assert_eq!(Some("こんにちは"), counts.find_match("こんにちは世界"));
-        assert_eq!(Some("世界"), counts.find_match("世界"));
+        assert_eq!(
+            substring_count("こんにちは", 10),
+            counts.find_match("こんにちは世界")
+        );
+        assert_eq!(substring_count("世界", 20), counts.find_match("世界"));
+    }
+
+    fn substring_count(value: &str, count: usize) -> Option<SubstringCount> {
+        Some(SubstringCount {
+            value: value.into(),
+            count,
+        })
     }
 }
 
