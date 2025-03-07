@@ -14,10 +14,14 @@ pub trait SubstringCounts {
     fn insert(&mut self, substring: Substring, count: usize);
 }
 
+pub fn btree() -> BTreeSubstringCounts {
+    BTreeSubstringCounts::new()
+}
+
 pub struct BTreeSubstringCounts(BTreeMap<Substring, usize>);
 
 impl BTreeSubstringCounts {
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self(BTreeMap::new())
     }
 }
