@@ -1,7 +1,4 @@
-use super::{
-    substring_counts::BTreeSubstringCounts, substring_counts::SubstringCounts,
-    substring_ledger::LedgerPolicy,
-};
+use super::{substring_counts::SubstringCounts, substring_ledger::LedgerPolicy};
 
 pub struct CaptureAll;
 
@@ -14,7 +11,7 @@ impl LimitLedgerSize {
         Self { max_size }
     }
 
-    fn calc_merge_threshold(&self, counts: &BTreeSubstringCounts) -> usize {
+    fn calc_merge_threshold(&self, counts: &impl SubstringCounts) -> usize {
         let free_space = self.calc_free_space(counts);
         if free_space <= 0 {
             usize::MAX
@@ -23,15 +20,15 @@ impl LimitLedgerSize {
         }
     }
 
-    fn is_full(&self, counts: &BTreeSubstringCounts) -> bool {
+    fn is_full(&self, counts: &impl SubstringCounts) -> bool {
         counts.len() >= self.max_size
     }
 
-    fn should_cleanup(&self, counts: &BTreeSubstringCounts) -> bool {
+    fn should_cleanup(&self, counts: &impl SubstringCounts) -> bool {
         self.calc_free_space(counts) < 2
     }
 
-    fn calc_median_count(&self, counts: &BTreeSubstringCounts) -> usize {
+    fn calc_median_count(&self, counts: &impl SubstringCounts) -> usize {
         let mut counts = counts.iter().map(|(_, count)| count).collect::<Vec<_>>();
         if counts.len() == 1 {
             return counts[0];
@@ -46,32 +43,32 @@ impl LimitLedgerSize {
 }
 
 impl LedgerPolicy for CaptureAll {
-    fn cleanup(&self, _counts: &mut BTreeSubstringCounts) {}
+    fn cleanup(&self, _counts: &mut impl SubstringCounts) {}
 
     fn should_merge(
         &self,
         _x_count: usize,
         _y_count: usize,
-        _substrings: &BTreeSubstringCounts,
+        _substrings: &impl SubstringCounts,
     ) -> bool {
         true
     }
 }
 
 impl LedgerPolicy for LimitLedgerSize {
-    fn cleanup(&self, counts: &mut BTreeSubstringCounts) {
+    fn cleanup(&self, counts: &mut impl SubstringCounts) {
         if self.should_cleanup(counts) {
             let median_count = self.calc_median_count(counts);
             counts.retain(|_, count| count >= median_count);
         }
     }
 
-    fn should_merge(&self, x_count: usize, y_count: usize, counts: &BTreeSubstringCounts) -> bool {
+    fn should_merge(&self, x_count: usize, y_count: usize, counts: &impl SubstringCounts) -> bool {
         if self.is_full(counts) {
             return false;
         }
 
-        let threshold = self.calc_merge_threshold(&counts);
+        let threshold = self.calc_merge_threshold(counts);
         x_count >= threshold && y_count >= threshold
     }
 }
@@ -81,6 +78,8 @@ mod limit_dictionary_size_tests {
     use super::*;
 
     mod merging {
+
+        use crate::encoder::substring_counts::BTreeSubstringCounts;
 
         use super::*;
 
@@ -150,7 +149,7 @@ mod limit_dictionary_size_tests {
 
     mod cleanup {
 
-        use crate::encoder::Substring;
+        use crate::encoder::{substring_counts::BTreeSubstringCounts, Substring};
 
         use super::*;
 
@@ -187,7 +186,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("z"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(counts));
+            assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&counts));
         }
 
         #[test]
@@ -201,7 +200,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("c"), 2);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a", "b", "c"], get_substrings(counts));
+            assert_eq!(vec!["a", "b", "c"], get_substrings(&counts));
         }
 
         #[test]
@@ -212,7 +211,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("a"), 1);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["a"], get_substrings(counts));
+            assert_eq!(vec!["a"], get_substrings(&counts));
         }
 
         #[test]
@@ -235,7 +234,7 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("d"), 4);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d"], get_substrings(counts));
+            assert_eq!(vec!["b", "c", "d"], get_substrings(&counts));
         }
 
         #[test]
@@ -250,10 +249,10 @@ mod limit_dictionary_size_tests {
             counts.insert(Substring::from("e"), 3);
 
             policy.cleanup(&mut counts);
-            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(counts));
+            assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts));
         }
 
-        fn get_substrings(substrings: BTreeSubstringCounts) -> Vec<String> {
+        fn get_substrings(substrings: &impl SubstringCounts) -> Vec<String> {
             substrings
                 .iter()
                 .map(|(s, _)| s.to_string())

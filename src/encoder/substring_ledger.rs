@@ -11,9 +11,9 @@ pub trait LedgerPolicy {
         &self,
         x_count: usize,
         y_count: usize,
-        substrings: &BTreeSubstringCounts,
+        substrings: &impl SubstringCounts,
     ) -> bool;
-    fn cleanup(&self, substrings: &mut BTreeSubstringCounts);
+    fn cleanup(&self, substrings: &mut impl SubstringCounts);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
@@ -185,7 +185,7 @@ mod tests {
     }
 
     impl LedgerPolicy for TestLedgerPolicy {
-        fn cleanup(&self, counts: &mut BTreeSubstringCounts) {
+        fn cleanup(&self, counts: &mut impl SubstringCounts) {
             if counts.len() < self.max_entries {
                 return;
             }
@@ -196,7 +196,7 @@ mod tests {
             &self,
             x_count: usize,
             y_count: usize,
-            _counts: &BTreeSubstringCounts,
+            _counts: &impl SubstringCounts,
         ) -> bool {
             return x_count == 1 && y_count == 1;
         }
