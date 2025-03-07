@@ -2,18 +2,36 @@ use std::collections::BTreeMap;
 
 use super::{substring::SubstringCount, Substring};
 
-pub struct SubstringCounts(BTreeMap<Substring, usize>);
+pub trait SubstringCounts {
+    fn len(&self) -> usize;
+    fn find_match(&self, text: &str) -> Option<SubstringCount>;
+    fn get_count_mut(&mut self, substr: &Substring) -> Option<&mut usize>;
+    fn contains_key(&self, substr: &Substring) -> bool;
+    fn iter(&self) -> impl Iterator<Item = (&Substring, usize)>;
+    fn retain<F>(&mut self, f: F)
+    where
+        F: Fn(&Substring, usize) -> bool;
+    fn insert(&mut self, substring: Substring, count: usize);
+}
 
-impl SubstringCounts {
+pub fn make_substring_counts() -> impl SubstringCounts {
+    BTreeSubstringCounts::new()
+}
+
+pub struct BTreeSubstringCounts(BTreeMap<Substring, usize>);
+
+impl BTreeSubstringCounts {
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
+}
 
-    pub fn len(&self) -> usize {
+impl SubstringCounts for BTreeSubstringCounts {
+    fn len(&self) -> usize {
         self.0.len()
     }
 
-    pub fn find_match(&self, text: &str) -> Option<SubstringCount> {
+    fn find_match(&self, text: &str) -> Option<SubstringCount> {
         self.0
             .iter()
             .find(|(substr, _)| substr.matches_start(text))
@@ -23,26 +41,26 @@ impl SubstringCounts {
             })
     }
 
-    pub fn get_count_mut(&mut self, substr: &Substring) -> Option<&mut usize> {
+    fn get_count_mut(&mut self, substr: &Substring) -> Option<&mut usize> {
         self.0.get_mut(substr)
     }
 
-    pub fn contains_key(&self, substr: &Substring) -> bool {
+    fn contains_key(&self, substr: &Substring) -> bool {
         self.0.contains_key(substr)
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
+    fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
         self.0.iter().map(|(substr, count)| (substr, *count))
     }
 
-    pub fn retain<F>(&mut self, f: F)
+    fn retain<F>(&mut self, f: F)
     where
         F: Fn(&Substring, usize) -> bool,
     {
         self.0.retain(|substr, count| f(substr, *count));
     }
 
-    pub fn insert(&mut self, substring: Substring, count: usize) {
+    fn insert(&mut self, substring: Substring, count: usize) {
         self.0.insert(substring, count);
     }
 }

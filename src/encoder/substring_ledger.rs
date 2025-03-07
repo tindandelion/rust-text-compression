@@ -2,24 +2,29 @@ use crate::encoding_table::EncodingTable;
 
 use super::{
     substring::{Substring, SubstringCount},
-    substring_counts::SubstringCounts,
+    substring_counts::{BTreeSubstringCounts, SubstringCounts},
     substring_selector::SubstringSelector,
 };
 
 pub trait LedgerPolicy {
-    fn should_merge(&self, x_count: usize, y_count: usize, substrings: &SubstringCounts) -> bool;
-    fn cleanup(&self, substrings: &mut SubstringCounts);
+    fn should_merge(
+        &self,
+        x_count: usize,
+        y_count: usize,
+        substrings: &BTreeSubstringCounts,
+    ) -> bool;
+    fn cleanup(&self, substrings: &mut BTreeSubstringCounts);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
-    substrings: SubstringCounts,
+    substrings: BTreeSubstringCounts,
     policy: LP,
 }
 
 impl<LP: LedgerPolicy> SubstringLedger<LP> {
     pub fn with_policy(policy: LP) -> Self {
         Self {
-            substrings: SubstringCounts::new(),
+            substrings: BTreeSubstringCounts::new(),
             policy,
         }
     }
@@ -180,14 +185,19 @@ mod tests {
     }
 
     impl LedgerPolicy for TestLedgerPolicy {
-        fn cleanup(&self, counts: &mut SubstringCounts) {
+        fn cleanup(&self, counts: &mut BTreeSubstringCounts) {
             if counts.len() < self.max_entries {
                 return;
             }
             counts.retain(|_, count| count > 1);
         }
 
-        fn should_merge(&self, x_count: usize, y_count: usize, _counts: &SubstringCounts) -> bool {
+        fn should_merge(
+            &self,
+            x_count: usize,
+            y_count: usize,
+            _counts: &BTreeSubstringCounts,
+        ) -> bool {
             return x_count == 1 && y_count == 1;
         }
     }
