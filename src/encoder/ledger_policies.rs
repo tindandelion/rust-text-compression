@@ -178,12 +178,12 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 6 };
             let mut counts = substring_counts::btree();
 
-            counts.insert(Substring::from("a"), 9);
-            counts.insert(Substring::from("b"), 1);
-            counts.insert(Substring::from("c"), 8);
-            counts.insert(Substring::from("x"), 3);
-            counts.insert(Substring::from("y"), 1);
-            counts.insert(Substring::from("z"), 2);
+            counts.insert("a".into(), 9);
+            counts.insert("b".into(), 1);
+            counts.insert("c".into(), 8);
+            counts.insert("x".into(), 3);
+            counts.insert("y".into(), 1);
+            counts.insert("z".into(), 2);
 
             policy.cleanup(&mut counts);
             assert_eq!(vec!["a", "c", "x", "z"], get_substrings(&counts));
@@ -195,9 +195,9 @@ mod limit_dictionary_size_tests {
             let mut counts = substring_counts::btree();
 
             // All substrings have count 2, which is the median
-            counts.insert(Substring::from("a"), 2);
-            counts.insert(Substring::from("b"), 2);
-            counts.insert(Substring::from("c"), 2);
+            counts.insert("a".into(), 2);
+            counts.insert("b".into(), 2);
+            counts.insert("c".into(), 2);
 
             policy.cleanup(&mut counts);
             assert_eq!(vec!["a", "b", "c"], get_substrings(&counts));
@@ -208,7 +208,7 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 2 };
             let mut counts = substring_counts::btree();
 
-            counts.insert(Substring::from("a"), 1);
+            counts.insert("a".into(), 1);
 
             policy.cleanup(&mut counts);
             assert_eq!(vec!["a"], get_substrings(&counts));
@@ -228,10 +228,10 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 5 };
             let mut counts = substring_counts::btree();
 
-            counts.insert(Substring::from("a"), 1);
-            counts.insert(Substring::from("b"), 2);
-            counts.insert(Substring::from("c"), 3);
-            counts.insert(Substring::from("d"), 4);
+            counts.insert("a".into(), 1);
+            counts.insert("b".into(), 2);
+            counts.insert("c".into(), 3);
+            counts.insert("d".into(), 4);
 
             policy.cleanup(&mut counts);
             assert_eq!(vec!["b", "c", "d"], get_substrings(&counts));
@@ -242,11 +242,11 @@ mod limit_dictionary_size_tests {
             let policy = LimitLedgerSize { max_size: 6 };
             let mut counts = substring_counts::btree();
 
-            counts.insert(Substring::from("a"), 1);
-            counts.insert(Substring::from("b"), 2); // median
-            counts.insert(Substring::from("c"), 2); // median
-            counts.insert(Substring::from("d"), 2); // median
-            counts.insert(Substring::from("e"), 3);
+            counts.insert("a".into(), 1);
+            counts.insert("b".into(), 2); // median
+            counts.insert("c".into(), 2); // median
+            counts.insert("d".into(), 2); // median
+            counts.insert("e".into(), 3);
 
             policy.cleanup(&mut counts);
             assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts));
