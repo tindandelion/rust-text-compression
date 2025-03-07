@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::Chars};
 
-use super::{substring::SubstringCount, Substring};
+use crate::encoder::{substring::SubstringCount, Substring};
 
 pub struct TrieSubstringCounts {
     nodes: HashMap<char, TrieNode>,

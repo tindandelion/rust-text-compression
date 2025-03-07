@@ -6,7 +6,6 @@ mod substring;
 mod substring_counts;
 mod substring_ledger;
 pub mod substring_selector;
-mod tries;
 
 use build_ledger::build_ledger;
 use encode_string::encode_string;
