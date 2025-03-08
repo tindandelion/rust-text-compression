@@ -139,9 +139,7 @@ struct TrieIterator<'a> {
 impl<'a> TrieIterator<'a> {
     fn new(trie: &'a TrieSubstringCounts) -> Self {
         let mut stack = Vec::with_capacity(trie.len());
-        for node in trie.nodes.values() {
-            stack.push(node);
-        }
+        stack.extend(trie.nodes.values());
         Self { stack }
     }
 }
@@ -151,9 +149,7 @@ impl<'a> Iterator for TrieIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(current) = self.stack.pop() {
-            for child in current.children.values() {
-                self.stack.push(child);
-            }
+            self.stack.extend(current.children.values());
             if current.count.is_some() {
                 return current.count.as_ref();
             }
@@ -169,9 +165,7 @@ struct RetainIf<'a> {
 impl<'a> RetainIf<'a> {
     fn new(trie: &'a mut TrieSubstringCounts) -> Self {
         let mut stack = Vec::with_capacity(trie.len());
-        for node in trie.nodes.values_mut() {
-            stack.push(node);
-        }
+        stack.extend(trie.nodes.values_mut());
         Self { stack }
     }
 
@@ -181,9 +175,7 @@ impl<'a> RetainIf<'a> {
     {
         let mut new_length: usize = 0;
         while let Some(current) = self.stack.pop() {
-            for child in current.children.values_mut() {
-                self.stack.push(child);
-            }
+            self.stack.extend(current.children.values_mut());
 
             if let Some(count) = current.count.as_mut() {
                 let should_retain = condition(&count.value, count.count);
