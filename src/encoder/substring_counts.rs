@@ -17,7 +17,6 @@ pub trait SubstringCounts {
         F: Fn(&Substring, usize) -> bool;
     fn insert(&mut self, substring: Substring, count: usize);
 }
-
 pub type DefaultSubstringCounts = TrieSubstringCounts;
 
 pub fn default() -> DefaultSubstringCounts {

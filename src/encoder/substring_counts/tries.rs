@@ -73,7 +73,7 @@ impl SubstringCounts for TrieSubstringCounts {
     where
         F: Fn(&Substring, usize) -> bool,
     {
-        RetainIf::new(self).run(f);
+        self.length = RetainIf::new(self).run(f);
     }
 }
 
@@ -175,10 +175,11 @@ impl<'a> RetainIf<'a> {
         Self { stack }
     }
 
-    fn run<F>(&mut self, condition: F)
+    fn run<F>(&mut self, condition: F) -> usize
     where
         F: Fn(&Substring, usize) -> bool,
     {
+        let mut new_length: usize = 0;
         while let Some(current) = self.stack.pop() {
             for child in current.children.values_mut() {
                 self.stack.push(child);
@@ -188,9 +189,12 @@ impl<'a> RetainIf<'a> {
                 let should_retain = condition(&count.value, count.count);
                 if !should_retain {
                     current.count = None;
+                } else {
+                    new_length += 1;
                 }
             }
         }
+        new_length
     }
 }
 
@@ -415,6 +419,7 @@ mod retain_tests {
         counts.insert("xyz".into(), 30);
 
         counts.retain(|_, count| count > 10);
+        assert_eq!(2, counts.len());
         assert_eq!(vec!["abcd", "xyz"], collect_strings(&counts));
     }
 
