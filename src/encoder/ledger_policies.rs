@@ -86,7 +86,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn should_merge_when_both_counts_are_bigger_than_threshold() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 10);
 
@@ -96,7 +96,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn should_merge_when_count_is_equal_to_threshold() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 10);
 
@@ -107,7 +107,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn should_not_merge_when_at_least_one_count_is_less_than_threshold() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 10);
 
@@ -121,7 +121,7 @@ mod limit_dictionary_size_tests {
                 Do not merge strings when the dictionary is full, regardless of their counts
             */
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 100);
@@ -136,7 +136,7 @@ mod limit_dictionary_size_tests {
                we should merge substrings whose counts are at least 2 (1.75 rounded up to 2)
             */
             let policy = LimitLedgerSize { max_size: 7 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 2);
             counts.insert("z".into(), 3);
@@ -158,7 +158,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 10 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             counts.insert(x.clone(), 1);
             counts.insert(y.clone(), 2);
@@ -176,7 +176,7 @@ mod limit_dictionary_size_tests {
                remove the substrings whose counts are less than median
             */
             let policy = LimitLedgerSize { max_size: 6 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             counts.insert("a".into(), 9);
             counts.insert("b".into(), 1);
@@ -192,7 +192,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn keeps_everything_when_exactly_at_median() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             // All substrings have count 2, which is the median
             counts.insert("a".into(), 2);
@@ -206,7 +206,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn handles_single_element_dictionary() {
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             counts.insert("a".into(), 1);
 
@@ -217,7 +217,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn handles_empty_dictionary() {
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             policy.cleanup(&mut counts);
             assert_eq!(counts.len(), 0);
@@ -226,7 +226,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn removes_below_median_with_even_number_of_elements() {
             let policy = LimitLedgerSize { max_size: 5 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             counts.insert("a".into(), 1);
             counts.insert("b".into(), 2);
@@ -240,7 +240,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn preserves_substrings_at_median_counts() {
             let policy = LimitLedgerSize { max_size: 6 };
-            let mut counts = substring_counts::btree();
+            let mut counts = substring_counts::default();
 
             counts.insert("a".into(), 1);
             counts.insert("b".into(), 2); // median

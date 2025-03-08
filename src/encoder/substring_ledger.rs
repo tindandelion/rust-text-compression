@@ -2,7 +2,7 @@ use crate::encoding_table::EncodingTable;
 
 use super::{
     substring::{Substring, SubstringCount},
-    substring_counts::{self, BTreeSubstringCounts, SubstringCounts},
+    substring_counts::{self, DefaultSubstringCounts, SubstringCounts},
     substring_selector::SubstringSelector,
 };
 
@@ -17,14 +17,14 @@ pub trait LedgerPolicy {
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
-    substrings: BTreeSubstringCounts,
+    substrings: DefaultSubstringCounts,
     policy: LP,
 }
 
 impl<LP: LedgerPolicy> SubstringLedger<LP> {
     pub fn with_policy(policy: LP) -> Self {
         Self {
-            substrings: substring_counts::btree(),
+            substrings: substring_counts::default(),
             policy,
         }
     }
