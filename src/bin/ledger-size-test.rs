@@ -39,7 +39,9 @@ impl ExperimentResult {
     }
 }
 const INPUT_FILENAME: &str = "wap-25600.txt";
-const LEDGER_SIZES: &[usize] = &[256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536];
+const LEDGER_SIZES: &[usize] = &[
+    256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144,
+];
 
 fn main() {
     let selector = SubstringSelector::order_by_frequency(ENCODER_SPEC);
