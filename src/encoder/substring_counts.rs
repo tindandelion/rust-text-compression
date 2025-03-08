@@ -18,8 +18,19 @@ pub trait SubstringCounts {
     fn insert(&mut self, substring: Substring, count: usize);
 }
 
-pub type DefaultSubstringCounts = BTreeSubstringCounts;
+pub type DefaultSubstringCounts = TrieSubstringCounts;
 
 pub fn default() -> DefaultSubstringCounts {
     DefaultSubstringCounts::new()
+}
+
+#[cfg(test)]
+pub mod util {
+    use super::*;
+
+    pub fn get_sorted_counts(counts: &impl SubstringCounts) -> Vec<(&Substring, usize)> {
+        let mut counts = counts.iter().collect::<Vec<_>>();
+        counts.sort_by_key(|(substr, _)| *substr);
+        counts
+    }
 }

@@ -253,7 +253,7 @@ mod limit_dictionary_size_tests {
         }
 
         fn get_substrings(substrings: &impl SubstringCounts) -> Vec<String> {
-            substrings
+            substring_counts::util::get_sorted_counts(substrings)
                 .iter()
                 .map(|(s, _)| s.to_string())
                 .collect::<Vec<_>>()

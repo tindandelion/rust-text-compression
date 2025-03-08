@@ -63,9 +63,11 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 
     #[cfg(test)]
     pub fn entries(&self) -> Vec<(&str, usize)> {
-        self.substrings
+        use super::substring_counts::util::get_sorted_counts;
+
+        get_sorted_counts(&self.substrings)
             .iter()
-            .map(|(substring, count)| (substring.as_str(), count))
+            .map(|(substring, count)| (substring.as_str(), *count))
             .collect()
     }
 }
