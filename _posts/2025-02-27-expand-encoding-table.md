@@ -55,4 +55,4 @@ It's clear from the data though, that the execution time of the current implemen
 [decode-string-0.0.8]: https://github.com/tindandelion/rust-text-compression/blob/0.0.8/src/decoder.rs#L5
 [test-file]: https://github.com/tindandelion/rust-text-compression/blob/0.0.8/test-data/wap-25600.txt
 [prev-post]: {{site.baseurl}}/{% post_url 2025-02-16-experiments-with-ledger-limit %}
-[tag-0.0.8]: https://github.com/tindandelion/rust-text-compression/tree/0.0.8
+[tag-0.0.8]: https://github.com/tindandelion/rust-text-compression/tree/0.0.8substrin
