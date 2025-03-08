@@ -8,6 +8,7 @@ use super::{substring::SubstringCount, Substring};
 
 pub trait SubstringCounts {
     fn len(&self) -> usize;
+    fn insert(&mut self, substring: Substring, count: usize);
     fn find_match(&self, text: &str) -> Option<SubstringCount>;
     fn get_count_mut(&mut self, substr: &Substring) -> Option<&mut usize>;
     fn contains_key(&self, substr: &Substring) -> bool;
@@ -15,7 +16,6 @@ pub trait SubstringCounts {
     fn retain<F>(&mut self, f: F)
     where
         F: Fn(&Substring, usize) -> bool;
-    fn insert(&mut self, substring: Substring, count: usize);
 }
 pub type DefaultSubstringCounts = TrieSubstringCounts;
 
