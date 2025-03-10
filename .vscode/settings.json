@@ -17,6 +17,12 @@
         "prev",
         "flamegraphs",
         "codebase",
-        "CaptureAll"
+        "CaptureAll",
+        "hashmap",
+        "btreemap",
+        "flamegraph",
+        "btree",
+        "newtype",
+        "Flamegraph"
     ]
 } 

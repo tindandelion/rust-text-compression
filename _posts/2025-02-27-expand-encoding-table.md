@@ -25,6 +25,7 @@ Having done that, I ran the compression on my usual test subject, the [excerpt f
 That's quite an improvement in the compression ratio: 51% versus 25% from my [previous experiment][prev-post]!
 
 # Trying out different ledger limits 
+{: #results }
 
 Now, let's have a look at the results of compressing the test file with different substring ledger limits: 
 
@@ -55,4 +56,4 @@ It's clear from the data though, that the execution time of the current implemen
 [decode-string-0.0.8]: https://github.com/tindandelion/rust-text-compression/blob/0.0.8/src/decoder.rs#L5
 [test-file]: https://github.com/tindandelion/rust-text-compression/blob/0.0.8/test-data/wap-25600.txt
 [prev-post]: {{site.baseurl}}/{% post_url 2025-02-16-experiments-with-ledger-limit %}
-[tag-0.0.8]: https://github.com/tindandelion/rust-text-compression/tree/0.0.8substrin
+[tag-0.0.8]: https://github.com/tindandelion/rust-text-compression/tree/0.0.8

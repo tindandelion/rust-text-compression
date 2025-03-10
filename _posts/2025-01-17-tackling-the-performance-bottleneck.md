@@ -75,6 +75,7 @@ In addition to that use case when we need to bypass the orphan rule, the newtype
 All in all, I like to use this pattern to improve the readability of my code. It's worth mentioning that in Rust newtypes are _zero-cost abstractions_: there's no overhead in using them, and the compiler will optimize them away.
 
 # The results after the change
+{: #results }
 
 Having done all the changes, I can now run the new version of the program. Here are the results of running the main program after the change:
 
