@@ -21,14 +21,66 @@ However, the release build also doesn't include the debug information, which mak
 debug = true
 ```
 
+Here's the flamegraph that was generated (click to see the [interactive version][flamegraph-before]): 
+
 [![Flamegraph before optimization][flamegraph-before]][flamegraph-before]
 
+From the flamegraph, the bottleneck is apparent: most of the time is spent in [`SubstringLedger::find_longset_match`][find-longest-match-0.0.8]: 
 
-# Flamegraph after optimization 
+```rust
+pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
+    self.substrings
+        .keys()
+        .find(|&substr| substr.matches_start(text))
+        .map(|substr| substr.clone())
+}
+```  
 
-[![Flamegraph after optimization][flamegraph-after]][flamegraph-after]
+Indeed, the culprit is quite obvious: we iterate over all keys in the `substrings` collection to find the substring that matches the beginning of the text. In the majority of calls, it has to go through the entire collection, to register the miss. As we accumulate more and more substrings, we have to go through longer and longer list of keys, and do it countless number of times as we scan through the input test. Hence, the polynomial growth in the execution time. 
 
-# Current results 
+To alleviate the problem, we need a more clever data structure, that would allow us to find a matching substring in the collection more efficiently. Enter _tries_. 
+
+# The _trie_ data structure 
+
+# Implementing the trie 
+
+#### Refactor to abstraction
+
+Unfortunately, the current state of the code doesn't allow me to switch underlying data structures easily. The knowledge about the substring collection being a `BTreeMap` has penetrated different parts of the code. To switch to a different data structure, I need to first create an abstraction layer that would hide the details of the underlying implementation. 
+
+To do that, I walked through the code, and analyzed what methods of `BTreeMap` were used. With a bit of refactoring, I was able to narrow it down to just a handful of methods, which I extracted into a new trait, called [`SubstringCounts`][substring-counts-0.0.9]: 
+
+```rust
+pub trait SubstringCounts {
+    fn len(&self) -> usize;
+    fn contains_key(&self, substr: &Substring) -> bool;
+    fn find_match(&self, text: &str) -> Option<SubstringCount>;    
+
+    fn insert(&mut self, substring: Substring, count: usize);
+    fn get_count_mut(&mut self, substr: &Substring) -> Option<&mut usize>;
+
+    fn iter(&self) -> impl Iterator<Item = (&Substring, usize)>;
+    fn retain<F>(&mut self, f: F)
+    where
+        F: Fn(&Substring, usize) -> bool;
+}
+```
+
+I altered the code to access the substrings via that new abstraction, and created a default implementation, [`BTreeStringCounts`][btree-counts-0.0.9], which is a simple wrapper around a `BTreeMap`. 
+
+#### Implementing `TrieSubstringCounts`
+
+#### My struggles with `retain_if`
+
+One particular function that gave me a few headaches was `retain_if`. It is called when we need clean up the substring ledger, removing all substrings with counts lower than a threshold value. It turned out, it's not that easy to implement this function, and satisfy Rust's borrow checker at the same time. 
+
+In a nutshell, the algorithm for removing the nodes from a trie is a bottom-up recursion. We start from the leaf nodes. If the leaf node doesn't satisfy the condition for retention, we can safely remove that node from the tree. As we go upwards from the bottom to the top of the tree, we apply the same procedure to the upper levels. Eventually, we end up with a tree where all empty nodes (the ones that don't keep a value and don't have children) are removed. 
+
+As it turned out, this is not a straightforward thing to implement in Rust, and keep the borrow checker satisfied. In essence, it boils down to creating a _postorder mutable iterator_, where you need to store multiple mutable references to the same node, and Rust's borrow checker doesn't allow it. To implement such an algorithm, one needs to rethink the way the tree structure is stored in memory (I've found [an article][tree-traversal-arena] that goes into the details). Another way to achieve the same effect could be to avoid mutable references altogether, and build a copy of the trie without empty nodes.  
+
+In the end, I decided to proceed with a simpler implementation that doesn't remove empty nodes from the trie. It simply removes the values from the nodes, but doesn't alter the tree structure. Sure, this incurs some penalty in terms of used memory and the lookup speed, but for now it seems to work reasonably well. I've decided put off a "proper" implementation for a later time.
+
+# Running the optimized version 
 
 | Max Ledger Size | Learned Ledger Size | Compression Ratio | Time Elapsed |
 | --------------: | ------------------: | ----------------: | -----------: |
@@ -46,6 +98,11 @@ debug = true
 
 ![Compression ratio and Time elapsed, by ledger limit]({{ site.baseurl }}/assets/images/optimize-substring-map/comp-ratio-time-elapsed-by-limit.svg)
 
+# Flamegraph after optimization 
+
+[![Flamegraph after optimization][flamegraph-after]][flamegraph-after]
+
+
 [prev-post]: {{site.baseurl}}/{% post_url 2025-02-27-expand-encoding-table %}
 [performance-bottleneck]: {{site.baseurl}}/{% post_url 2025-01-17-tackling-the-performance-bottleneck %}
 [performance-bottleneck-results]: {{site.baseurl}}/{% post_url 2025-01-17-tackling-the-performance-bottleneck %}#results
@@ -53,3 +110,7 @@ debug = true
 [flamegraphs]: {{site.baseurl}}/{% post_url 2025-01-12-profiling-with-flamegraphs %}
 [flamegraph-before]: {{ site.baseurl }}/assets/images/optimize-substring-map/flamegraph-before.svg
 [flamegraph-after]: {{ site.baseurl }}/assets/images/optimize-substring-map/flamegraph-after-optimization.svg
+[find-longest-match-0.0.8]: https://github.com/tindandelion/rust-text-compression/blob/0.0.8/src/encoder/substring_ledger.rs#L36
+[substring-counts-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/substring_counts.rs#L9
+[btree-counts-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/substring_counts/btree.rs
+[tree-traversal-arena]: https://sachanganesh.com/programming/graph-tree-traversals-in-rust/

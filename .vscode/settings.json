@@ -23,6 +23,8 @@
         "flamegraph",
         "btree",
         "newtype",
-        "Flamegraph"
+        "Flamegraph",
+        "trie",
+        "Refactor"
     ]
 } 
