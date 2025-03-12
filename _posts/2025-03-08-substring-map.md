@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Optimizing substring map 
+title: More efficient substring matching
 date: 2025-03-08
 ---
 
@@ -25,7 +25,7 @@ Here's the flamegraph that was generated (click to see the [interactive version]
 
 [![Flamegraph before optimization][flamegraph-before]][flamegraph-before]
 
-From the flamegraph, the bottleneck is apparent: most of the time is spent in [`SubstringLedger::find_longset_match`][find-longest-match-0.0.8]: 
+From the flamegraph, the bottleneck is apparent: most of the time is spent in [`SubstringLedger::find_longset_match()`][find-longest-match-0.0.8]: 
 
 ```rust
 pub fn find_longest_match(&self, text: &str) -> Option<Substring> {
@@ -66,9 +66,27 @@ pub trait SubstringCounts {
 }
 ```
 
-I altered the code to access the substrings via that new abstraction, and created a default implementation, [`BTreeStringCounts`][btree-counts-0.0.9], which is a simple wrapper around a `BTreeMap`. 
+I altered the code to access the substrings via that new abstraction, and created a default implementation, [`BTreeSubstringCounts`][btree-counts-0.0.9], which is a simple wrapper around a `BTreeMap`. 
 
 #### Implementing `TrieSubstringCounts`
+
+Now I can make a second implementation of `StringCounts` that implements the trie data structure, called [`TrieSubstringCounts`][trie-counts-0.0.9]. It follows the "canonical" trie implementation, with a few adjustments: 
+
+* We store children as a `HashMap`, indexed by the character. The canonical implementation is to use a pre-allocated array of links to the child nodes, but in case of UTF-8 encoding such arrays would be huge. `HashMap` is a best second option, in terms of access time / memory efficiency. 
+
+* In the original trie implementation, the string itself is stored _implicitly_ in the structure. I've found that it's more convenient for my purposes to also store the string _explicitly_ in the nodes, along with the count values. It makes it easier to return references to strings in the `iter` method, and also generally helps us avoid reconstructing the strings every time.  
+
+The structure for the trie node looks like this: 
+
+```rust 
+#[derive(Debug)]
+struct TrieNode {
+    count: Option<SubstringCount>,
+    children: HashMap<char, TrieNode>,
+}
+```
+
+The intermediate nodes will contain `None` in their `count` field, and the nodes that represent substrings will contain both the string and its count, packed into `SubstringCount` structure. 
 
 #### My struggles with `retain_if`
 
@@ -81,6 +99,9 @@ As it turned out, this is not a straightforward thing to implement in Rust, and 
 In the end, I decided to proceed with a simpler implementation that doesn't remove empty nodes from the trie. It simply removes the values from the nodes, but doesn't alter the tree structure. Sure, this incurs some penalty in terms of used memory and the lookup speed, but for now it seems to work reasonably well. I've decided put off a "proper" implementation for a later time.
 
 # Running the optimized version 
+ 
+ Now with the implementations in place, we can run our [previous experiments][ledger-sizes-experiment-results] with different ledger sizes using `BTreeSubstringCounts` as the workhorse, and see how it impacts the performance: 
+
 
 | Max Ledger Size | Learned Ledger Size | Compression Ratio | Time Elapsed |
 | --------------: | ------------------: | ----------------: | -----------: |
@@ -98,10 +119,25 @@ In the end, I decided to proceed with a simpler implementation that doesn't remo
 
 ![Compression ratio and Time elapsed, by ledger limit]({{ site.baseurl }}/assets/images/optimize-substring-map/comp-ratio-time-elapsed-by-limit.svg)
 
+That's a huge performance boost, compared to the [previous results][ledger-sizes-experiment-results]! We went from 35 seconds for 64K ledger, to less than 2 seconds! Most notably, there's no increase in the execution time when we increase the maximum ledger size, it stays below 2 seconds. That's remarkable! 
+
+Using the new improved version, I was able to experiment with even larger substring ledger sizes beyond 64K. As the results above show, we don't get significant compression gains beyond the size of 32768. For now, I'm going to stick with the maximum ledger size of 64K. 
+
 # Flamegraph after optimization 
+
+Finally, let's have a look at the [flamegraph][flamegraph-after] to see the difference: 
 
 [![Flamegraph after optimization][flamegraph-after]][flamegraph-after]
 
+As we can see, `SubstringLedger::find_longset_match()` has completely disappeared from the picture. In fact the entire `build_ledger()` function is barely noticeable here, taking up only 3% of the total execution time. On the other hand, `encode_string()` is now becoming much more prominent as a next potential performance bottleneck. 
+
+If we look closer to the implementation of [`encode_string()`][encode-string-0.0.9], we can see that is has the issue similar to our previous `SubstringLedger`. Inside, it relies on the `EncodingTable` instance to search for matches during the encoding phase, which in turn uses a `Vec<Substring>` inside. This is also a good candidate to switching to a trie structure, to achieve the optimal performance. 
+
+For the time being, however, I'm quite satisfied with the current results, so I've decided to keep the current implementation of `EncodingTable`. Since the size of the encoding table [is fixed to 2816 entries][expand-encoding-table], I don't expect the execution time to slip into polynomial growth because of the inefficiency here. I might revisit it later and switch to the trie implementation as well. 
+
+# Next steps
+
+The core algorithm is done now, to be determined what to do next. 
 
 [prev-post]: {{site.baseurl}}/{% post_url 2025-02-27-expand-encoding-table %}
 [performance-bottleneck]: {{site.baseurl}}/{% post_url 2025-01-17-tackling-the-performance-bottleneck %}
@@ -113,4 +149,7 @@ In the end, I decided to proceed with a simpler implementation that doesn't remo
 [find-longest-match-0.0.8]: https://github.com/tindandelion/rust-text-compression/blob/0.0.8/src/encoder/substring_ledger.rs#L36
 [substring-counts-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/substring_counts.rs#L9
 [btree-counts-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/substring_counts/btree.rs
+[trie-counts-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/substring_counts/tries.rs
 [tree-traversal-arena]: https://sachanganesh.com/programming/graph-tree-traversals-in-rust/
+[encode-string-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/encode_string.rs
+[expand-encoding-table]: {{site.baseurl}}/{% post_url 2025-02-27-expand-encoding-table %}
