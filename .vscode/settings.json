@@ -25,6 +25,10 @@
         "newtype",
         "Flamegraph",
         "trie",
-        "Refactor"
+        "Refactor",
+        "Flamegraphs",
+        "dtrace",
+        "valgrind",
+        "Valgrind"
     ]
 } 
