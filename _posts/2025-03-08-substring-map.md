@@ -148,6 +148,8 @@ For the time being, however, I'm quite satisfied with the current results, so I'
 
 # Next steps
 
+Current progress is available on GitHub under the [tag 0.0.9][tag-0.0.9]. 
+
 The core algorithm is done now, to be determined what to do next. 
 
 [trie-wikipedia]: https://en.wikipedia.org/wiki/Trie
@@ -165,3 +167,4 @@ The core algorithm is done now, to be determined what to do next.
 [tree-traversal-arena]: https://sachanganesh.com/programming/graph-tree-traversals-in-rust/
 [encode-string-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/encode_string.rs
 [expand-encoding-table]: {{site.baseurl}}/{% post_url 2025-02-27-expand-encoding-table %}
+[tag-0.0.9]: https://github.com/tindandelion/rust-text-compression/tree/0.0.9
