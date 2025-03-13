@@ -29,6 +29,8 @@
         "Flamegraphs",
         "dtrace",
         "valgrind",
-        "Valgrind"
+        "Valgrind",
+        "wikipedia",
+        "Trie"
     ]
 } 
