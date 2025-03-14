@@ -66,7 +66,7 @@ impl SubstringCounts for TrieSubstringCounts {
     }
 
     fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
-        TrieIterator::new(self).map(|v| (&v.value, v.count))
+        TrieIterator::new(self).map(|(key, value)| (key, *value))
     }
 
     fn retain<F>(&mut self, f: F)
@@ -145,13 +145,13 @@ impl<'a> TrieIterator<'a> {
 }
 
 impl<'a> Iterator for TrieIterator<'a> {
-    type Item = &'a SubstringCount;
+    type Item = (&'a Substring, &'a usize);
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(current) = self.stack.pop() {
             self.stack.extend(current.children.values());
-            if current.count.is_some() {
-                return current.count.as_ref();
+            if let Some(count) = current.count.as_ref() {
+                return Some((&count.value, &count.count));
             }
         }
         None
