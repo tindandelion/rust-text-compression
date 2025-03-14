@@ -10,8 +10,14 @@ pub struct TrieSubstringCounts {
 }
 
 #[derive(Debug)]
+struct NodeValue<V> {
+    pub key: Substring,
+    pub value: V,
+}
+
+#[derive(Debug)]
 struct TrieNode {
-    count: Option<SubstringCount>,
+    value: Option<NodeValue<usize>>,
     children: HashMap<char, TrieNode>,
 }
 
@@ -25,7 +31,7 @@ impl SubstringCounts for TrieSubstringCounts {
             let root = self.nodes.entry(first_char).or_insert(TrieNode::new());
             let leaf = root.make_children(rest_chars);
 
-            if leaf.update_count(substring, count).is_none() {
+            if leaf.update_value(substring, count).is_none() {
                 self.length += 1;
             }
         }
@@ -38,7 +44,7 @@ impl SubstringCounts for TrieSubstringCounts {
         for char in rest_chars {
             current = current.get_child_mut(&char)?;
         }
-        current.count.as_mut().map(|v| &mut v.count)
+        current.value.as_mut().map(|v| &mut v.value)
     }
 
     fn contains_key(&self, substring: &Substring) -> bool {
@@ -49,19 +55,19 @@ impl SubstringCounts for TrieSubstringCounts {
         let (first_char, rest_chars) = start_search(text)?;
 
         let mut current = self.nodes.get(&first_char)?;
-        let mut best_match: Option<&SubstringCount> = current.count.as_ref();
+        let mut best_match: Option<&NodeValue<usize>> = current.value.as_ref();
 
         for next_char in rest_chars {
             if let Some(child) = current.get_child(&next_char) {
-                best_match = child.count.as_ref().or(best_match);
+                best_match = child.value.as_ref().or(best_match);
                 current = child;
             } else {
                 break;
             }
         }
         best_match.map(|v| SubstringCount {
-            value: v.value.clone(),
-            count: v.count,
+            value: v.key.clone(),
+            count: v.value,
         })
     }
 
@@ -92,7 +98,7 @@ impl TrieSubstringCounts {
         for char in rest_chars {
             current = current.get_child(&char)?;
         }
-        current.count.as_ref().map(|v| &v.count)
+        current.value.as_ref().map(|v| &v.value)
     }
 }
 
@@ -105,7 +111,7 @@ fn start_search<'a>(text: &'a str) -> Option<(char, Chars<'a>)> {
 impl TrieNode {
     fn new() -> Self {
         Self {
-            count: None,
+            value: None,
             children: HashMap::new(),
         }
     }
@@ -126,9 +132,10 @@ impl TrieNode {
         self.children.get_mut(char)
     }
 
-    fn update_count(&mut self, value: Substring, count: usize) -> Option<usize> {
-        let old_count = self.count.replace(SubstringCount::new(value, count));
-        old_count.map(|v| v.count)
+    fn update_value(&mut self, key: Substring, value: usize) -> Option<usize> {
+        self.value
+            .replace(NodeValue { key, value })
+            .map(|v| v.value)
     }
 }
 
@@ -150,8 +157,8 @@ impl<'a> Iterator for TrieIterator<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(current) = self.stack.pop() {
             self.stack.extend(current.children.values());
-            if let Some(count) = current.count.as_ref() {
-                return Some((&count.value, &count.count));
+            if let Some(count) = current.value.as_ref() {
+                return Some((&count.key, &count.value));
             }
         }
         None
@@ -177,10 +184,10 @@ impl<'a> RetainIf<'a> {
         while let Some(current) = self.stack.pop() {
             self.stack.extend(current.children.values_mut());
 
-            if let Some(count) = current.count.as_mut() {
-                let should_retain = condition(&count.value, count.count);
+            if let Some(count) = current.value.as_mut() {
+                let should_retain = condition(&count.key, count.value);
                 if !should_retain {
-                    current.count = None;
+                    current.value = None;
                 } else {
                     new_length += 1;
                 }
