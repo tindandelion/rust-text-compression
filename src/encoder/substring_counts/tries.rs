@@ -4,15 +4,19 @@ use crate::encoder::{substring::SubstringCount, Substring};
 
 use super::SubstringCounts;
 
-pub struct TrieSubstringCounts {
+pub struct Trie {
     nodes: HashMap<char, TrieNode>,
     length: usize,
 }
 
+pub struct TrieSubstringCounts {
+    trie: Trie,
+}
+
 #[derive(Debug)]
 struct NodeValue<V> {
-    pub key: Substring,
-    pub value: V,
+    key: Substring,
+    value: V,
 }
 
 #[derive(Debug)]
@@ -23,6 +27,51 @@ struct TrieNode {
 
 impl SubstringCounts for TrieSubstringCounts {
     fn len(&self) -> usize {
+        self.trie.len()
+    }
+
+    fn insert(&mut self, substring: Substring, count: usize) {
+        self.trie.insert(substring, count);
+    }
+
+    fn get_count_mut(&mut self, substring: &Substring) -> Option<&mut usize> {
+        self.trie.get_mut(substring)
+    }
+
+    fn contains_key(&self, substring: &Substring) -> bool {
+        self.trie.get(substring).is_some()
+    }
+
+    fn find_match(&self, text: &str) -> Option<SubstringCount> {
+        self.trie
+            .find_match(text)
+            .map(|(key, value)| SubstringCount {
+                value: key.clone(),
+                count: *value,
+            })
+    }
+
+    fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
+        self.trie.iter().map(|(key, value)| (key, *value))
+    }
+
+    fn retain<F>(&mut self, f: F)
+    where
+        F: Fn(&Substring, usize) -> bool,
+    {
+        self.trie.retain(|key, value| f(key, *value));
+    }
+}
+
+impl Trie {
+    pub fn new() -> Self {
+        Self {
+            nodes: HashMap::new(),
+            length: 0,
+        }
+    }
+
+    pub fn len(&self) -> usize {
         self.length
     }
 
@@ -37,7 +86,7 @@ impl SubstringCounts for TrieSubstringCounts {
         }
     }
 
-    fn get_count_mut(&mut self, substring: &Substring) -> Option<&mut usize> {
+    fn get_mut(&mut self, substring: &Substring) -> Option<&mut usize> {
         let (first_char, rest_chars) = start_search(substring.as_str())?;
 
         let mut current = self.nodes.get_mut(&first_char)?;
@@ -47,11 +96,17 @@ impl SubstringCounts for TrieSubstringCounts {
         current.value.as_mut().map(|v| &mut v.value)
     }
 
-    fn contains_key(&self, substring: &Substring) -> bool {
-        self.get_count(substring).is_some()
+    fn get(&self, substring: &Substring) -> Option<&usize> {
+        let (first_char, rest_chars) = start_search(substring.as_str())?;
+
+        let mut current = self.nodes.get(&first_char)?;
+        for char in rest_chars {
+            current = current.get_child(&char)?;
+        }
+        current.value.as_ref().map(|v| &v.value)
     }
 
-    fn find_match(&self, text: &str) -> Option<SubstringCount> {
+    fn find_match(&self, text: &str) -> Option<(&Substring, &usize)> {
         let (first_char, rest_chars) = start_search(text)?;
 
         let mut current = self.nodes.get(&first_char)?;
@@ -65,19 +120,16 @@ impl SubstringCounts for TrieSubstringCounts {
                 break;
             }
         }
-        best_match.map(|v| SubstringCount {
-            value: v.key.clone(),
-            count: v.value,
-        })
+        best_match.map(|v| (&v.key, &v.value))
     }
 
-    fn iter(&self) -> impl Iterator<Item = (&Substring, usize)> {
-        TrieIterator::new(self).map(|(key, value)| (key, *value))
+    fn iter(&self) -> impl Iterator<Item = (&Substring, &usize)> {
+        TrieIterator::new(self)
     }
 
     fn retain<F>(&mut self, f: F)
     where
-        F: Fn(&Substring, usize) -> bool,
+        F: Fn(&Substring, &usize) -> bool,
     {
         self.length = RetainIf::new(self).run(f);
     }
@@ -85,20 +137,7 @@ impl SubstringCounts for TrieSubstringCounts {
 
 impl TrieSubstringCounts {
     pub fn new() -> Self {
-        Self {
-            nodes: HashMap::new(),
-            length: 0,
-        }
-    }
-
-    fn get_count(&self, substring: &Substring) -> Option<&usize> {
-        let (first_char, rest_chars) = start_search(substring.as_str())?;
-
-        let mut current = self.nodes.get(&first_char)?;
-        for char in rest_chars {
-            current = current.get_child(&char)?;
-        }
-        current.value.as_ref().map(|v| &v.value)
+        Self { trie: Trie::new() }
     }
 }
 
@@ -144,8 +183,8 @@ struct TrieIterator<'a> {
 }
 
 impl<'a> TrieIterator<'a> {
-    fn new(trie: &'a TrieSubstringCounts) -> Self {
-        let mut stack = Vec::with_capacity(trie.len());
+    fn new(trie: &'a Trie) -> Self {
+        let mut stack = Vec::with_capacity(trie.length);
         stack.extend(trie.nodes.values());
         Self { stack }
     }
@@ -170,22 +209,22 @@ struct RetainIf<'a> {
 }
 
 impl<'a> RetainIf<'a> {
-    fn new(trie: &'a mut TrieSubstringCounts) -> Self {
-        let mut stack = Vec::with_capacity(trie.len());
+    fn new(trie: &'a mut Trie) -> Self {
+        let mut stack = Vec::with_capacity(trie.length);
         stack.extend(trie.nodes.values_mut());
         Self { stack }
     }
 
     fn run<F>(&mut self, condition: F) -> usize
     where
-        F: Fn(&Substring, usize) -> bool,
+        F: Fn(&Substring, &usize) -> bool,
     {
         let mut new_length: usize = 0;
         while let Some(current) = self.stack.pop() {
             self.stack.extend(current.children.values_mut());
 
             if let Some(count) = current.value.as_mut() {
-                let should_retain = condition(&count.key, count.value);
+                let should_retain = condition(&count.key, &count.value);
                 if !should_retain {
                     current.value = None;
                 } else {
