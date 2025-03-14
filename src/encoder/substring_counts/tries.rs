@@ -25,7 +25,7 @@ impl SubstringCounts for TrieSubstringCounts {
             let root = self.nodes.entry(first_char).or_insert(TrieNode::new());
             let leaf = root.make_children(rest_chars);
 
-            if leaf.update_count(substring, count) == 0 {
+            if leaf.update_count(substring, count).is_none() {
                 self.length += 1;
             }
         }
@@ -126,9 +126,9 @@ impl TrieNode {
         self.children.get_mut(char)
     }
 
-    fn update_count(&mut self, value: Substring, count: usize) -> usize {
+    fn update_count(&mut self, value: Substring, count: usize) -> Option<usize> {
         let old_count = self.count.replace(SubstringCount::new(value, count));
-        old_count.map_or(0, |v| v.count)
+        old_count.map(|v| v.count)
     }
 }
 
