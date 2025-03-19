@@ -20,6 +20,7 @@ const INPUT_FILENAMES: &[&str] = &[
     "wap-25600.txt",
     "war-and-peace.txt",
     "war-and-peace-dbl.txt",
+    "war-and-peace-quad.txt",
 ];
 
 fn main() {

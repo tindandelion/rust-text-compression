@@ -4,7 +4,7 @@ use text_compression::decode;
 use text_compression::encode_with_policy;
 use text_compression::policies::LimitLedgerSize;
 
-const INPUT_FILENAME: &str = "test-data/war-and-peace.txt";
+const INPUT_FILENAME: &str = "test-data/war-and-peace-quad.txt";
 
 fn main() {
     println!("* Compressing {}...", INPUT_FILENAME);
