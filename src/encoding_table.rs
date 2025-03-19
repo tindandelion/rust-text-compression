@@ -1,4 +1,4 @@
-use crate::encoder::Substring;
+use crate::{encoder::Substring, trie::Trie};
 
 #[derive(Clone)]
 struct TableEntry {
@@ -8,33 +8,39 @@ struct TableEntry {
 
 pub struct EncodingTable {
     entries: Vec<TableEntry>,
+    search_index: Trie<usize>,
 }
 
 impl EncodingTable {
     pub fn new(mut substrings: Vec<Substring>) -> Self {
         substrings.sort();
+
         let entries = substrings
+            .clone()
             .into_iter()
             .map(|s| TableEntry {
                 substring: s,
                 hits: std::cell::Cell::new(0),
             })
             .collect();
-        Self { entries }
+
+        let mut search_index = Trie::new();
+        for (i, substring) in substrings.into_iter().enumerate() {
+            search_index.insert(substring, i);
+        }
+
+        Self {
+            entries,
+            search_index,
+        }
     }
 
     pub fn find_match(&self, text: &str) -> Option<(usize, &str)> {
-        let result = self
-            .entries
-            .iter()
-            .enumerate()
-            .find(|(_, entry)| entry.substring.matches_start(text));
+        let (substring, &index) = self.search_index.find_match(text)?;
 
-        if let Some((_, entry)) = result {
-            entry.hits.set(entry.hits.get() + 1);
-        }
-
-        result.map(|(i, entry)| (i, entry.substring.as_str()))
+        let entry = &self.entries[index];
+        entry.hits.set(entry.hits.get() + 1);
+        Some((index, substring.as_str()))
     }
 
     pub fn unused_entries(&self) -> Vec<String> {
@@ -79,6 +85,35 @@ impl EncodingTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn find_the_longest_match_possible() {
+        let table = EncodingTable::new(vec![
+            "a".into(),
+            "aa".into(),
+            "aaaa".into(),
+            "b".into(),
+            "bb".into(),
+        ]);
+
+        let found = table.find_match("aaaabb");
+        assert_eq!(Some((0, "aaaa")), found);
+    }
+
+    #[test]
+    fn no_match_found() {
+        let table = EncodingTable::new(vec!["a".into(), "aa".into()]);
+        let miss = table.find_match("bcd");
+        assert_eq!(None, miss);
+    }
+
+    #[test]
+    fn get_substring_at_index() {
+        let table = EncodingTable::new(vec!["a".into(), "aaaa".into(), "b".into(), "bb".into()]);
+
+        assert_eq!("aaaa", table.get(0));
+        assert_eq!("bb", table.get(1));
+    }
 
     #[test]
     fn sorts_substrings_by_length_at_creation() {
