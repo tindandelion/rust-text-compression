@@ -4,7 +4,7 @@ title: Optimizing the encoding process
 date: 2025-03-19
 ---
 
-In the [previous post][prev-post] I implemented a trie data structure for fast substring lookups during the learning phase of the compression algorithm. I also mentioned that there was one more place where tries could improve the performance: the encoding phase. It didn't bother me much then, but now I decided to bite the bullet and eliminate this inefficiency. 
+In the [previous post][prev-post] I implemented a trie data structure for fast substring lookups during the learning phase of the compression algorithm. I also mentioned that there was one more place where tries could improve the performance: the encoding phase. It didn't bother me much then, but now I've decided to bite the bullet and eliminate this inefficiency. 
 
 # The problem 
 
@@ -16,14 +16,44 @@ By now, the trie data structure is implemented inside the [`TrieSubstringCounts`
 
 # Use of trie in `EncodingTable`
 
+Our [`EncodingTable`][encoding-table-0.0.10] struct acts as a two-way mapping of substrings to their respective indices: 
+
+* during encoding, we try to find an index of the longest substring that matches the beginning of the input text; 
+* when decoding, we retrieve the relevant substring by its index from the encoded data. 
+
+To make it work efficiently in both situations, we have to maintain two different data structures internally. One is a simple vector of substrings, to quickly look up the substring by its index. Another data structure is a trie that provides the mapping in the opposite direction: from substrings to their respective indices. This structure comes into play when we search for the longest substring at the beginning of the input text. 
+
+We build both structures when we create the instance of `EncodingTable`. 
 
 
+# Comparing implementations
 
+To round up all the work done on optimizing the compression algorithm speed, let's do one final experiment. I'm going to run the compression on input texts of different length, and see how our implementation with tries compares to the b-tree performance. 
+
+| File name              | Source length (chars) |   B-tree |  Tries |
+|----------------------|---------------------:|--------:|-------:|
+| wap-1600.txt         |              45 832 |    0.18 |   0.02 |
+| wap-3200.txt         |             119 763 |    0.88 |   0.03 |
+| wap-6400.txt         |             276 154 |    3.72 |   0.11 |
+| wap-12800.txt        |             589 815 |   12.84 |   0.16 |
+| wap-25600.txt        |           1 229 811 |   35.61 |   0.25 |
+| war-and-peace.txt    |           3 293 615 |  114.17 |   0.52 |
+| war-and-peace-dbl.txt|           6 587 230 |  227.45 |   0.93 |
+| war-and-peace-quad.txt|         13 174 460 |  454.30 |   1.73 |
 
 ![Compression time, by source length]({{ site.baseurl }}/assets/images/optimize-encoding/source-length-vs-time-comparison.svg)
+
+The difference in speed is astonishing! It's almost useless to put these data on the same plot: you can barely see the plot line for tries implementation in the picture. 
+
+To marvel on the numbers one more time: it takes **almost 2 minutes** for the b-tree implementation to process the entire text of *War And Peace* novel. Implemented with tries, it takes **less than 1 second**! I couldn't be more satisfied with the payoff for the efforts spent on optimizing the algorithm.
+
+# Next steps 
+
+
 
 [prev-post]: {{site.baseurl}}/{% post_url 2025-03-08-substring-map %}
 [find-match-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoding_table.rs#L26
 [trie-substring-counts-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoder/substring_counts/tries.rs
 [trie-0.0.10]: https://github.com/tindandelion/rust-text-compression/blob/0.0.10/src/trie.rs
 [trie-substring-counts-0.0.10]: https://github.com/tindandelion/rust-text-compression/blob/0.0.10/src/encoder/substring_counts/tries.rs
+[encoding-table-0.0.10]: https://github.com/tindandelion/rust-text-compression/blob/0.0.10/src/encoding_table.rs
