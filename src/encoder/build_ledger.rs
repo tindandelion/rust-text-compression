@@ -102,7 +102,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
 
 #[cfg(test)]
 mod tests {
-    use crate::encoder::{ledger_policies::CaptureAll, substring_counts::TrieSubstringCounts};
+    use crate::encoder::{ledger_policies::CaptureAll, substring_counts::SubstringCounts};
 
     use super::*;
 
@@ -233,16 +233,16 @@ mod tests {
             &self,
             _x_count: usize,
             _y_count: usize,
-            _substrings: &TrieSubstringCounts,
+            _substrings: &SubstringCounts,
         ) -> bool {
             false
         }
 
-        fn cleanup(&self, _counts: &mut TrieSubstringCounts) {}
+        fn cleanup(&self, _counts: &mut SubstringCounts) {}
     }
 
     impl LedgerPolicy for RemoveAll {
-        fn cleanup(&self, counts: &mut TrieSubstringCounts) {
+        fn cleanup(&self, counts: &mut SubstringCounts) {
             counts.retain(|_, _| false);
         }
 
@@ -250,7 +250,7 @@ mod tests {
             &self,
             _x_count: usize,
             _y_count: usize,
-            _substrings: &TrieSubstringCounts,
+            _substrings: &SubstringCounts,
         ) -> bool {
             true
         }

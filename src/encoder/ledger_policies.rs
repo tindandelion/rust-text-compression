@@ -1,4 +1,4 @@
-use super::{substring_counts::TrieSubstringCounts, substring_ledger::LedgerPolicy};
+use super::{substring_counts::SubstringCounts, substring_ledger::LedgerPolicy};
 
 pub struct CaptureAll;
 
@@ -11,7 +11,7 @@ impl LimitLedgerSize {
         Self { max_size }
     }
 
-    fn calc_merge_threshold(&self, counts: &TrieSubstringCounts) -> usize {
+    fn calc_merge_threshold(&self, counts: &SubstringCounts) -> usize {
         let free_space = self.calc_free_space(counts);
         if free_space <= 0 {
             usize::MAX
@@ -20,15 +20,15 @@ impl LimitLedgerSize {
         }
     }
 
-    fn is_full(&self, counts: &TrieSubstringCounts) -> bool {
+    fn is_full(&self, counts: &SubstringCounts) -> bool {
         counts.len() >= self.max_size
     }
 
-    fn should_cleanup(&self, counts: &TrieSubstringCounts) -> bool {
+    fn should_cleanup(&self, counts: &SubstringCounts) -> bool {
         self.calc_free_space(counts) < 2
     }
 
-    fn calc_median_count(&self, counts: &TrieSubstringCounts) -> usize {
+    fn calc_median_count(&self, counts: &SubstringCounts) -> usize {
         let mut counts = counts.iter().map(|(_, count)| count).collect::<Vec<_>>();
         if counts.len() == 1 {
             return counts[0];
@@ -37,33 +37,33 @@ impl LimitLedgerSize {
         counts[counts.len() / 2 - 1]
     }
 
-    fn calc_free_space(&self, counts: &TrieSubstringCounts) -> usize {
+    fn calc_free_space(&self, counts: &SubstringCounts) -> usize {
         self.max_size - counts.len()
     }
 }
 
 impl LedgerPolicy for CaptureAll {
-    fn cleanup(&self, _counts: &mut TrieSubstringCounts) {}
+    fn cleanup(&self, _counts: &mut SubstringCounts) {}
 
     fn should_merge(
         &self,
         _x_count: usize,
         _y_count: usize,
-        _substrings: &TrieSubstringCounts,
+        _substrings: &SubstringCounts,
     ) -> bool {
         true
     }
 }
 
 impl LedgerPolicy for LimitLedgerSize {
-    fn cleanup(&self, counts: &mut TrieSubstringCounts) {
+    fn cleanup(&self, counts: &mut SubstringCounts) {
         if self.should_cleanup(counts) {
             let median_count = self.calc_median_count(counts);
             counts.retain(|_, count| count >= median_count);
         }
     }
 
-    fn should_merge(&self, x_count: usize, y_count: usize, counts: &TrieSubstringCounts) -> bool {
+    fn should_merge(&self, x_count: usize, y_count: usize, counts: &SubstringCounts) -> bool {
         if self.is_full(counts) {
             return false;
         }
@@ -79,14 +79,14 @@ mod limit_dictionary_size_tests {
 
     mod merging {
 
-        use crate::encoder::substring_counts::TrieSubstringCounts;
+        use crate::encoder::substring_counts::SubstringCounts;
 
         use super::*;
 
         #[test]
         fn should_merge_when_both_counts_are_bigger_than_threshold() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 10);
 
@@ -96,7 +96,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn should_merge_when_count_is_equal_to_threshold() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 10);
 
@@ -107,7 +107,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn should_not_merge_when_at_least_one_count_is_less_than_threshold() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 10);
 
@@ -121,7 +121,7 @@ mod limit_dictionary_size_tests {
                 Do not merge strings when the dictionary is full, regardless of their counts
             */
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 100);
@@ -136,7 +136,7 @@ mod limit_dictionary_size_tests {
                we should merge substrings whose counts are at least 2 (1.75 rounded up to 2)
             */
             let policy = LimitLedgerSize { max_size: 7 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
             counts.insert("x".into(), 1);
             counts.insert("y".into(), 2);
             counts.insert("z".into(), 3);
@@ -149,10 +149,7 @@ mod limit_dictionary_size_tests {
 
     mod cleanup {
 
-        use crate::encoder::{
-            substring_counts::{self, TrieSubstringCounts},
-            Substring,
-        };
+        use crate::encoder::{substring_counts::SubstringCounts, Substring};
 
         use super::*;
 
@@ -161,7 +158,7 @@ mod limit_dictionary_size_tests {
             let x = Substring::from("x");
             let y = Substring::from("y");
             let policy = LimitLedgerSize { max_size: 10 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             counts.insert(x.clone(), 1);
             counts.insert(y.clone(), 2);
@@ -179,7 +176,7 @@ mod limit_dictionary_size_tests {
                remove the substrings whose counts are less than median
             */
             let policy = LimitLedgerSize { max_size: 6 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             counts.insert("a".into(), 9);
             counts.insert("b".into(), 1);
@@ -195,7 +192,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn keeps_everything_when_exactly_at_median() {
             let policy = LimitLedgerSize { max_size: 4 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             // All substrings have count 2, which is the median
             counts.insert("a".into(), 2);
@@ -209,7 +206,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn handles_single_element_dictionary() {
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             counts.insert("a".into(), 1);
 
@@ -220,7 +217,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn handles_empty_dictionary() {
             let policy = LimitLedgerSize { max_size: 2 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             policy.cleanup(&mut counts);
             assert_eq!(counts.len(), 0);
@@ -229,7 +226,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn removes_below_median_with_even_number_of_elements() {
             let policy = LimitLedgerSize { max_size: 5 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             counts.insert("a".into(), 1);
             counts.insert("b".into(), 2);
@@ -243,7 +240,7 @@ mod limit_dictionary_size_tests {
         #[test]
         fn preserves_substrings_at_median_counts() {
             let policy = LimitLedgerSize { max_size: 6 };
-            let mut counts = TrieSubstringCounts::new();
+            let mut counts = SubstringCounts::new();
 
             counts.insert("a".into(), 1);
             counts.insert("b".into(), 2); // median
@@ -255,8 +252,9 @@ mod limit_dictionary_size_tests {
             assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts));
         }
 
-        fn get_substrings(substrings: &TrieSubstringCounts) -> Vec<String> {
-            substring_counts::util::get_sorted_counts(substrings)
+        fn get_substrings(substrings: &SubstringCounts) -> Vec<String> {
+            substrings
+                .get_sorted_counts()
                 .iter()
                 .map(|(s, _)| s.to_string())
                 .collect::<Vec<_>>()

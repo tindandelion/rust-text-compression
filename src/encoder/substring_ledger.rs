@@ -2,29 +2,24 @@ use crate::encoding_table::EncodingTable;
 
 use super::{
     substring::{Substring, SubstringCount},
-    substring_counts::TrieSubstringCounts,
+    substring_counts::SubstringCounts,
     substring_selector::SubstringSelector,
 };
 
 pub trait LedgerPolicy {
-    fn should_merge(
-        &self,
-        x_count: usize,
-        y_count: usize,
-        substrings: &TrieSubstringCounts,
-    ) -> bool;
-    fn cleanup(&self, substrings: &mut TrieSubstringCounts);
+    fn should_merge(&self, x_count: usize, y_count: usize, substrings: &SubstringCounts) -> bool;
+    fn cleanup(&self, substrings: &mut SubstringCounts);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
-    substrings: TrieSubstringCounts,
+    substrings: SubstringCounts,
     policy: LP,
 }
 
 impl<LP: LedgerPolicy> SubstringLedger<LP> {
     pub fn with_policy(policy: LP) -> Self {
         Self {
-            substrings: TrieSubstringCounts::new(),
+            substrings: SubstringCounts::new(),
             policy,
         }
     }
@@ -63,9 +58,8 @@ impl<LP: LedgerPolicy> SubstringLedger<LP> {
 
     #[cfg(test)]
     pub fn entries(&self) -> Vec<(&str, usize)> {
-        use super::substring_counts::util::get_sorted_counts;
-
-        get_sorted_counts(&self.substrings)
+        self.substrings
+            .get_sorted_counts()
             .iter()
             .map(|(substring, count)| (substring.as_str(), *count))
             .collect()
@@ -187,19 +181,14 @@ mod tests {
     }
 
     impl LedgerPolicy for TestLedgerPolicy {
-        fn cleanup(&self, counts: &mut TrieSubstringCounts) {
+        fn cleanup(&self, counts: &mut SubstringCounts) {
             if counts.len() < self.max_entries {
                 return;
             }
             counts.retain(|_, count| count > 1);
         }
 
-        fn should_merge(
-            &self,
-            x_count: usize,
-            y_count: usize,
-            _counts: &TrieSubstringCounts,
-        ) -> bool {
+        fn should_merge(&self, x_count: usize, y_count: usize, _counts: &SubstringCounts) -> bool {
             return x_count == 1 && y_count == 1;
         }
     }
