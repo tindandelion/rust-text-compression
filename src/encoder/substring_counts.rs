@@ -1,8 +1,6 @@
-mod btree;
 mod tries;
 
-use btree::BTreeSubstringCounts;
-use tries::TrieSubstringCounts;
+pub use tries::TrieSubstringCounts;
 
 use super::{substring::SubstringCount, Substring};
 
@@ -16,11 +14,6 @@ pub trait SubstringCounts {
     fn retain<F>(&mut self, f: F)
     where
         F: Fn(&Substring, usize) -> bool;
-}
-pub type DefaultSubstringCounts = TrieSubstringCounts;
-
-pub fn default() -> DefaultSubstringCounts {
-    DefaultSubstringCounts::new()
 }
 
 #[cfg(test)]
