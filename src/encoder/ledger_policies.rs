@@ -1,4 +1,4 @@
-use super::{substring_counts::SubstringCounts, substring_ledger::LedgerPolicy};
+use super::{substring_counts::TrieSubstringCounts, substring_ledger::LedgerPolicy};
 
 pub struct CaptureAll;
 
@@ -11,7 +11,7 @@ impl LimitLedgerSize {
         Self { max_size }
     }
 
-    fn calc_merge_threshold(&self, counts: &impl SubstringCounts) -> usize {
+    fn calc_merge_threshold(&self, counts: &TrieSubstringCounts) -> usize {
         let free_space = self.calc_free_space(counts);
         if free_space <= 0 {
             usize::MAX
@@ -20,15 +20,15 @@ impl LimitLedgerSize {
         }
     }
 
-    fn is_full(&self, counts: &impl SubstringCounts) -> bool {
+    fn is_full(&self, counts: &TrieSubstringCounts) -> bool {
         counts.len() >= self.max_size
     }
 
-    fn should_cleanup(&self, counts: &impl SubstringCounts) -> bool {
+    fn should_cleanup(&self, counts: &TrieSubstringCounts) -> bool {
         self.calc_free_space(counts) < 2
     }
 
-    fn calc_median_count(&self, counts: &impl SubstringCounts) -> usize {
+    fn calc_median_count(&self, counts: &TrieSubstringCounts) -> usize {
         let mut counts = counts.iter().map(|(_, count)| count).collect::<Vec<_>>();
         if counts.len() == 1 {
             return counts[0];
@@ -37,33 +37,33 @@ impl LimitLedgerSize {
         counts[counts.len() / 2 - 1]
     }
 
-    fn calc_free_space(&self, counts: &impl SubstringCounts) -> usize {
+    fn calc_free_space(&self, counts: &TrieSubstringCounts) -> usize {
         self.max_size - counts.len()
     }
 }
 
 impl LedgerPolicy for CaptureAll {
-    fn cleanup(&self, _counts: &mut impl SubstringCounts) {}
+    fn cleanup(&self, _counts: &mut TrieSubstringCounts) {}
 
     fn should_merge(
         &self,
         _x_count: usize,
         _y_count: usize,
-        _substrings: &impl SubstringCounts,
+        _substrings: &TrieSubstringCounts,
     ) -> bool {
         true
     }
 }
 
 impl LedgerPolicy for LimitLedgerSize {
-    fn cleanup(&self, counts: &mut impl SubstringCounts) {
+    fn cleanup(&self, counts: &mut TrieSubstringCounts) {
         if self.should_cleanup(counts) {
             let median_count = self.calc_median_count(counts);
             counts.retain(|_, count| count >= median_count);
         }
     }
 
-    fn should_merge(&self, x_count: usize, y_count: usize, counts: &impl SubstringCounts) -> bool {
+    fn should_merge(&self, x_count: usize, y_count: usize, counts: &TrieSubstringCounts) -> bool {
         if self.is_full(counts) {
             return false;
         }
@@ -255,7 +255,7 @@ mod limit_dictionary_size_tests {
             assert_eq!(vec!["b", "c", "d", "e"], get_substrings(&counts));
         }
 
-        fn get_substrings(substrings: &impl SubstringCounts) -> Vec<String> {
+        fn get_substrings(substrings: &TrieSubstringCounts) -> Vec<String> {
             substring_counts::util::get_sorted_counts(substrings)
                 .iter()
                 .map(|(s, _)| s.to_string())

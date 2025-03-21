@@ -2,7 +2,7 @@ use crate::encoding_table::EncodingTable;
 
 use super::{
     substring::{Substring, SubstringCount},
-    substring_counts::{SubstringCounts, TrieSubstringCounts},
+    substring_counts::TrieSubstringCounts,
     substring_selector::SubstringSelector,
 };
 
@@ -11,9 +11,9 @@ pub trait LedgerPolicy {
         &self,
         x_count: usize,
         y_count: usize,
-        substrings: &impl SubstringCounts,
+        substrings: &TrieSubstringCounts,
     ) -> bool;
-    fn cleanup(&self, substrings: &mut impl SubstringCounts);
+    fn cleanup(&self, substrings: &mut TrieSubstringCounts);
 }
 
 pub struct SubstringLedger<LP: LedgerPolicy> {
@@ -187,7 +187,7 @@ mod tests {
     }
 
     impl LedgerPolicy for TestLedgerPolicy {
-        fn cleanup(&self, counts: &mut impl SubstringCounts) {
+        fn cleanup(&self, counts: &mut TrieSubstringCounts) {
             if counts.len() < self.max_entries {
                 return;
             }
@@ -198,7 +198,7 @@ mod tests {
             &self,
             x_count: usize,
             y_count: usize,
-            _counts: &impl SubstringCounts,
+            _counts: &TrieSubstringCounts,
         ) -> bool {
             return x_count == 1 && y_count == 1;
         }
