@@ -1,4 +1,4 @@
-use crate::{encoder::Substring, trie::Trie};
+use crate::core::{Substring, Trie};
 
 #[derive(Clone)]
 struct TableEntry {

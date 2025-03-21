@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use super::{encoder_spec::EncoderSpec, substring::Substring};
+use super::{encoder_spec::EncoderSpec, Substring};
 
 type ImpactComparator = fn(&EncodingImpact, &EncodingImpact) -> Ordering;
 

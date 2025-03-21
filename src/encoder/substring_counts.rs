@@ -1,7 +1,6 @@
-use crate::{
-    encoder::{substring::SubstringCount, Substring},
-    trie::Trie,
-};
+use crate::core::{SubstringCount, Trie};
+
+use super::Substring;
 
 pub struct SubstringCounts {
     trie: Trie<usize>,

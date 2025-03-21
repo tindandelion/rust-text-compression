@@ -2,19 +2,18 @@ mod build_ledger;
 mod encode_string;
 mod encoder_spec;
 pub mod ledger_policies;
-mod substring;
 mod substring_counts;
 mod substring_ledger;
 pub mod substring_selector;
 
+pub use crate::core::Substring;
 use build_ledger::build_ledger;
 use encode_string::encode_string;
 pub use encode_string::SPEC as ENCODER_SPEC;
-pub use substring::Substring;
 use substring_ledger::{LedgerPolicy, SubstringLedger};
 use substring_selector::SubstringSelector;
 
-use crate::encoding_table::EncodingTable;
+use crate::core::EncodingTable;
 
 pub fn encode_with_policy<P: LedgerPolicy>(
     string: &str,

@@ -1,7 +1,6 @@
+mod core;
 mod decoder;
 mod encoder;
-mod encoding_table;
-mod trie;
 
 pub use decoder::decode_string as decode;
 pub use encoder::encode;

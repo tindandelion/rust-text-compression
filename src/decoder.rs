@@ -1,4 +1,4 @@
-use crate::encoding_table::EncodingTable;
+use crate::core::EncodingTable;
 
 const ENCODED_MARKER: u8 = 0xF5;
 

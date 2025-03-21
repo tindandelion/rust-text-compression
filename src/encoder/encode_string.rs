@@ -1,4 +1,4 @@
-use crate::encoding_table::EncodingTable;
+use crate::core::EncodingTable;
 
 use super::encoder_spec::EncoderSpec;
 
