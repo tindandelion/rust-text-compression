@@ -148,9 +148,7 @@ For the time being, however, I'm quite satisfied with the current results, so I'
 
 # Next steps
 
-Current progress is available on GitHub under the [tag 0.0.9][tag-0.0.9]. 
-
-The core algorithm is done now, to be determined what to do next. 
+Current progress is available on GitHub under the [tag 0.0.9][tag-0.0.9]. The core algorithm is done now, to be determined what to do next. 
 
 [trie-wikipedia]: https://en.wikipedia.org/wiki/Trie
 [prev-post]: {{site.baseurl}}/{% post_url 2025-02-27-expand-encoding-table %}
