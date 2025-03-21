@@ -46,7 +46,8 @@ fn utf8_char_width(first_byte: u8) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::encoder::Substring;
+
+    use crate::core::Substring;
 
     use super::*;
 

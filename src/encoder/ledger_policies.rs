@@ -149,7 +149,7 @@ mod limit_dictionary_size_tests {
 
     mod cleanup {
 
-        use crate::encoder::{substring_counts::SubstringCounts, Substring};
+        use crate::{core::Substring, encoder::substring_counts::SubstringCounts};
 
         use super::*;
 

@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::Chars};
 
-use crate::encoder::Substring;
+use super::Substring;
 
 pub struct Trie<V> {
     nodes: HashMap<char, TrieNode<V>>,

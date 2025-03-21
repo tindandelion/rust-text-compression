@@ -37,7 +37,8 @@ pub fn encode_string(source: &str, substrings: &EncodingTable) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use crate::encoder::Substring;
+
+    use crate::core::Substring;
 
     use super::*;
 
@@ -82,10 +83,7 @@ mod tests {
         let substrings = vec!["abc".to_string(), "def".to_string()];
 
         let encoded = encode_string(source, &make_dictionary(substrings));
-        assert_eq!(
-            vec![0xF5, 0x00, b'x', b'y', b'z', 0xF5, 0x01],
-            encoded
-        );
+        assert_eq!(vec![0xF5, 0x00, b'x', b'y', b'z', 0xF5, 0x01], encoded);
     }
 
     #[test]
@@ -96,10 +94,7 @@ mod tests {
         substrings.push("cc".to_string());
 
         let encoded = encode_string(source, &make_dictionary(substrings));
-        assert_eq!(
-            vec![0xF6, 0x00, 0xF6, 0x01, b'a', b'b', b'c'],
-            encoded
-        );
+        assert_eq!(vec![0xF6, 0x00, 0xF6, 0x01, b'a', b'b', b'c'], encoded);
     }
 
     #[test]

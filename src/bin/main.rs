@@ -6,7 +6,6 @@ use text_compression::policies::LimitLedgerSize;
 
 struct ExperimentResult {
     source_length_chars: usize,
-    substrings: Vec<String>,
     compression_ratio: f32,
     time_elapsed: f32,
 }
@@ -32,7 +31,6 @@ fn main() {
         println!("Source length in chars: {}", result.source_length_chars);
         println!("Compression ratio: {:.2}%", result.compression_ratio);
         println!("Time elapsed: {:.2}s", result.time_elapsed);
-        println!("Top 5 substrings: {:?}", result.substrings);
         println!("================================================");
     }
     println!("* Experiments finished.");
@@ -53,7 +51,6 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
     let compression_ratio = (1.0 - (encoded.len() as f32 / source.len() as f32)) * 100.0;
     ExperimentResult {
         source_length_chars: source.len(),
-        substrings: substrings.top(5).to_vec(),
         compression_ratio,
         time_elapsed,
     }

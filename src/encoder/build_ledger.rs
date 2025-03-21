@@ -1,5 +1,5 @@
-use super::{substring_ledger::LedgerPolicy, Substring, SubstringLedger};
-use crate::core::SubstringCount;
+use super::{substring_ledger::LedgerPolicy, SubstringLedger};
+use crate::core::{Substring, SubstringCount};
 
 pub fn build_ledger<LP: LedgerPolicy>(source: &str, policy: LP) -> SubstringLedger<LP> {
     BuildState::new(source, policy).run_until_end().ledger

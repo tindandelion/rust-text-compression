@@ -1,6 +1,6 @@
-use crate::core::{EncodingTable, SubstringCount};
+use crate::core::{EncodingTable, Substring, SubstringCount};
 
-use super::{substring_counts::SubstringCounts, substring_selector::SubstringSelector, Substring};
+use super::{substring_counts::SubstringCounts, substring_selector::SubstringSelector};
 
 pub trait LedgerPolicy {
     fn should_merge(&self, x_count: usize, y_count: usize, substrings: &SubstringCounts) -> bool;

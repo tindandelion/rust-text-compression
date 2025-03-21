@@ -6,7 +6,6 @@ mod substring_counts;
 mod substring_ledger;
 pub mod substring_selector;
 
-pub use crate::core::Substring;
 use build_ledger::build_ledger;
 use encode_string::encode_string;
 pub use encode_string::SPEC as ENCODER_SPEC;

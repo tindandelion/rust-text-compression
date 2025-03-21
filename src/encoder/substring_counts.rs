@@ -1,6 +1,4 @@
-use crate::core::{SubstringCount, Trie};
-
-use super::Substring;
+use crate::core::{Substring, SubstringCount, Trie};
 
 pub struct SubstringCounts {
     trie: Trie<usize>,
