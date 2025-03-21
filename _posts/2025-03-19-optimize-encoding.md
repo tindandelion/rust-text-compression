@@ -32,7 +32,7 @@ We build both structures when we create the instance of `EncodingTable`. Luckily
 To round up all the work I've done so far with optimizing the compression algorithm speed, let's do one final experiment. 
 I'm going to run the compression on input texts of different lengths, and see how our implementation with tries beats the b-tree performance. 
 
-As before, I'm using [the excerpts][test-data] of *War and Peace:*  
+As before, I'm using [the excerpts][test-data] of *War and Peace* novel:  
 
 | File name              | Source length (chars) |   B-tree |  Tries |
 |----------------------|---------------------:|--------:|-------:|
