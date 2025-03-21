@@ -64,7 +64,7 @@ fn run_baseline(selector: &SubstringSelector) -> ExperimentResult {
     let source = read_source_file();
 
     let start = Instant::now();
-    let (encoded, substrings, ledger_size) = encode(&source, CaptureAll, &selector);
+    let (encoded, substrings, ledger_size) = encode(&source, CaptureAll, selector);
     let time_elapsed = start.elapsed().as_secs_f32();
 
     let decoded = decode(&encoded, &substrings);

@@ -185,7 +185,7 @@ mod tests {
         }
 
         fn should_merge(&self, x_count: usize, y_count: usize, _counts: &SubstringCounts) -> bool {
-            return x_count == 1 && y_count == 1;
+            x_count == 1 && y_count == 1
         }
     }
 }

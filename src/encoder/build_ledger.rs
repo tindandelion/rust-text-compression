@@ -28,7 +28,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
     }
 
     fn at_end(&self) -> bool {
-        self.head.len() == 0
+        self.head.is_empty()
     }
 
     fn step(mut self) -> BuildState<'a, LP> {

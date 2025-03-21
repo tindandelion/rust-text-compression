@@ -6,7 +6,7 @@ pub fn decode_string(encoded_bytes: &[u8], substrings: &EncodingTable) -> String
     let mut result = String::new();
 
     let mut head = encoded_bytes;
-    while head.len() > 0 {
+    while !head.is_empty() {
         let byte = head[0];
         if byte >= ENCODED_MARKER {
             let hi_byte = ((byte - ENCODED_MARKER) as u16) << 8;
@@ -82,7 +82,7 @@ mod tests {
         let sample_string = "犬猫魚鳥";
         let encoded = sample_string.as_bytes();
 
-        let decoded = decode_string(&encoded, &make_encoding_table(vec![]));
+        let decoded = decode_string(encoded, &make_encoding_table(vec![]));
         assert_eq!(decoded, sample_string);
     }
 

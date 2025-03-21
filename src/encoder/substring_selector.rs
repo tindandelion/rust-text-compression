@@ -68,9 +68,7 @@ impl SubstringSelector {
     fn calc_compression_gain(&self, string: &str, count: usize) -> usize {
         let unencoded_total_size = string.len() * count;
         let encoded_total_size = self.spec.encoded_size * count;
-        unencoded_total_size
-            .checked_sub(encoded_total_size)
-            .unwrap_or(0)
+        unencoded_total_size.saturating_sub(encoded_total_size)
     }
 }
 

@@ -122,7 +122,7 @@ impl<V> TrieNode<V> {
     }
 }
 
-fn start_search<'a>(text: &'a str) -> Option<(char, Chars<'a>)> {
+fn start_search(text: &str) -> Option<(char, Chars<'_>)> {
     let mut chars = text.chars();
     let first_char = chars.next()?;
     Some((first_char, chars))

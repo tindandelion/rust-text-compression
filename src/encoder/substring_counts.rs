@@ -6,6 +6,12 @@ pub struct SubstringCounts {
     trie: Trie<usize>,
 }
 
+impl Default for SubstringCounts {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SubstringCounts {
     pub fn new() -> Self {
         Self { trie: Trie::new() }
