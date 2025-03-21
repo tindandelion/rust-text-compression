@@ -12,10 +12,10 @@ struct UsageStats {
     table_size: usize,
 }
 
-impl ToString for UsageStats {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for UsageStats {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let used_count = self.table_size - self.unused_entries.len();
-        format!("{}/{}", used_count, self.table_size)
+        write!(f, "{}/{}", used_count, self.table_size)
     }
 }
 struct ExperimentResult {
@@ -34,7 +34,7 @@ impl ExperimentResult {
         println!("Compression ratio: {:.2}%", self.compression_ratio);
         println!("Top 10 substrings: {:?}", self.top_10);
         println!("Bottom 10 substrings: {:?}", self.bottom_10);
-        println!("Used entries: {}", self.usage_stats.to_string());
+        println!("Used entries: {}", self.usage_stats);
         println!("Unused substrings: {:?}", self.usage_stats.unused_entries);
     }
 }

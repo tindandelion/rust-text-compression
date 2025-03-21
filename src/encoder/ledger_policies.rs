@@ -13,7 +13,7 @@ impl LimitLedgerSize {
 
     fn calc_merge_threshold(&self, counts: &SubstringCounts) -> usize {
         let free_space = self.calc_free_space(counts);
-        if free_space <= 0 {
+        if free_space == 0 {
             usize::MAX
         } else {
             self.max_size.div_ceil(free_space)
