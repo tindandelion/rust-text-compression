@@ -161,11 +161,9 @@ mod tests {
     }
 
     fn make_ledger() -> SubstringLedger<TestLedgerPolicy> {
-        make_capped_ledger(usize::MAX)
-    }
-
-    fn make_capped_ledger(max_entries: usize) -> SubstringLedger<TestLedgerPolicy> {
-        SubstringLedger::with_policy(TestLedgerPolicy { max_entries })
+        SubstringLedger::with_policy(TestLedgerPolicy {
+            max_entries: usize::MAX,
+        })
     }
 
     fn make_ledger_with_policy(policy: TestLedgerPolicy) -> SubstringLedger<TestLedgerPolicy> {

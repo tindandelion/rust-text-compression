@@ -27,7 +27,7 @@ pub fn encode_with_policy<P: LedgerPolicy>(
 ) -> (Vec<u8>, EncodingTable, usize) {
     let ledger = build_ledger(string, policy);
     let ledger_size = ledger.len();
-    let substring_selector = SubstringSelector::order_by_frequency(ENCODER_SPEC);
+    let substring_selector = SubstringSelector::new(ENCODER_SPEC);
     let substrings = ledger.build_encoding_table(&substring_selector);
     let encoded = encode_string(string, &substrings);
     (encoded, substrings, ledger_size)
