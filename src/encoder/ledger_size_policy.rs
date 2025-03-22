@@ -1,7 +1,5 @@
 use super::{substring_counts::SubstringCounts, substring_ledger::LedgerPolicy};
 
-pub struct CaptureAll;
-
 pub struct LimitLedgerSize {
     max_size: usize,
 }
@@ -39,19 +37,6 @@ impl LimitLedgerSize {
 
     fn calc_free_space(&self, counts: &SubstringCounts) -> usize {
         self.max_size - counts.len()
-    }
-}
-
-impl LedgerPolicy for CaptureAll {
-    fn cleanup(&self, _counts: &mut SubstringCounts) {}
-
-    fn should_merge(
-        &self,
-        _x_count: usize,
-        _y_count: usize,
-        _substrings: &SubstringCounts,
-    ) -> bool {
-        true
     }
 }
 

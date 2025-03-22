@@ -9,12 +9,6 @@ pub struct SubstringCount {
     pub count: usize,
 }
 
-impl SubstringCount {
-    pub fn new(value: Substring, count: usize) -> Self {
-        Self { value, count }
-    }
-}
-
 impl Substring {
     pub fn from_char(c: char) -> Self {
         Self(c.to_string())

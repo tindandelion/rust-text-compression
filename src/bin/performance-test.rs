@@ -10,7 +10,7 @@ fn main() {
     let source = fs::read_to_string(INPUT_FILENAME).unwrap();
 
     let start = Instant::now();
-    let (encoded, substrings, _) = encode(&source);
+    let (encoded, substrings) = encode(&source);
     let decoded = decode(&encoded, &substrings);
     assert_eq!(decoded, source);
 

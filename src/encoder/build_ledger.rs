@@ -101,7 +101,7 @@ impl<'a, LP: LedgerPolicy> BuildState<'a, LP> {
 
 #[cfg(test)]
 mod tests {
-    use crate::encoder::{ledger_policies::CaptureAll, substring_counts::SubstringCounts};
+    use crate::encoder::substring_counts::SubstringCounts;
 
     use super::*;
 
@@ -224,6 +224,7 @@ mod tests {
         Substring::from(s)
     }
 
+    struct CaptureAll;
     struct RemoveAll;
     struct DisallowMerging;
 
@@ -244,6 +245,19 @@ mod tests {
         fn cleanup(&self, counts: &mut SubstringCounts) {
             counts.retain(|_, _| false);
         }
+
+        fn should_merge(
+            &self,
+            _x_count: usize,
+            _y_count: usize,
+            _substrings: &SubstringCounts,
+        ) -> bool {
+            true
+        }
+    }
+
+    impl LedgerPolicy for CaptureAll {
+        fn cleanup(&self, _counts: &mut SubstringCounts) {}
 
         fn should_merge(
             &self,

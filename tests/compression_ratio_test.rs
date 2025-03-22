@@ -1,23 +1,23 @@
 use std::fs;
 
-use text_compression::{decode, encode_with_policy, policies::CaptureAll};
+use text_compression::{decode, encode};
 
 #[test]
 fn compression_ratio_test() {
     let test_files = [
-        ("wap-100.txt", 40.3),
-        ("wap-200.txt", 60.1),
-        ("wap-400.txt", 74.7),
-        ("wap-800.txt", 84.6),
-        ("wap-1600.txt", 59.1),
-        ("wap-3200.txt", 54.8),
-        ("wap-6400.txt", 52.0),
-        ("wap-12800.txt", 50.4),
+        ("wap-100.txt", 35.9),
+        ("wap-200.txt", 55.5),
+        ("wap-400.txt", 72.9),
+        ("wap-800.txt", 83.2),
+        ("wap-1600.txt", 56.5),
+        ("wap-3200.txt", 54.0),
+        ("wap-6400.txt", 52.3),
+        ("wap-12800.txt", 51.6),
     ];
 
     for (file_name, expected_ratio) in test_files {
         let source = read_test_file(file_name);
-        let (encoded, substrings, _) = encode_with_policy(&source, CaptureAll);
+        let (encoded, substrings) = encode(&source);
         let decoded = decode(&encoded, &substrings);
 
         assert_eq!(

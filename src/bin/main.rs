@@ -38,7 +38,7 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
     let source = fs::read_to_string("test-data/".to_string() + file_name).unwrap();
 
     let start = Instant::now();
-    let (encoded, substrings, _) = encode(&source);
+    let (encoded, substrings) = encode(&source);
     let end = Instant::now();
     let time_elapsed = end.duration_since(start).as_secs_f32();
 
