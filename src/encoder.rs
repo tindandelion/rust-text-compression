@@ -14,25 +14,21 @@ use substring_selector::SubstringSelector;
 
 use crate::core::EncodingTable;
 
+const LEDGER_SIZE: usize = 65_536;
+
+pub fn encode(string: &str) -> (Vec<u8>, EncodingTable, usize) {
+    let policy = ledger_policies::LimitLedgerSize::with_max_size(LEDGER_SIZE);
+    encode_with_policy(string, policy)
+}
+
 pub fn encode_with_policy<P: LedgerPolicy>(
     string: &str,
     policy: P,
 ) -> (Vec<u8>, EncodingTable, usize) {
-    encode(
-        string,
-        policy,
-        &SubstringSelector::order_by_compression_gain(ENCODER_SPEC),
-    )
-}
-
-pub fn encode<P: LedgerPolicy>(
-    string: &str,
-    ledger_policy: P,
-    substring_selector: &SubstringSelector,
-) -> (Vec<u8>, EncodingTable, usize) {
-    let ledger = build_ledger(string, ledger_policy);
+    let ledger = build_ledger(string, policy);
     let ledger_size = ledger.len();
-    let substrings = ledger.build_encoding_table(substring_selector);
+    let substring_selector = SubstringSelector::order_by_frequency(ENCODER_SPEC);
+    let substrings = ledger.build_encoding_table(&substring_selector);
     let encoded = encode_string(string, &substrings);
     (encoded, substrings, ledger_size)
 }

@@ -1,8 +1,7 @@
 use std::fs;
 use std::time::Instant;
 use text_compression::decode;
-use text_compression::encode_with_policy;
-use text_compression::policies::LimitLedgerSize;
+use text_compression::encode;
 
 struct ExperimentResult {
     source_length_chars: usize,
@@ -10,7 +9,6 @@ struct ExperimentResult {
     time_elapsed: f32,
 }
 
-const LEDGER_SIZE: usize = 65_536;
 const INPUT_FILENAMES: &[&str] = &[
     "wap-1600.txt",
     "wap-3200.txt",
@@ -40,8 +38,7 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
     let source = fs::read_to_string("test-data/".to_string() + file_name).unwrap();
 
     let start = Instant::now();
-    let (encoded, substrings, _) =
-        encode_with_policy(&source, LimitLedgerSize::with_max_size(LEDGER_SIZE));
+    let (encoded, substrings, _) = encode(&source);
     let end = Instant::now();
     let time_elapsed = end.duration_since(start).as_secs_f32();
 
