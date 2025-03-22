@@ -8,7 +8,7 @@ mod substring_selector;
 
 use build_ledger::build_ledger;
 use encode_string::encode_string;
-pub use encode_string::SPEC as ENCODER_SPEC;
+use encode_string::SPEC as ENCODER_SPEC;
 use ledger_size_policy::LimitLedgerSize;
 use substring_ledger::SubstringLedger;
 use substring_selector::SubstringSelector;

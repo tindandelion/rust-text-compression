@@ -1,7 +1,6 @@
 use std::fs;
 use std::time::Instant;
-use text_compression::decode;
-use text_compression::encode;
+use text_compression::{decode, encode};
 
 const INPUT_FILENAME: &str = "test-data/war-and-peace-quad.txt";
 
