@@ -110,6 +110,7 @@ As it turned out, this is not a straightforward thing to implement in Rust, and 
 In the end, I decided to proceed with a simpler implementation that doesn't remove empty nodes from the trie. It only removes the values from the nodes, but doesn't alter the tree structure. Sure, this incurs some penalty in terms of used memory and the lookup speed, but for now it seems to work reasonably well. I've decided put off a "proper" implementation for a later time.
 
 # Running the optimized version 
+{: #results }
  
  Now with the implementations in place, we can run our [previous experiments][ledger-sizes-experiment-results] with different ledger sizes using `BTreeSubstringCounts` as the workhorse, and see how it impacts the performance: 
 

@@ -28,6 +28,7 @@ To make it work efficiently in both situations, we have to maintain two differen
 We build both structures when we create the instance of `EncodingTable`. Luckily, their content doesn't change, so there's no additional effort to keep them both in sync.
 
 # Comparing implementations: final experiment
+{: #results }
 
 To round up all the work I've done so far with optimizing the compression algorithm speed, let's do one final experiment. 
 I'm going to run the compression on input texts of different lengths, and see how our implementation with tries beats the b-tree performance. 
@@ -55,7 +56,7 @@ To marvel on the numbers one more time: it takes **almost 2 minutes** for the b-
 
 Current version of the program is available on GitHub under the [tag 0.0.10][tag-0.0.10].
 
-While I was experimenting with different optimizations for the core algorithm, I introduced quite a bit of complexity to the code, trying to support different implementations, collecting additional data, etc. Now that I'm done with those experiments, it's time to revisit the code and do some housekeeping, removing the pieces that are no longer needed.  
+While I was experimenting with different optimizations for the core algorithm, I introduced quite a bit of complexity to the code, trying to support different implementations, collecting additional data, etc. Now that I'm done with those experiments, it's time to [revisit the code and do some housekeeping][next-post], removing the pieces that are no longer needed.  
 
 [prev-post]: {{site.baseurl}}/{% post_url 2025-03-08-substring-map %}
 [find-match-0.0.9]: https://github.com/tindandelion/rust-text-compression/blob/0.0.9/src/encoding_table.rs#L26
@@ -65,3 +66,4 @@ While I was experimenting with different optimizations for the core algorithm, I
 [encoding-table-0.0.10]: https://github.com/tindandelion/rust-text-compression/blob/0.0.10/src/encoding_table.rs
 [test-data]: https://github.com/tindandelion/rust-text-compression/tree/0.0.10/test-data
 [tag-0.0.10]: https://github.com/tindandelion/rust-text-compression/tree/0.0.10
+[next-post]: {{site.baseurl}}/{% post_url 2025-03-22-review-and-cleanup %}
