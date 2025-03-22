@@ -2,7 +2,7 @@ mod core;
 mod decoder;
 mod encoder;
 
-pub use decoder::decode_string as decode;
+pub use decoder::decode;
 pub use encoder::encode;
 
 #[cfg(test)]

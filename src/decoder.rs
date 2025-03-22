@@ -2,7 +2,7 @@ use crate::core::EncodingTable;
 
 const ENCODED_MARKER: u8 = 0xF5;
 
-pub fn decode_string(encoded_bytes: &[u8], substrings: &EncodingTable) -> String {
+pub fn decode(encoded_bytes: &[u8], substrings: &EncodingTable) -> String {
     let mut result = String::new();
 
     let mut head = encoded_bytes;
@@ -56,7 +56,7 @@ mod tests {
         let string = "abcdef";
         let substrings = EncodingTable::new(vec![]);
 
-        let decoded = decode_string(string.as_bytes(), &substrings);
+        let decoded = decode(string.as_bytes(), &substrings);
         assert_eq!(string, decoded);
     }
 
@@ -65,7 +65,7 @@ mod tests {
         let encoded = vec![0xF5, 0x00];
         let substrings = make_encoding_table(vec!["abc".to_string()]);
 
-        let decoded = decode_string(&encoded, &substrings);
+        let decoded = decode(&encoded, &substrings);
         assert_eq!(decoded, "abc");
     }
 
@@ -74,7 +74,7 @@ mod tests {
         let encoded = vec![0xF5, 0x00, 0x41, 0xF5, 0x01, 0x41, 0x42, 0x43];
         let substrings = make_encoding_table(vec!["abc".to_string(), "def".to_string()]);
 
-        let decoded = decode_string(&encoded, &substrings);
+        let decoded = decode(&encoded, &substrings);
         assert_eq!(decoded, "abcAdefABC");
     }
 
@@ -83,7 +83,7 @@ mod tests {
         let sample_string = "犬猫魚鳥";
         let encoded = sample_string.as_bytes();
 
-        let decoded = decode_string(encoded, &make_encoding_table(vec![]));
+        let decoded = decode(encoded, &make_encoding_table(vec![]));
         assert_eq!(decoded, sample_string);
     }
 
@@ -94,7 +94,7 @@ mod tests {
         substrings.push("bb".to_string());
         substrings.push("cc".to_string());
 
-        let decoded = decode_string(&encoded, &make_encoding_table(substrings));
+        let decoded = decode(&encoded, &make_encoding_table(substrings));
         assert_eq!(decoded, "bbccabc");
     }
 
