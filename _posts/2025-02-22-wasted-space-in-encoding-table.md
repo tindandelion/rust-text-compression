@@ -67,6 +67,7 @@ I still would like to keep both approaches in the code, though, because I'd like
 - [`SubstringSelector`][substring-selector] is responsible for selecting the appropriate subset of substrings for the final encoding table. It also gives us a choice how to select the substrings: either by their compression gain, or by their frequency.
 
 # The results 
+{: #results }
 
 [Having implemented][tag-0.0.7] the necessary changes, I ran my experiments again, only using the frequency-based approach. The results are presented in the table below: 
 
