@@ -29,4 +29,13 @@ mod tests {
         let decoded = decode(&encoded, &substrings);
         assert_eq!(decoded, source);
     }
+
+    #[test]
+    fn encode_and_decode_string_preserves_byte_order_mark() {
+        let source = "\u{FEFF}Hello  world";
+
+        let (encoded, substrings) = encode(source);
+        let decoded = decode(&encoded, &substrings);
+        assert_eq!(decoded, source);
+    }
 }

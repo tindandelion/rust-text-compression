@@ -46,7 +46,7 @@ mod tests {
     fn encode_string_with_empty_substrings() {
         let source = "abc";
 
-        let encoded = encode_string(source, &make_dictionary(vec![]));
+        let encoded = encode_string(source, &make_encoding_table(vec![]));
         assert_eq!(source.as_bytes(), encoded);
     }
 
@@ -55,7 +55,7 @@ mod tests {
         let source = "abc";
         let substrings = vec!["abc".to_string()];
 
-        let encoded = encode_string(source, &make_dictionary(substrings));
+        let encoded = encode_string(source, &make_encoding_table(substrings));
         assert_eq!(vec![0xF5, 0x00], encoded);
     }
 
@@ -64,7 +64,7 @@ mod tests {
         let source = "abcabc";
         let substrings = vec!["abc".to_string()];
 
-        let encoded = encode_string(source, &make_dictionary(substrings));
+        let encoded = encode_string(source, &make_encoding_table(substrings));
         assert_eq!(vec![0xF5, 0x00, 0xF5, 0x00], encoded);
     }
 
@@ -73,7 +73,7 @@ mod tests {
         let source = "abcdef";
         let substrings = vec!["abc".to_string(), "def".to_string()];
 
-        let encoded = encode_string(source, &make_dictionary(substrings));
+        let encoded = encode_string(source, &make_encoding_table(substrings));
         assert_eq!(vec![0xF5, 0x00, 0xF5, 0x01], encoded);
     }
 
@@ -82,7 +82,7 @@ mod tests {
         let source = "abcxyzdef";
         let substrings = vec!["abc".to_string(), "def".to_string()];
 
-        let encoded = encode_string(source, &make_dictionary(substrings));
+        let encoded = encode_string(source, &make_encoding_table(substrings));
         assert_eq!(vec![0xF5, 0x00, b'x', b'y', b'z', 0xF5, 0x01], encoded);
     }
 
@@ -93,7 +93,7 @@ mod tests {
         substrings.push("bb".to_string());
         substrings.push("cc".to_string());
 
-        let encoded = encode_string(source, &make_dictionary(substrings));
+        let encoded = encode_string(source, &make_encoding_table(substrings));
         assert_eq!(vec![0xF6, 0x00, 0xF6, 0x01, b'a', b'b', b'c'], encoded);
     }
 
@@ -101,11 +101,11 @@ mod tests {
     fn encode_multibyte_string() {
         let source = "こんにちはこんにちは世界世界";
 
-        let encoded = encode_string(source, &make_dictionary(vec![]));
+        let encoded = encode_string(source, &make_encoding_table(vec![]));
         assert_eq!(source.as_bytes(), encoded);
     }
 
-    fn make_dictionary(substrings: Vec<String>) -> EncodingTable {
+    fn make_encoding_table(substrings: Vec<String>) -> EncodingTable {
         EncodingTable::new(substrings.into_iter().map(Substring::from).collect())
     }
 }
