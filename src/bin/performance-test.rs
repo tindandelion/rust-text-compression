@@ -10,7 +10,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let start = Instant::now();
     let (encoded, substrings) = encode(&source);
-    let decoded = decode(&encoded, &substrings);
+    let decoded = decode(&encoded, &substrings)?;
     assert_eq!(decoded, source);
 
     println!("* Finished in {:?}", start.elapsed());

@@ -16,7 +16,7 @@ mod tests {
         "low low low low low lowest lowest newer newer newer newer newer newer wider wider wider new new";
 
         let (encoded, substrings) = encode(source);
-        let decoded = decode(&encoded, &substrings);
+        let decoded = decode(&encoded, &substrings).unwrap();
 
         assert_eq!(decoded, source);
     }
@@ -26,7 +26,7 @@ mod tests {
         let source = "こんにちはこんにちは世界世界";
 
         let (encoded, substrings) = encode(source);
-        let decoded = decode(&encoded, &substrings);
+        let decoded = decode(&encoded, &substrings).unwrap();
         assert_eq!(decoded, source);
     }
 
@@ -35,7 +35,7 @@ mod tests {
         let source = "\u{FEFF}Hello  world";
 
         let (encoded, substrings) = encode(source);
-        let decoded = decode(&encoded, &substrings);
+        let decoded = decode(&encoded, &substrings).unwrap();
         assert_eq!(decoded, source);
     }
 }

@@ -42,7 +42,7 @@ fn run_experiment(file_name: &str) -> Result<ExperimentResult, Box<dyn Error>> {
     let end = Instant::now();
     let time_elapsed = end.duration_since(start).as_secs_f32();
 
-    let decoded = decode(&encoded, &substrings);
+    let decoded = decode(&encoded, &substrings)?;
     assert_eq!(decoded, source);
 
     let compression_ratio = (1.0 - (encoded.len() as f32 / source.len() as f32)) * 100.0;
