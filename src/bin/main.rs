@@ -1,5 +1,5 @@
-use std::fs;
 use std::time::Instant;
+use std::{error::Error, fs};
 use text_compression::{decode, encode};
 
 struct ExperimentResult {
@@ -19,11 +19,11 @@ const INPUT_FILENAMES: &[&str] = &[
     "war-and-peace-quad.txt",
 ];
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("* Running experiments...");
     for filename in INPUT_FILENAMES {
         println!("File name: {}", filename);
-        let result = run_experiment(filename);
+        let result = run_experiment(filename)?;
 
         println!("Source length in chars: {}", result.source_length_chars);
         println!("Compression ratio: {:.2}%", result.compression_ratio);
@@ -31,10 +31,11 @@ fn main() {
         println!("================================================");
     }
     println!("* Experiments finished.");
+    Ok(())
 }
 
-fn run_experiment(file_name: &str) -> ExperimentResult {
-    let source = fs::read_to_string("test-data/".to_string() + file_name).unwrap();
+fn run_experiment(file_name: &str) -> Result<ExperimentResult, Box<dyn Error>> {
+    let source = fs::read_to_string("test-data/".to_string() + file_name)?;
 
     let start = Instant::now();
     let (encoded, substrings) = encode(&source);
@@ -45,9 +46,9 @@ fn run_experiment(file_name: &str) -> ExperimentResult {
     assert_eq!(decoded, source);
 
     let compression_ratio = (1.0 - (encoded.len() as f32 / source.len() as f32)) * 100.0;
-    ExperimentResult {
+    Ok(ExperimentResult {
         source_length_chars: source.len(),
         compression_ratio,
         time_elapsed,
-    }
+    })
 }
