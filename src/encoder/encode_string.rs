@@ -14,22 +14,18 @@ pub fn encode_string(source: &str, substrings: &EncodingTable) -> Vec<u8> {
     assert!(substrings.len() <= SPEC.num_strings);
 
     let mut encoding_buffer = [0; 4];
-    let mut result = vec![];
+    let mut result = Vec::with_capacity(source.len());
 
     let mut head = source;
-    while !head.is_empty() {
-        match substrings.find_match(head) {
-            Some((index, substr)) => {
-                let encoded_index = INDEX_START + index as u16;
-                result.extend(encoded_index.to_be_bytes());
-                head = &head[substr.len()..];
-            }
-            None => {
-                // TODO: Error handling here
-                let next_char = head.chars().next().unwrap();
-                result.extend(next_char.encode_utf8(&mut encoding_buffer).as_bytes());
-                head = &head[next_char.len_utf8()..];
-            }
+    while let Some(next_char) = head.chars().next() {
+        if let Some((index, substr)) = substrings.find_match(head) {
+            let encoded_index = INDEX_START + index as u16;
+            result.extend(encoded_index.to_be_bytes());
+            head = &head[substr.len()..];
+        } else {
+            let encoded_char = next_char.encode_utf8(&mut encoding_buffer).as_bytes();
+            result.extend(encoded_char);
+            head = &head[next_char.len_utf8()..];
         }
     }
     result
