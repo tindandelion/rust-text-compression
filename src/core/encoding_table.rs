@@ -29,8 +29,12 @@ impl EncodingTable {
         self.entries.len()
     }
 
-    pub fn get(&self, index: usize) -> &str {
-        self.entries[index].as_str()
+    pub fn get(&self, index: usize) -> Option<&str> {
+        if index < self.entries.len() {
+            Some(self.entries[index].as_str())
+        } else {
+            None
+        }
     }
 
     #[cfg(test)]
@@ -68,7 +72,15 @@ mod tests {
     fn get_substring_at_index() {
         let table = EncodingTable::new(vec!["a".into(), "aaaa".into(), "b".into(), "bb".into()]);
 
-        assert_eq!("aaaa", table.get(1));
-        assert_eq!("bb", table.get(3));
+        assert_eq!(Some("aaaa"), table.get(1));
+        assert_eq!(Some("bb"), table.get(3));
+    }
+
+    #[test]
+    fn missing_substring_by_index() {
+        let table = EncodingTable::new(vec!["a".into()]);
+
+        let missing = table.get(1);
+        assert_eq!(None, missing);
     }
 }
