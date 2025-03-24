@@ -18,7 +18,7 @@ fn compression_ratio_test() {
     for (file_name, expected_ratio) in test_files {
         let source = read_test_file(file_name);
         let (encoded, substrings) = encode(&source);
-        let decoded = decode(&encoded, &substrings);
+        let decoded = decode(&encoded, &substrings).unwrap();
 
         assert_eq!(
             decoded, source,
