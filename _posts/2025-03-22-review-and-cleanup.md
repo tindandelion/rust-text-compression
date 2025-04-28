@@ -45,7 +45,7 @@ However, I no longer expose the ledger policies to the outside world: all the de
 
 It looks like the core functionality of the text compression algorithm is ready and polished. To celebrate achieving this important milestone, I'm tagging the current state as [version 0.1.0][tag-0.1.0].  
 
-One other thing I'd like to focus on next is to make `encode()` and `decode()` functions more robust, in terms of handling invalid inputs. That leads me to a yet unexplored territory: **error handling in Rust**. 
+One other thing I'd like to focus on next is to make `encode()` and `decode()` functions more robust, in terms of handling invalid inputs. That leads me to a yet unexplored territory: [**error handling in Rust**][next-post]. 
 
 
 [substring-map-experiment]: {{site.baseurl}}/{% post_url 2025-03-08-substring-map %}
@@ -68,3 +68,4 @@ One other thing I'd like to focus on next is to make `encode()` and `decode()` f
 [test-doubles]: https://martinfowler.com/bliki/TestDouble.html
 [encoder-0.1.0]: https://github.com/tindandelion/rust-text-compression/blob/0.1.0/src/encoder.rs
 [tag-0.1.0]: https://github.com/tindandelion/rust-text-compression/tree/0.1.0
+[next-post]: {{site.baseurl}}/{% post_url 2025-04-28-handling-invalid-inputs %}

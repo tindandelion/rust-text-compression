@@ -13,7 +13,7 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Text Compression in Rust 
+title: Text Compression with Rust 
 email: s.moshnikov@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   This is a learning project in Rust, the implementation of a text compression algorithm.
