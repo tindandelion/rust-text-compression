@@ -68,4 +68,4 @@ One other thing I'd like to focus on next is to make `encode()` and `decode()` f
 [test-doubles]: https://martinfowler.com/bliki/TestDouble.html
 [encoder-0.1.0]: https://github.com/tindandelion/rust-text-compression/blob/0.1.0/src/encoder.rs
 [tag-0.1.0]: https://github.com/tindandelion/rust-text-compression/tree/0.1.0
-[next-post]: {{site.baseurl}}/{% post_url 2025-04-28-handling-invalid-inputs %}
+[next-post]: {{site.baseurl}}/{% post_url 2025-05-01-tidbits-of-error-handling %}
