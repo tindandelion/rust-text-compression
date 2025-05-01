@@ -46,21 +46,67 @@ With [`decode()`][decode-0.1.0], the situation is different. It accepts an encod
 
 * Invalid UTF-8 codes in un-encoded parts of the text; 
 * Invalid substring index: the entry is missing from the encoding table; 
-* Substring index is missing: the encoded string ends with the encoded "marker" byte (`0xF5..0xFF`), but there's no follow-up "index" byte. 
+* Substring index is missing: the encoded string ends with the encoded "marker" byte (`0xF5..0xFF`), but there's no follow-up "index" byte `NN`. 
 
-These are the situations that need to be accounted for when decoding the input byte array. 
+These are the situations that should be accounted for when decoding the input byte array. 
 
-# Error handling in Rust: `Result` type 
+# Tidbits of error handling in Rust
+
+Error handling in Rust is well documented in [multiple sources][rust-book-errors], so let's not waste space on obvious things. In this section, I'd like to mention a few things I've learned on top of the basics. 
 
 #### `std::Error` trait 
 
-#### `?` operator as a syntax sugar 
+When you define custom error types, it's a good practice to make your error type implement a `std::Error` trait. This makes your error type fit nicely into the rest of Rust ecosystem. Implementing `Error` trait also requires you to implement `Debug` and `Display` traits on your error types. 
 
-What types can be `?`-ed? 
+Luckily, that doesn't require a lot of coding in common cases. The default implementation of `Error` and `#[derive(Debug)]` are sufficient to comply. The only piece of code you need to write is the implementation of `Display::fmt()` method. This method is supposed to provide a *user-friendly* information about what went wrong: it's up to you as an application developer to decide what will be shown to the user.   
+
+There are no specific guidelines about how `Display::fmt()` should be implemented. Jon Gjengset gives the following advice in his book ["Rust for Rustaceans"][rust-for-rustaceans], in the chapter about error handling: 
+
+> In general, your implementation of Display should give a one-line description of what went wrong that can easily be folded into other error messages. The display format should be lowercase and without trailing punctuation so that it fits nicely into other, larger error reports.
+
+Another interesting method in `std::Error` is `source()`. The default implementation simply returns `None`. It is useful if your error type is a wrapper around another error. In this case, you can override this method to give access to the inner error. 
+
+#### Syntax sugar: `?` operator
+
+The `?` operator is commonly used in Rust to avoid repetitive boilerplate code related to error propagation. It's a shorthand for *unwrap the successful result or return the error early*, in cases when you simply need to abort the function and return the error to the caller. But it's not limited only to errors: it works with `Option` type also. 
+
+Interestingly, the `?` operator uses the [`Try`][try-trait] trait behind the scenes. Currently, this trait is still experimental, but once it stabilizes, it will be possible to make your own types `?`-compliant by implementing this trait. 
 
 #### `try` blocks 
 
-Are they a part of Rust? 
+Yet another **experimental feature** I've learned about is [`try`][try-blocks] blocks. 
+
+Sometimes an early return with `?` operator can backfire. Consider the following example: 
+
+```rust
+fn query_database() -> Result<i32, Error> {
+    let conn = Database::connect()?;
+
+    let x = query_value(conn)?; // Early return on error
+    let y = x + 10;
+
+    conn.close();
+    Ok(y)
+}
+```
+
+If `query_value(conn)` returns an error, the `?` operator will cause the entire `query_database()` to return early and skip the important `conn.close()` call at the end! This is the problem `try` blocks are intended to solve: 
+
+```rust
+fn try_query_database() -> Result<i32, Error> {
+    let conn = Database::connect()?;
+
+    let y: Result<i32, Error> = try {
+        let x = query_value(conn)?;
+        x + 10
+    };
+
+    conn.close();
+    y
+}
+```
+
+In this snippet, `query_value()?` will return early only from the `try` block, and the execution will proceed to close the connection and return the result. 
 
 # Changes to the code 
 
@@ -68,4 +114,9 @@ Are they a part of Rust?
 [encode-0.1.0]: https://github.com/tindandelion/rust-text-compression/blob/0.1.0/src/encoder.rs#L20
 [decode-0.1.0]: https://github.com/tindandelion/rust-text-compression/blob/0.1.0/src/decoder.rs#L5
 [rust-doc-string]: https://doc.rust-lang.org/rust-by-example/std/str.html
+[rust-book-errors]: https://doc.rust-lang.org/book/ch09-00-error-handling.html
+[rust-for-rustaceans]: https://rust-for-rustaceans.com/
+[try-trait]: https://doc.rust-lang.org/std/ops/trait.Try.html
+[try-blocks]: https://doc.rust-lang.org/beta/unstable-book/language-features/try-blocks.html
+
 
