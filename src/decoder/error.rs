@@ -20,6 +20,6 @@ impl From<Utf8Error> for DecodeError {
 
 impl Display for DecodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Decoding error: {:?}", self)
+        write!(f, "decoding error: {:?}", self)
     }
 }
