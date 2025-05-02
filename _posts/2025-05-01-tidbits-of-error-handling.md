@@ -7,6 +7,7 @@ date: 2025-05-01
 Error handling in Rust is well documented in [multiple sources][rust-book-errors], so let's not waste space on obvious things. In this post, I'd like to share a few things I've learned on top of the basics. 
 
 # Error trait **std::Error**
+{: #guidelines }
 
 When you define custom error types, it's a good practice to make them implement the `std::Error` trait. This makes your error type fit nicely into the rest of Rust ecosystem: `std::Error` is a kind of a *catch-all* case for all error types.
 
@@ -92,9 +93,10 @@ In this snippet, `query_value()?` will return early only from the `try` block, a
 
 # Moving on 
 
-Now that we're equipped with a bit of knowledge about error handling in Rust, I'm going to move on to implementing proper error handling in my project.
+Now that we're equipped with a bit of knowledge about error handling in Rust, I'm going to move on to [implementing proper error handling][next-post] in my project.
 
 [rust-book-errors]: https://doc.rust-lang.org/book/ch09-00-error-handling.html
 [rust-for-rustaceans]: https://rust-for-rustaceans.com/
 [try-trait]: https://doc.rust-lang.org/std/ops/trait.Try.html
 [try-blocks]: https://doc.rust-lang.org/beta/unstable-book/language-features/try-blocks.html
+[next-post]: {{site.baseurl}}/{% post_url 2025-05-02-handling-invalid-inputs %}

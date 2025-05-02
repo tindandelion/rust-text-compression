@@ -1,7 +1,7 @@
 ---
 layout: post
-title: Handling invalid input
-date: 2025-04-28
+title: Handling invalid inputs 
+date: 2025-05-02
 ---
 
 Up to this point, I was mostly focusing on getting things to work, and I've been blissfully ignoring various error conditions that can occur. Now, I'd like to switch gears and pay more attention to the aspect of error handling. Two main functions of the compression algorithm are [`encode()`][encode-0.1.0] and [`decode()`][decode-0.1.0], so let's focus on them. In particular, let's examine if there are possibilities for these functions to accept invalid inputs, and how they should respond to such inputs. 
@@ -44,22 +44,39 @@ If you need to slice a string by character indexes, you need to use the `chars()
 
 With [`decode()`][decode-0.1.0], the situation is different. It accepts an encoded string in a form of a byte vector, and there's a few possibilities of errors in the input data: 
 
-* Invalid UTF-8 codes in un-encoded parts of the text; 
-* Invalid substring index: the entry is missing from the encoding table; 
-* Substring index is missing: the encoded string ends with the encoded "marker" byte (`0xF5..0xFF`), but there's no follow-up "index" byte `NN`. 
+* invalid UTF-8 codes in un-encoded parts of the text; 
+* invalid substring index: the entry is missing from the encoding table; 
+* substring index is missing: the encoded string ends with the encoded "marker" byte (`0xF5..0xFF`), but there's no follow-up "index" byte `NN`. 
 
 These are the situations that should be accounted for when decoding the input byte array. 
 
-
 # Changes to the code 
+
+#### *DecodeError* type 
+
+The first step I took is to create an enum for errors that can happen during decoding: [`DecodeError`][decode-error-0.1.1]. I created a different variant for each invalid situation that we might encounter while processing the encoded byte array, as outlined in the [section above]. I tried to follow the [guidelines for error types][prev-post-guidelines], and added the following specifics to the `DecodeError` type: 
+
+* implemented `std::Error` trait. Since I didn't need any specific behaviour, we use the default implementation. 
+* implemented `Display` trait. There's nothing special about this implementation, either: we're simply dumping the error object to the output. This is a lazy implementation: if I had a more interactive UI, I'd have to think more carefully about more user-friendly output. However, this simple implementation is enough for debugging purposes. 
+* finally, I also implemented `From<Utf8Error>` trait, to cover the cases when the creation of a UTF-8 character from bytes fail. `str::Utf8Error` is returned by [`str::from_utf8()`][from-utf-8-doc] function. Again, for a more user-friendly application, it would be nice to provide more information about where in the encoded text this error occurred, what was the incorrect byte sequence, etc., but for the purposes of this learning project I decided to take a shortcut and simply signal that the creation of _some_ UTF-8 character failed. 
+
+One may notice that there's a lot of possible improvements here in terms of what information should be included into the error, and how it should be reported to the user. For example, I could have provided the data where in the encoded sequence the error occurred, what was the input that couldn't be converted into UTF-8 character, etc. I agree with these concerns. However, I think that developing a proper error handling is an iterative process: you can start with some basic implementation, and refine it later on. Proper manual testing plays an important role in this process: 
+
+* from the user perspective, you should validate that the error was correctly shown in the UI; 
+* as a developer, you should have enough information in the internal logs to understand where an error occurred and what conditions caused it. 
+
+Current implementation of the `DecodeError` is a good starting point to build a more sophisticated solution. 
+
+#### Changes to *decode()* function 
+
+
+
 
 
 [encode-0.1.0]: https://github.com/tindandelion/rust-text-compression/blob/0.1.0/src/encoder.rs#L20
 [decode-0.1.0]: https://github.com/tindandelion/rust-text-compression/blob/0.1.0/src/decoder.rs#L5
 [rust-doc-string]: https://doc.rust-lang.org/rust-by-example/std/str.html
-[rust-book-errors]: https://doc.rust-lang.org/book/ch09-00-error-handling.html
-[rust-for-rustaceans]: https://rust-for-rustaceans.com/
-[try-trait]: https://doc.rust-lang.org/std/ops/trait.Try.html
-[try-blocks]: https://doc.rust-lang.org/beta/unstable-book/language-features/try-blocks.html
-
+[decode-error-0.1.1]: https://github.com/tindandelion/rust-text-compression/blob/0.1.1/src/decoder/error.rs
+[prev-post-guidelines]: {{site.baseurl}}/{% post_url 2025-05-01-tidbits-of-error-handling %}#guidelines
+[from-utf-8-doc]: https://doc.rust-lang.org/std/str/fn.from_utf8.html
 

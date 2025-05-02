@@ -33,6 +33,8 @@
         "wikipedia",
         "Trie",
         "BTree",
-        "impl"
+        "impl",
+        "enum",
+        "behaviour"
     ]
 } 
