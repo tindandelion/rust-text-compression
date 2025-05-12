@@ -57,6 +57,7 @@ pub fn build_ledger(source: &str) -> SubstringLedger {
 ```
 
 # Encoding scheme
+{: #encoding-scheme }
 
 My program works with UTF-8 encoded strings, which are natural in Rust. The question is how to embed the substring replacements into the encoded text, so that we don't confuse them with uncompressed portions. The answer here is to use a special marker byte to indicate the replacement. The marker byte should be a value that would never occur in the original text, so that we don't mistake it for an uncompressed portion at the decoding stage.
 
@@ -100,6 +101,7 @@ fn calculate_impacts(&self, encoder_spec: &EncoderSpec) -> Vec<EncodingImpact<'_
 ```
 
 ## Trying out the first version
+{: #results }
 
 Once I have the the [first version][first-iteration] end-to-end working, let's go on an try it out on a few samples.
 

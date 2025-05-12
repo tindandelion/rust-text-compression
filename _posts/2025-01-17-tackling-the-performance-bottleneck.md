@@ -7,6 +7,7 @@ date: 2025-01-17
 So far, I've done the round of performance profiling, and [identified the bottleneck][profiling-experiment]. In this post, I'm going to describe how I tackled the problem. _Spoiler alert_: I only alleviate the performance issue, but not solve it completely for now. 
 
 # _HashMap_ and _BTreeMap_
+{: #rust-maps }
 
 Rust's standard library provides two different data structures to work with key-value pairs: [`HashMap`][hashmap] and [`BTreeMap`][btreemap]. 
 
@@ -17,6 +18,7 @@ But `HashMap` has a significant drawback for my current use case: it doesn't pre
 In contrast, `BTreeMap` keeps the keys ordanized in a tree structure, called [B-tree][btree]. Essentially, B-tree is a balanced tree that taks advantage of the CPU memory cache, so it works better than a regular binary tree on modern CPU architectures. `BTreeMap` provides logarithmic time complexity for accessing the elements by key, but more importantly for us, `BTreeMap::keys()`  always keeps the keys in a sorted order, hence eliminating the need for sorting them each time. `BTreeMap` requires the key type to be sortable, meaning that it must implement the `Ord` trait. Sometimes we can get away with default implementations, provided by the `#[derive]` macro, but in my case I have a custom sorting order, so I need to implement the `Ord` trait manually.
 
 # Comparison traits in Rust 
+{: #comparison-traits }
 
 There is a family of traits in Rust that are used to compare values, namely [`PartialEq`][partial-eq-trait], [`Eq`][eq-trait], [`PartialOrd`][partial-ord-trait], and [`Ord`][ord-trait]. These traits have special significance, because if they are present, the compiler will automatically use them for comparison operators, such as `==`, `!=` (for `PartialEq`), and `<`, `<=`, `>`, `>=` (for `PartialOrd`). There also needs to be consitence in the implementation of these traits, e.g. `x == y` and `x <= y` must not contradict each other. This is especially important in case you use `#[derive]` some of these traits, and manually implement others.
 
