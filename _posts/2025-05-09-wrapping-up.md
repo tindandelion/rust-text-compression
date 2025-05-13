@@ -4,9 +4,9 @@ title: Wrapping up the project
 date: 2025-05-09
 ---
 
-Summary of what I've done in this training project.
+I think this is a good point to wrap up this learning project. Surely, there's still a lot of features that can be implemented, and improvements to be made. However, it's meant to be a training exercise, not a complete production-ready solution. I've spent quite a bit of time working on this task, and achieved some interesting results. I will summarize most significant milestones in this post. 
 
-# Main achievements 
+# Main achievements throughout the project
 
 * I started with a [simplified version][first-iteration] of the text compression solution, and later upgraded it to a [more advanced version][limit-ledger-size] that used an adaptive learning algorithm. I also experimented with [different substring ledger limits][ledger-limit-experiments] to see how it impacts the compression efficiency, to come up with the optimal value.
 
@@ -17,6 +17,19 @@ Summary of what I've done in this training project.
 * On the encoding side, I [started with a simple scheme][first-encoding-scheme] that only allowed me to handle 256 substrings, and later [optimized it][encoding-optimization] to be able to encode 2816 substrings. That led to [big improvements in the compression ratio][encoding-optimization-results]. 
 
 * Along the way, I've learned quite a few details about Rust itself, such as: [handling multiple crates][multiple-crates], [differences between HashMap and BTreeMap][rust-maps], details about implementing the [comparison traits][comparison-traits], and tidbits about the Rust way of [dealing with error conditions][error-handling].
+
+# Onto the new challenges! 
+
+To celebrate the ending of this project, I'm giving the current version a proud number of [1.0.0][tag-1.0.0] and call the job well done!
+
+This project doesn't end my journey in Rust. I barely scratched the surface, and there's more exciting discoveries waiting for me. I look forward to a new challenge that hopefully will let me dive deeper into subjects like: 
+
+* multi-threaded programming and asynchronous Rust; 
+* working with networks; 
+* building user interface applications, both CLI and GUI. 
+
+**That's all, folks! Thanks for your attention, and see you next time!** 
+
 
 [first-iteration]: {{site.baseurl}}/{% post_url 2025-01-10-first-iteration %}
 [limit-ledger-size]: {{site.baseurl}}/{% post_url 2025-02-12-limit-ledger-size %}
@@ -33,3 +46,4 @@ Summary of what I've done in this training project.
 [rust-maps]: {{site.baseurl}}/{% post_url 2025-01-17-tackling-the-performance-bottleneck %}#rust-maps
 [comparison-traits]: {{site.baseurl}}/{% post_url 2025-01-17-tackling-the-performance-bottleneck %}#comparison-traits
 [error-handling]: {{site.baseurl}}/{% post_url 2025-05-02-handling-invalid-inputs %}
+[tag-1.0.0]: https://github.com/tindandelion/rust-text-compression/tree/1.0.0
