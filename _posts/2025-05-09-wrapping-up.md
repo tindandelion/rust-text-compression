@@ -8,7 +8,7 @@ I think this is a good point to wrap up this learning project. No doubt, there's
 
 # Main achievements throughout the project
 
-* I started with a [simplified version][first-iteration] of the text compression solution, and later upgraded it to a [more advanced version][limit-ledger-size] that used an adaptive learning algorithm. I also experimented with [different substring ledger limits][ledger-limit-experiments] to see how it impacts the compression efficiency, to come up with a reasonable value.
+* I started with a [simplified version][first-iteration] of the text compression solution, and later upgraded it to a [more advanced version][limit-ledger-size] that used an adaptive learning algorithm. I also experimented with [different substring dictionary limits][ledger-limit-experiments] to see how it impacts the compression efficiency, to come up with a reasonable value.
 
 * I had to tackle some performance issues. The first version started with a [naive implementation using HashMap][first-iteration-results]; later I [replaced it with BTreeMap][btree-map-impl], which helped performance a bit. However, the algorithm still showed polynomial time complexity, so I [implemented a much more suitable _trie_ data structure][trie-impl], and finally [got the performance][final-performance] I was satisfied with. 
 
