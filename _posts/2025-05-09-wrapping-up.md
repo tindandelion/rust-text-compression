@@ -4,25 +4,25 @@ title: Wrapping up the project
 date: 2025-05-09
 ---
 
-I think this is a good point to wrap up this learning project. Surely, there's still a lot of features that can be implemented, and improvements to be made. However, it's meant to be a training exercise, not a complete production-ready solution. I've spent quite a bit of time working on this task, and achieved some interesting results. I will summarize most significant milestones in this post. 
+I think this is a good point to wrap up this learning project. No doubt, there's still a lot of features that can be implemented, and improvements to be made. However, it was meant to be a training exercise, not a complete production-ready solution. I've spent quite a bit of time working on this etude, and achieved some interesting results. I will summarize most significant milestones in this post. 
 
 # Main achievements throughout the project
 
-* I started with a [simplified version][first-iteration] of the text compression solution, and later upgraded it to a [more advanced version][limit-ledger-size] that used an adaptive learning algorithm. I also experimented with [different substring ledger limits][ledger-limit-experiments] to see how it impacts the compression efficiency, to come up with the optimal value.
+* I started with a [simplified version][first-iteration] of the text compression solution, and later upgraded it to a [more advanced version][limit-ledger-size] that used an adaptive learning algorithm. I also experimented with [different substring ledger limits][ledger-limit-experiments] to see how it impacts the compression efficiency, to come up with a reasonable value.
 
-* I had to tackle the performance issues. The first version started with a [naive implementation using HashMap][first-iteration-results], later I [replaced it with BTreeMap][btree-map-impl], which helped performance a bit. However, the algorithm still showed polynomial time complexity, so I [implemented a much more suitable _trie_ data structure][trie-impl], and finally [achieved the performance][final-performance] I was satisfied with. 
+* I had to tackle some performance issues. The first version started with a [naive implementation using HashMap][first-iteration-results]; later I [replaced it with BTreeMap][btree-map-impl], which helped performance a bit. However, the algorithm still showed polynomial time complexity, so I [implemented a much more suitable _trie_ data structure][trie-impl], and finally [got the performance][final-performance] I was satisfied with. 
 
 * While tackling performance issues, I [learned how I could use flamegraphs][flamegraphs] in Rust to identify the bottlenecks; 
 
 * On the encoding side, I [started with a simple scheme][first-encoding-scheme] that only allowed me to handle 256 substrings, and later [optimized it][encoding-optimization] to be able to encode 2816 substrings. That led to [big improvements in the compression ratio][encoding-optimization-results]. 
 
-* Along the way, I've learned quite a few details about Rust itself, such as: [handling multiple crates][multiple-crates], [differences between HashMap and BTreeMap][rust-maps], details about implementing the [comparison traits][comparison-traits], and tidbits about the Rust way of [dealing with error conditions][error-handling].
+* Along the way, I've learned quite a few details about Rust itself, such as: [handling multiple crates][multiple-crates], [differences between HashMap and BTreeMap][rust-maps], details about implementing the [comparison traits][comparison-traits], and tidbits about the "Rust way" of [dealing with error conditions][error-handling].
 
 # Onto the new challenges! 
 
-To celebrate the ending of this project, I'm giving the current version a proud number of [1.0.0][tag-1.0.0] and call the job well done!
+To celebrate the ending of this project, I'm giving the current version a proud number of [1.0.0][tag-1.0.0], and call the job well done!
 
-This project doesn't end my journey in Rust. I barely scratched the surface, and there's more exciting discoveries waiting for me. I look forward to a new challenge that hopefully will let me dive deeper into subjects like: 
+This project doesn't end my journey in Rust. I barely scratched the surface, and there are many more exciting discoveries waiting for me. I look forward to a new challenge that hopefully will let me dive deeper into subjects like: 
 
 * multi-threaded programming and asynchronous Rust; 
 * working with networks; 
