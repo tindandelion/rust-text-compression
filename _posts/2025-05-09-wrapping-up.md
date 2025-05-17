@@ -20,7 +20,7 @@ I think this is a good point to wrap up this learning project. No doubt, there's
 
 # Onto the new challenges! 
 
-To celebrate the ending of this project, I'm giving the current version a proud number of [1.0.0][tag-1.0.0], and call the job well done!
+To celebrate the completion of this project, I'm giving the current version a proud number of [1.0.0][tag-1.0.0], and call the job well done!
 
 This project doesn't end my journey in Rust. I barely scratched the surface, and there are many more exciting discoveries waiting for me. I look forward to a new challenge that hopefully will let me dive deeper into subjects like: 
 
